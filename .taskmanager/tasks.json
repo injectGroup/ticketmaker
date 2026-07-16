@@ -4,7 +4,7 @@
     {
       "id": "S48ODI73lfsZJSn8Kke2",
       "name": "ticketmaker",
-      "description": "Flutter rewrite of Quick Ticket Maker (from FlutterFlow) \u2014 generate styled event tickets with customizable QR codes.",
+      "description": "Quick Ticket Maker \u2014 generate styled event tickets with customizable QR codes.",
       "ownerEmail": "abdulkadirhaldu@gmail.com",
       "proposedOwnerEmail": "abdulkadirhaldu@gmail.com",
       "ownershipStatus": "needs_owner_claim",
@@ -18,13 +18,13 @@
       "projectId": "S48ODI73lfsZJSn8Kke2",
       "epicId": null,
       "title": "Scaffold clean Flutter app structure",
-      "description": "Scaffolded clean Flutter app with core/theme, core/router, features/generate, features/tickets. No FlutterFlow.",
+      "description": "Scaffolded clean Flutter app with core/theme, core/router, features/generate, features/tickets.",
       "details": "",
       "operationalPhase": "CONSTRUCT",
       "priority": "high",
       "status": "done",
       "createdAt": "2026-07-16T12:00:04.754Z",
-      "updatedAt": "2026-07-16T12:05:00.000Z"
+      "updatedAt": "2026-07-16T13:47:10.000Z"
     },
     {
       "id": "task-1784203205908",
@@ -37,7 +37,7 @@
       "priority": "high",
       "status": "done",
       "createdAt": "2026-07-16T12:00:05.908Z",
-      "updatedAt": "2026-07-16T12:05:00.000Z"
+      "updatedAt": "2026-07-16T13:47:10.000Z"
     },
     {
       "id": "task-1784203206096",
@@ -50,7 +50,7 @@
       "priority": "high",
       "status": "done",
       "createdAt": "2026-07-16T12:00:06.096Z",
-      "updatedAt": "2026-07-16T12:05:00.000Z"
+      "updatedAt": "2026-07-16T13:47:10.000Z"
     },
     {
       "id": "task-1784203206104",
@@ -63,7 +63,7 @@
       "priority": "medium",
       "status": "done",
       "createdAt": "2026-07-16T12:00:06.104Z",
-      "updatedAt": "2026-07-16T12:05:00.000Z"
+      "updatedAt": "2026-07-16T13:47:10.000Z"
     },
     {
       "id": "task-docs-github-iso-20260716",
@@ -76,8 +76,21 @@
       "priority": "high",
       "status": "done",
       "createdAt": "2026-07-16T13:46:08.000Z",
-      "updatedAt": "2026-07-16T13:46:08.000Z"
+      "updatedAt": "2026-07-16T13:47:10.000Z"
+    },
+    {
+      "id": "task-remove-flutterflow-mentions-20260716",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Remove FlutterFlow mentions from code and docs",
+      "description": "Scrubbed remaining FlutterFlow references from theme comments, CONTRIBUTING, architecture/development docs, and TaskManager backup text.",
+      "details": "",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-16T13:47:10.000Z",
+      "updatedAt": "2026-07-16T13:47:10.000Z"
     }
   ],
-  "lastSync": "2026-07-16T13:46:08.000Z"
+  "lastSync": "2026-07-16T13:47:10.000Z"
 }

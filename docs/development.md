@@ -8,7 +8,7 @@ Engineering standards for Quick Ticket Maker. These support ISO/IEC 25010 mainta
 
 - Dart null safety is mandatory.
 - Prefer Flutter 3.x Material 3 patterns already used in `AppTheme`.
-- Do not reintroduce FlutterFlow runtime dependencies.
+- Prefer first-party Flutter packages and approved Inject dependencies only.
 
 ---
 

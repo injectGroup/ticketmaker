@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Colors matching the original FlutterFlow theme.
+/// Application color tokens for Quick Ticket Maker.
 abstract final class AppColors {
   static const Color primary = Color(0xFF4B39EF);
   static const Color secondary = Color(0xFF39D2C0);

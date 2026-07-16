@@ -44,7 +44,7 @@ Branch from `main`. Keep branches short-lived.
 
 - Prefer small, focused commits.
 - Match existing architecture (`core/` vs `features/`).
-- Do not introduce FlutterFlow or unrelated refactors.
+- Do not introduce unrelated refactors outside the PR scope.
 - Do not commit secrets, credentials, or personal data.
 
 ### 3. Verify locally (required quality gates)

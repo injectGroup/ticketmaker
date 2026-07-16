@@ -56,7 +56,7 @@ lib/
 
 | Layer | May depend on | Must not depend on |
 | --- | --- | --- |
-| `presentation` | `domain`, `core` | FlutterFlow, unrelated features’ internals |
+| `presentation` | `domain`, `core` | Unrelated features’ internals |
 | `domain` | Dart / equatable only (prefer) | Flutter UI widgets where avoidable |
 | `core` | Flutter / shared packages | Feature-specific business rules |
 
