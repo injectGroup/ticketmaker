@@ -1,0 +1,44 @@
+name: Feature request
+description: Propose a product or engineering enhancement
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the problem first, then a proposed solution.
+        Security-sensitive ideas should note privacy/security impact.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What user or maintainer problem are we solving?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: security
+    attributes:
+      label: Security / privacy impact
+      description: New data collected? New network calls? Auth? Storage?
+      placeholder: None / details...
+    validations:
+      required: true
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I checked docs/features.md so this is not already shipped or explicitly out of scope without justification
+          required: true
+        - label: I am willing to help implement or test if maintainers agree
+          required: false

@@ -1,0 +1,85 @@
+name: Bug report
+description: Report a defect in Quick Ticket Maker
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Quick Ticket Maker.
+        **Do not** include secrets, tokens, or personal data.
+        Security vulnerabilities must be reported via [SECURITY.md](https://github.com/injectGroup/ticketmaker/blob/main/SECURITY.md), not this form.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Clear description of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version / commit SHA
+      placeholder: 1.0.0+1 or git SHA
+    validations:
+      required: true
+  - type: input
+    id: flutter
+    attributes:
+      label: Flutter version
+      placeholder: Output of `flutter --version` (first line is fine)
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      multiple: true
+      options:
+        - iOS
+        - Android
+        - Web
+        - macOS
+        - Windows
+        - Linux
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Paste text logs (redacted). Drag images if needed.
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing Issues for duplicates
+          required: true
+        - label: I confirmed this is not a security vulnerability report
+          required: true
+        - label: I redacted secrets and personal data
+          required: true

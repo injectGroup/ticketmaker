@@ -1,0 +1,52 @@
+# License
+
+Copyright © 2026 Inject (injectGroup). All rights reserved.
+
+## Proprietary software
+
+This repository and all associated source code, documentation, assets, and
+configuration (the "Software") are the confidential and proprietary property of
+Inject (injectGroup) and/or its licensors.
+
+Permission to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software is **not** granted except under a separate written
+agreement with Inject, or for authorized Inject personnel and contractors acting
+within the scope of their engagement.
+
+## Restrictions
+
+Without prior written permission from Inject, you may not:
+
+1. Copy, redistribute, or publicly disclose the Software or substantial portions of it.
+2. Use the Software for commercial purposes outside Inject-authorized work.
+3. Reverse engineer, decompile, or disassemble the Software except to the extent
+   that applicable law expressly prohibits this restriction.
+4. Remove or alter proprietary notices.
+
+## Contributions
+
+Contributions submitted to this repository are assigned to or licensed to Inject
+under the contributor terms described in `CONTRIBUTING.md`, unless a different
+written agreement applies.
+
+## Third-party components
+
+This Software may include open-source components under their own licenses
+(for example, Flutter SDK packages and dependencies declared in `pubspec.yaml`).
+Those components remain subject to their respective licenses. Nothing in this
+file limits rights granted by those third-party licenses for the third-party
+components alone.
+
+## Disclaimer
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM,
+OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE, TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW.
+
+## Contact
+
+For licensing inquiries: `legal@inject.group`

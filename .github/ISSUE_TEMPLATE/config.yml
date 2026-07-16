@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability report
+    url: https://github.com/injectGroup/ticketmaker/security/advisories/new
+    about: Report security issues privately. Do not file public Issues for vulnerabilities. See SECURITY.md.
+  - name: Support
+    url: https://github.com/injectGroup/ticketmaker/blob/main/SUPPORT.md
+    about: Read support channels and expectations before opening an Issue.

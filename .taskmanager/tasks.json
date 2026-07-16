@@ -4,7 +4,7 @@
     {
       "id": "S48ODI73lfsZJSn8Kke2",
       "name": "ticketmaker",
-      "description": "Flutter rewrite of Quick Ticket Maker (from FlutterFlow) — generate styled event tickets with customizable QR codes.",
+      "description": "Flutter rewrite of Quick Ticket Maker (from FlutterFlow) \u2014 generate styled event tickets with customizable QR codes.",
       "ownerEmail": "abdulkadirhaldu@gmail.com",
       "proposedOwnerEmail": "abdulkadirhaldu@gmail.com",
       "ownershipStatus": "needs_owner_claim",
@@ -64,7 +64,20 @@
       "status": "done",
       "createdAt": "2026-07-16T12:00:06.104Z",
       "updatedAt": "2026-07-16T12:05:00.000Z"
+    },
+    {
+      "id": "task-docs-github-iso-20260716",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Write full GitHub documentation (ISO + security)",
+      "description": "Added GitHub community health files, docs architecture/features/security/privacy, ISO alignment mapping, issue/PR templates, Dependabot, and secret-hardened gitignore.",
+      "details": "Aligned with GitHub docs community health guidance; ISO/IEC 27001/27701/29147/30111/12207/25010 mapping. No formal certification claim.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-16T13:46:08.000Z",
+      "updatedAt": "2026-07-16T13:46:08.000Z"
     }
   ],
-  "lastSync": "2026-07-16T12:05:00.000Z"
+  "lastSync": "2026-07-16T13:46:08.000Z"
 }

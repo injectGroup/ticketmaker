@@ -43,3 +43,24 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Secrets and credentials (ISO/IEC 27001 / secure development)
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.key
+*.keystore
+*.jks
+google-services.json
+GoogleService-Info.plist
+**/secrets/
+**/credentials*.json
+service-account*.json
+
+# Platform ephemeral
+**/Pods/
+**/DerivedData/
+**/local.properties
+**/xcuserdata/
