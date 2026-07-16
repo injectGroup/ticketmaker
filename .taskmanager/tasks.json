@@ -79,18 +79,18 @@
       "updatedAt": "2026-07-16T13:47:10.000Z"
     },
     {
-      "id": "task-remove-flutterflow-mentions-20260716",
+      "id": "task-remove-legacy-tooling-mentions-20260716",
       "projectId": "S48ODI73lfsZJSn8Kke2",
       "epicId": null,
-      "title": "Remove FlutterFlow mentions from code and docs",
-      "description": "Scrubbed remaining FlutterFlow references from theme comments, CONTRIBUTING, architecture/development docs, and TaskManager backup text.",
+      "title": "Remove legacy tooling mentions from code and docs",
+      "description": "Scrubbed remaining legacy low-code tooling references from theme comments, CONTRIBUTING, architecture/development docs, and TaskManager backup text.",
       "details": "",
       "operationalPhase": "COMPLETE",
       "priority": "medium",
       "status": "done",
       "createdAt": "2026-07-16T13:47:10.000Z",
-      "updatedAt": "2026-07-16T13:47:10.000Z"
+      "updatedAt": "2026-07-16T13:47:18.000Z"
     }
   ],
-  "lastSync": "2026-07-16T13:47:10.000Z"
+  "lastSync": "2026-07-16T13:47:18.000Z"
 }
