@@ -1,0 +1,70 @@
+{
+  "version": "1.0.0",
+  "projects": [
+    {
+      "id": "S48ODI73lfsZJSn8Kke2",
+      "name": "ticketmaker",
+      "description": "Flutter rewrite of Quick Ticket Maker (from FlutterFlow) — generate styled event tickets with customizable QR codes.",
+      "ownerEmail": "abdulkadirhaldu@gmail.com",
+      "proposedOwnerEmail": "abdulkadirhaldu@gmail.com",
+      "ownershipStatus": "needs_owner_claim",
+      "createdAt": "2026-07-16T12:00:00.000Z",
+      "updatedAt": "2026-07-16T12:05:00.000Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-1784203204754",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Scaffold clean Flutter app structure",
+      "description": "Scaffolded clean Flutter app with core/theme, core/router, features/generate, features/tickets. No FlutterFlow.",
+      "details": "",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-16T12:00:04.754Z",
+      "updatedAt": "2026-07-16T12:05:00.000Z"
+    },
+    {
+      "id": "task-1784203205908",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Port Generate ticket screen with BLoC",
+      "description": "GeneratePage + GenerateCubit with working color/shape/bg/image/code actions.",
+      "details": "",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-16T12:00:05.908Z",
+      "updatedAt": "2026-07-16T12:05:00.000Z"
+    },
+    {
+      "id": "task-1784203206096",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Add GenerateQRCode widget and deps",
+      "description": "GenerateQrCode via qr_flutter; deps: flutter_bloc, go_router, google_fonts, equatable.",
+      "details": "",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-16T12:00:06.096Z",
+      "updatedAt": "2026-07-16T12:05:00.000Z"
+    },
+    {
+      "id": "task-1784203206104",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Add Tickets list screen + navigation",
+      "description": "TicketsPage + HomeShell bottom nav via go_router StatefulShellRoute.",
+      "details": "",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-16T12:00:06.104Z",
+      "updatedAt": "2026-07-16T12:05:00.000Z"
+    }
+  ],
+  "lastSync": "2026-07-16T12:05:00.000Z"
+}
