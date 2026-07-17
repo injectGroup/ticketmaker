@@ -4,7 +4,7 @@
     {
       "id": "S48ODI73lfsZJSn8Kke2",
       "name": "ticketmaker",
-      "description": "Quick Ticket Maker \u2014 generate styled event tickets with customizable QR codes.",
+      "description": "Quick Ticket Maker — generate styled event tickets with customizable QR codes.",
       "ownerEmail": "abdulkadirhaldu@gmail.com",
       "proposedOwnerEmail": "abdulkadirhaldu@gmail.com",
       "ownershipStatus": "needs_owner_claim",
@@ -118,5 +118,5 @@
       "updatedAt": "2026-07-17T16:45:00.000Z"
     }
   ],
-  "lastSync": "2026-07-17T16:45:00.000Z"
+  "lastSync": "2026-07-17T15:42:37.869Z"
 }
