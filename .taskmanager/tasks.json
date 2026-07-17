@@ -194,7 +194,20 @@
       "status": "done",
       "createdAt": "2026-07-17T17:43:00.000Z",
       "updatedAt": "2026-07-17T17:44:00.000Z"
+    },
+    {
+      "id": "task-bulletproof-ios-share-text-20260717",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Bulletproof iOS Share.share with sharePositionOrigin",
+      "description": "SavedTicketCard now builds an explicit share string (title/venue/date) and calls Share.share with subject My Custom Ticket Design plus a non-zero sharePositionOrigin for iOS/iPadOS anchoring.",
+      "details": "Venue falls back from subtitle; date uses dateLabel (Ticket has no location/date fields).",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-17T17:45:00.000Z",
+      "updatedAt": "2026-07-17T17:46:00.000Z"
     }
   ],
-  "lastSync": "2026-07-17T17:45:54.222Z"
+  "lastSync": "2026-07-17T17:46:02.822Z"
 }
