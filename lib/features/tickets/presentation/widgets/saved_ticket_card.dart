@@ -12,24 +12,35 @@ class SavedTicketCard extends StatelessWidget {
 
   Future<void> _share(BuildContext buttonContext) async {
     final box = buttonContext.findRenderObject() as RenderBox?;
-    Rect origin;
+    final Rect sharePositionOrigin;
     if (box != null &&
         box.hasSize &&
         box.size.width > 0 &&
         box.size.height > 0) {
-      origin = box.localToGlobal(Offset.zero) & box.size;
+      sharePositionOrigin = box.localToGlobal(Offset.zero) & box.size;
     } else {
       final size = MediaQuery.sizeOf(buttonContext);
-      origin = Rect.fromLTWH(size.width / 2 - 1, size.height / 2 - 1, 2, 2);
+      sharePositionOrigin = Rect.fromLTWH(
+        size.width / 2 - 1,
+        size.height / 2 - 1,
+        2,
+        2,
+      );
     }
 
-    // share_plus requires a non-zero sharePositionOrigin on iOS for the sheet
-    // to present reliably from the tapped control.
+    final venue = ticket.subtitle.trim().isEmpty
+        ? 'Venue'
+        : ticket.subtitle.trim();
+    final date = ticket.dateLabel.trim();
+    final String shareText =
+        'Check out my ticket: ${ticket.title} at $venue on $date!';
+
+    // sharePositionOrigin is required on iOS/iPadOS so the popover anchors.
     // ignore: deprecated_member_use
     await Share.share(
-      ticket.toShareText(),
-      subject: ticket.title,
-      sharePositionOrigin: origin,
+      shareText,
+      subject: 'My Custom Ticket Design',
+      sharePositionOrigin: sharePositionOrigin,
     );
   }
 

@@ -86,14 +86,8 @@ class Ticket extends Equatable {
 
   /// Plain-text summary for the native share sheet.
   String toShareText() {
-    return [
-      headerLabel,
-      title,
-      subtitle,
-      '$dateLabel · $timeLabel',
-      'Code: $code',
-      if (qrData.isNotEmpty) qrData,
-    ].join('\n');
+    final venue = subtitle.trim().isEmpty ? 'Venue' : subtitle.trim();
+    return 'Check out my ticket: $title at $venue on ${dateLabel.trim()}!';
   }
 
   Ticket copyWith({
