@@ -42,6 +42,60 @@ class Ticket extends Equatable {
   final Color bottomGradientStart;
   final Color bottomGradientEnd;
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'headerLabel': headerLabel,
+    'title': title,
+    'subtitle': subtitle,
+    'dateLabel': dateLabel,
+    'timeLabel': timeLabel,
+    'eventAt': eventAt.toIso8601String(),
+    'code': code,
+    'qrData': qrData,
+    'imagePath': imagePath,
+    'eyeColor': eyeColor.toARGB32(),
+    'dataModuleColor': dataModuleColor.toARGB32(),
+    'isSquare': isSquare,
+    'topGradientStart': topGradientStart.toARGB32(),
+    'topGradientEnd': topGradientEnd.toARGB32(),
+    'bottomGradientStart': bottomGradientStart.toARGB32(),
+    'bottomGradientEnd': bottomGradientEnd.toARGB32(),
+  };
+
+  factory Ticket.fromJson(Map<String, dynamic> json) {
+    return Ticket(
+      id: json['id'] as String,
+      headerLabel: json['headerLabel'] as String? ?? 'My Ticket',
+      title: json['title'] as String,
+      subtitle: json['subtitle'] as String,
+      dateLabel: json['dateLabel'] as String,
+      timeLabel: json['timeLabel'] as String,
+      eventAt: DateTime.parse(json['eventAt'] as String),
+      code: json['code'] as String,
+      qrData: json['qrData'] as String,
+      imagePath: json['imagePath'] as String? ?? '',
+      eyeColor: Color(json['eyeColor'] as int),
+      dataModuleColor: Color(json['dataModuleColor'] as int),
+      isSquare: json['isSquare'] as bool? ?? false,
+      topGradientStart: Color(json['topGradientStart'] as int),
+      topGradientEnd: Color(json['topGradientEnd'] as int),
+      bottomGradientStart: Color(json['bottomGradientStart'] as int),
+      bottomGradientEnd: Color(json['bottomGradientEnd'] as int),
+    );
+  }
+
+  /// Plain-text summary for the native share sheet.
+  String toShareText() {
+    return [
+      headerLabel,
+      title,
+      subtitle,
+      '$dateLabel · $timeLabel',
+      'Code: $code',
+      if (qrData.isNotEmpty) qrData,
+    ].join('\n');
+  }
+
   Ticket copyWith({
     String? id,
     String? headerLabel,
@@ -84,22 +138,22 @@ class Ticket extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        headerLabel,
-        title,
-        subtitle,
-        dateLabel,
-        timeLabel,
-        eventAt,
-        code,
-        qrData,
-        imagePath,
-        eyeColor,
-        dataModuleColor,
-        isSquare,
-        topGradientStart,
-        topGradientEnd,
-        bottomGradientStart,
-        bottomGradientEnd,
-      ];
+    id,
+    headerLabel,
+    title,
+    subtitle,
+    dateLabel,
+    timeLabel,
+    eventAt,
+    code,
+    qrData,
+    imagePath,
+    eyeColor,
+    dataModuleColor,
+    isSquare,
+    topGradientStart,
+    topGradientEnd,
+    bottomGradientStart,
+    bottomGradientEnd,
+  ];
 }

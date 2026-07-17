@@ -17,10 +17,7 @@ abstract final class ColorContrast {
   ///
   /// Semi-transparent colors are alpha-blended onto [surface] first so
   /// luminance matches what the user actually sees.
-  static Color onColor(
-    Color background, {
-    Color surface = blendSurface,
-  }) {
+  static Color onColor(Color background, {Color surface = blendSurface}) {
     final opaque = Color.alphaBlend(background, surface);
     return opaque.computeLuminance() > 0.5 ? onLight : onDark;
   }

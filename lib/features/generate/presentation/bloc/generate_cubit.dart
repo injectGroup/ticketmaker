@@ -11,8 +11,8 @@ part 'generate_state.dart';
 
 class GenerateCubit extends Cubit<GenerateState> {
   GenerateCubit({Random? random})
-      : _random = random ?? Random(),
-        super(GenerateState(ticket: _defaultTicket));
+    : _random = random ?? Random(),
+      super(GenerateState(ticket: _defaultTicket));
 
   final Random _random;
 
@@ -140,10 +140,7 @@ class GenerateCubit extends Cubit<GenerateState> {
   }
 
   /// Applies the same solid/gradient to both ticket halves.
-  void setTopBackgroundGradient({
-    required Color start,
-    required Color end,
-  }) {
+  void setTopBackgroundGradient({required Color start, required Color end}) {
     final ticket = state.ticket;
     if (ticket.topGradientStart.toARGB32() == start.toARGB32() &&
         ticket.topGradientEnd.toARGB32() == end.toARGB32() &&
@@ -203,11 +200,7 @@ class GenerateCubit extends Cubit<GenerateState> {
 
   void setImagePath(String path) {
     if (path == state.ticket.imagePath) return;
-    emit(
-      state.copyWith(
-        ticket: state.ticket.copyWith(imagePath: path),
-      ),
-    );
+    emit(state.copyWith(ticket: state.ticket.copyWith(imagePath: path)));
   }
 
   void setEventDateTime(DateTime eventAt) {
@@ -239,9 +232,7 @@ class GenerateCubit extends Cubit<GenerateState> {
   void updateHeaderLabel(String headerLabel) {
     if (headerLabel == state.ticket.headerLabel) return;
     emit(
-      state.copyWith(
-        ticket: state.ticket.copyWith(headerLabel: headerLabel),
-      ),
+      state.copyWith(ticket: state.ticket.copyWith(headerLabel: headerLabel)),
     );
   }
 

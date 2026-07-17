@@ -89,10 +89,9 @@ class _TopBgColorCustomizerSheetState extends State<TopBgColorCustomizerSheet> {
   }
 
   void _submitSolidHex() {
-    final ok =
-        context.read<GenerateCubit>().applyTopBackgroundSolidHex(
-              _solidHexController.text,
-            );
+    final ok = context.read<GenerateCubit>().applyTopBackgroundSolidHex(
+      _solidHexController.text,
+    );
     if (ok) {
       _dismissAfterApply();
       return;
@@ -108,8 +107,9 @@ class _TopBgColorCustomizerSheetState extends State<TopBgColorCustomizerSheet> {
     final start = GenerateCubit.tryParseHexColor(startRaw);
     final end = GenerateCubit.tryParseHexColor(endRaw);
 
-    final startError =
-        start == null ? 'Enter a valid hex color (#RRGGBB)' : null;
+    final startError = start == null
+        ? 'Enter a valid hex color (#RRGGBB)'
+        : null;
     final endError = end == null ? 'Enter a valid hex color (#RRGGBB)' : null;
 
     if (start == null || end == null) {
@@ -121,9 +121,9 @@ class _TopBgColorCustomizerSheetState extends State<TopBgColorCustomizerSheet> {
     }
 
     context.read<GenerateCubit>().setTopBackgroundGradient(
-          start: start,
-          end: end,
-        );
+      start: start,
+      end: end,
+    );
     _dismissAfterApply();
   }
 
@@ -233,8 +233,8 @@ class _SolidColorPanel extends StatelessWidget {
               previous.ticket.topGradientEnd != current.ticket.topGradientEnd,
           builder: (context, state) {
             final selected = state.ticket.topGradientStart;
-            final isSolid = selected.toARGB32() ==
-                state.ticket.topGradientEnd.toARGB32();
+            final isSolid =
+                selected.toARGB32() == state.ticket.topGradientEnd.toARGB32();
             return SizedBox(
               height: 44,
               child: ListView.separated(
@@ -243,8 +243,8 @@ class _SolidColorPanel extends StatelessWidget {
                 separatorBuilder: (_, _) => const SizedBox(width: 10),
                 itemBuilder: (context, index) {
                   final color = GenerateCubit.topBgColorPresets[index];
-                  final isSelected = isSolid &&
-                      color.toARGB32() == selected.toARGB32();
+                  final isSelected =
+                      isSolid && color.toARGB32() == selected.toARGB32();
                   return _ColorSwatch(
                     color: color,
                     selected: isSelected,
@@ -274,9 +274,7 @@ class _SolidColorPanel extends StatelessWidget {
               onPressed: onHexSubmitted,
               icon: const Icon(Icons.check_circle_outline),
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
           onChanged: (_) => onHexChanged(),
           onSubmitted: (_) => onHexSubmitted(),
@@ -344,16 +342,15 @@ class _GradientColorPanel extends StatelessWidget {
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 ),
-                border: Border.all(color: AppColors.secondaryText.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: AppColors.secondaryText.withValues(alpha: 0.2),
+                ),
               ),
             );
           },
         ),
         const SizedBox(height: 16),
-        FilledButton(
-          onPressed: onApply,
-          child: const Text('Apply gradient'),
-        ),
+        FilledButton(onPressed: onApply, child: const Text('Apply gradient')),
       ],
     );
   }
@@ -389,9 +386,7 @@ class _HexColorField extends StatelessWidget {
         hintText: '#RRGGBB',
         errorText: errorText,
         prefixIcon: const Icon(Icons.tag),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
       onChanged: (_) => onChanged(),
       onSubmitted: (_) => onSubmitted(),
