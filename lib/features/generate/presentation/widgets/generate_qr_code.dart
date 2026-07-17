@@ -37,8 +37,9 @@ class GenerateQrCode extends StatelessWidget {
         ),
         dataModuleStyle: QrDataModuleStyle(
           color: dataModuleStyleColor,
-          dataModuleShape:
-              isSquare ? QrDataModuleShape.square : QrDataModuleShape.circle,
+          dataModuleShape: isSquare
+              ? QrDataModuleShape.square
+              : QrDataModuleShape.circle,
         ),
       ),
     );

@@ -1,10 +1,7 @@
 part of 'generate_cubit.dart';
 
 class GenerateState extends Equatable {
-  const GenerateState({
-    required this.ticket,
-    this.message,
-  });
+  const GenerateState({required this.ticket, this.message});
 
   final Ticket ticket;
   final String? message;

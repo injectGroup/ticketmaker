@@ -28,10 +28,7 @@ class TicketPerforation extends StatelessWidget {
           const Expanded(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),
-              child: DashedDivider(
-                thickness: 2,
-                color: AppColors.primary,
-              ),
+              child: DashedDivider(thickness: 2, color: AppColors.primary),
             ),
           ),
           Container(

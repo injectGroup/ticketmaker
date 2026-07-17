@@ -2,18 +2,49 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/color_contrast.dart';
 import '../../domain/entities/ticket.dart';
 import '../bloc/generate_cubit.dart';
 import 'generate_qr_code.dart';
+import 'top_bg_color_customizer_sheet.dart';
 
 class TicketHeaderSection extends StatelessWidget {
-  const TicketHeaderSection({super.key, required this.ticket});
+  const TicketHeaderSection({
+    super.key,
+    required this.ticket,
+    required this.headerLabelController,
+  });
 
   final Ticket ticket;
+  final TextEditingController headerLabelController;
+
+  static const InputDecoration _plainFieldDecoration = InputDecoration(
+    isDense: true,
+    isCollapsed: true,
+    filled: false,
+    fillColor: Colors.transparent,
+    border: InputBorder.none,
+    enabledBorder: InputBorder.none,
+    focusedBorder: InputBorder.none,
+    disabledBorder: InputBorder.none,
+    errorBorder: InputBorder.none,
+    focusedErrorBorder: InputBorder.none,
+    contentPadding: EdgeInsets.zero,
+    hoverColor: Colors.transparent,
+  );
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cubit = context.read<GenerateCubit>();
+    final onTop = ColorContrast.onGradient(
+      ticket.topGradientStart,
+      ticket.topGradientEnd,
+    );
+    final labelStyle = theme.textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.w800,
+      color: onTop,
+    );
 
     return Container(
       width: double.infinity,
@@ -27,10 +58,26 @@ class TicketHeaderSection extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 20),
-          Text(
-            '[ MY TICKET ]',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              children: [
+                Text('[ ', style: labelStyle),
+                Expanded(
+                  child: TextField(
+                    controller: headerLabelController,
+                    textAlign: TextAlign.center,
+                    textAlignVertical: TextAlignVertical.center,
+                    minLines: 1,
+                    maxLines: 2,
+                    style: labelStyle,
+                    cursorColor: onTop,
+                    decoration: _plainFieldDecoration,
+                    onChanged: cubit.updateHeaderLabel,
+                  ),
+                ),
+                Text(' ]', style: labelStyle),
+              ],
             ),
           ),
           const SizedBox(height: 30),
@@ -65,11 +112,11 @@ class TicketHeaderSection extends StatelessWidget {
           const SizedBox(height: 20),
           Text(
             '[ ${ticket.code} ]',
-            style: theme.textTheme.bodyMedium,
+            style: theme.textTheme.bodyMedium?.copyWith(color: onTop),
           ),
           Icon(
             Icons.info_outline_rounded,
-            color: AppColors.secondaryText,
+            color: onTop.withValues(alpha: 0.7),
             size: 24,
           ),
           Align(
@@ -79,8 +126,7 @@ class TicketHeaderSection extends StatelessWidget {
               child: _IconAction(
                 icon: Icons.color_lens,
                 label: 'Bg color',
-                onPressed: () =>
-                    context.read<GenerateCubit>().cycleBackgroundColors(),
+                onPressed: () => TopBgColorCustomizerSheet.show(context),
               ),
             ),
           ),
@@ -110,9 +156,9 @@ class _ChipButton extends StatelessWidget {
           child: Center(
             child: Text(
               label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.primary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.primary),
             ),
           ),
         ),

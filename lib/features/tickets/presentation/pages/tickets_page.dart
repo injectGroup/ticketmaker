@@ -1,28 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../bloc/tickets_cubit.dart';
+import '../widgets/saved_ticket_card.dart';
 
-/// Placeholder tickets list — expands when persistence is added.
 class TicketsPage extends StatelessWidget {
   const TicketsPage({super.key});
 
   static const String routeName = 'tickets';
   static const String routePath = '/tickets';
-
-  static const _sampleTickets = [
-    (
-      title: 'Circu Du Freak',
-      subtitle: 'Vision & Sound Experience',
-      code: '1234-5678-910',
-      when: 'Sat, Jul 18 · 8:00 PM',
-    ),
-    (
-      title: 'Neon Nights',
-      subtitle: 'Live DJ Set',
-      code: '2468-1357-902',
-      when: 'Fri, Aug 1 · 10:00 PM',
-    ),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -34,65 +21,61 @@ class TicketsPage extends StatelessWidget {
         title: const Text('My Tickets'),
         automaticallyImplyLeading: false,
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: _sampleTickets.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final ticket = _sampleTickets[index];
-          return Material(
-            color: AppColors.secondaryBackground,
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {},
+      body: BlocConsumer<TicketsCubit, TicketsState>(
+        listenWhen: (previous, current) =>
+            previous.message != current.message && current.message != null,
+        listener: (context, state) {
+          final message = state.message;
+          if (message == null) return;
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(message)));
+          context.read<TicketsCubit>().clearMessage();
+        },
+        builder: (context, state) {
+          if (state.isLoading && state.tickets.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state.tickets.isEmpty) {
+            return Center(
               child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.confirmation_number_outlined,
-                        color: AppColors.primary,
-                      ),
+                    Icon(
+                      Icons.confirmation_number_outlined,
+                      size: 56,
+                      color: AppColors.secondaryText.withValues(alpha: 0.6),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(ticket.title, style: theme.textTheme.titleSmall),
-                          const SizedBox(height: 4),
-                          Text(
-                            ticket.subtitle,
-                            style: theme.textTheme.bodySmall,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            ticket.when,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: AppColors.secondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    const SizedBox(height: 16),
                     Text(
-                      ticket.code,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+                      'No saved tickets yet',
+                      style: theme.textTheme.titleMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Customize a ticket on Generate, then tap Save Ticket.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.secondaryText,
                       ),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
               ),
-            ),
+            );
+          }
+
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: state.tickets.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              return SavedTicketCard(ticket: state.tickets[index]);
+            },
           );
         },
       ),
