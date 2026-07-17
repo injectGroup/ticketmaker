@@ -1,22 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../generate/domain/entities/ticket.dart';
 import '../bloc/tickets_cubit.dart';
+import '../widgets/saved_ticket_card.dart';
 
 class TicketsPage extends StatelessWidget {
   const TicketsPage({super.key});
 
   static const String routeName = 'tickets';
   static const String routePath = '/tickets';
-
-  Future<void> _shareTicket(Ticket ticket) {
-    return SharePlus.instance.share(
-      ShareParams(text: ticket.toShareText(), subject: ticket.title),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,67 +74,7 @@ class TicketsPage extends StatelessWidget {
             itemCount: state.tickets.length,
             separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
-              final ticket = state.tickets[index];
-              return Material(
-                color: AppColors.secondaryBackground,
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.confirmation_number_outlined,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              ticket.title,
-                              style: theme.textTheme.titleSmall,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              ticket.subtitle,
-                              style: theme.textTheme.bodySmall,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${ticket.dateLabel} · ${ticket.timeLabel}',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: AppColors.secondary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              ticket.code,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: 'Share',
-                        onPressed: () => _shareTicket(ticket),
-                        icon: const Icon(Icons.share_outlined),
-                        color: AppColors.primary,
-                      ),
-                    ],
-                  ),
-                ),
-              );
+              return SavedTicketCard(ticket: state.tickets[index]);
             },
           );
         },

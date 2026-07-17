@@ -181,7 +181,20 @@
       "status": "done",
       "createdAt": "2026-07-17T17:10:00.000Z",
       "updatedAt": "2026-07-17T17:20:00.000Z"
+    },
+    {
+      "id": "task-fix-share-sheet-origin-20260717",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Fix ticket Share sheet with Share.share + origin",
+      "description": "Extracted SavedTicketCard; share icon now calls Share.share() with sharePositionOrigin from the button RenderBox so the iOS native sheet presents.",
+      "details": "lib/features/tickets/presentation/widgets/saved_ticket_card.dart",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-17T17:43:00.000Z",
+      "updatedAt": "2026-07-17T17:44:00.000Z"
     }
   ],
-  "lastSync": "2026-07-17T17:22:29.684Z"
+  "lastSync": "2026-07-17T17:44:25.750Z"
 }
