@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/color_contrast.dart';
 import '../../domain/entities/ticket.dart';
 import '../bloc/generate_cubit.dart';
 import 'generate_qr_code.dart';
@@ -36,8 +37,13 @@ class TicketHeaderSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cubit = context.read<GenerateCubit>();
+    final onTop = ColorContrast.onGradient(
+      ticket.topGradientStart,
+      ticket.topGradientEnd,
+    );
     final labelStyle = theme.textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.w800,
+      color: onTop,
     );
 
     return Container(
@@ -65,7 +71,7 @@ class TicketHeaderSection extends StatelessWidget {
                     minLines: 1,
                     maxLines: 2,
                     style: labelStyle,
-                    cursorColor: AppColors.primaryText,
+                    cursorColor: onTop,
                     decoration: _plainFieldDecoration,
                     onChanged: cubit.updateHeaderLabel,
                   ),
@@ -106,11 +112,11 @@ class TicketHeaderSection extends StatelessWidget {
           const SizedBox(height: 20),
           Text(
             '[ ${ticket.code} ]',
-            style: theme.textTheme.bodyMedium,
+            style: theme.textTheme.bodyMedium?.copyWith(color: onTop),
           ),
           Icon(
             Icons.info_outline_rounded,
-            color: AppColors.secondaryText,
+            color: onTop.withValues(alpha: 0.7),
             size: 24,
           ),
           Align(

@@ -142,7 +142,20 @@
       "status": "done",
       "createdAt": "2026-07-17T16:44:00.000Z",
       "updatedAt": "2026-07-17T16:47:00.000Z"
+    },
+    {
+      "id": "task-adaptive-text-contrast-20260717",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Adaptive ticket text color from background luminance",
+      "description": "Added ColorContrast utility and wired top/bottom ticket sections so text, cursors, and icons switch between dark and light for readable contrast on custom gradients.",
+      "details": "Files: lib/core/utils/color_contrast.dart, ticket_header_section.dart, ticket_details_section.dart.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-17T16:52:00.000Z",
+      "updatedAt": "2026-07-17T16:53:00.000Z"
     }
   ],
-  "lastSync": "2026-07-17T16:46:52.829Z"
+  "lastSync": "2026-07-17T16:53:05.961Z"
 }

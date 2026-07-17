@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/color_contrast.dart';
 import '../../domain/entities/ticket.dart';
 import '../bloc/generate_cubit.dart';
 
@@ -35,7 +36,10 @@ class TicketDetailsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final onGradient = AppColors.secondaryBackground;
+    final onGradient = ColorContrast.onGradient(
+      ticket.bottomGradientStart,
+      ticket.bottomGradientEnd,
+    );
     final cubit = context.read<GenerateCubit>();
 
     return Container(
