@@ -12,11 +12,18 @@ class SavedTicketCard extends StatelessWidget {
 
   Future<void> _share(BuildContext buttonContext) async {
     final box = buttonContext.findRenderObject() as RenderBox?;
-    final origin = box == null
-        ? null
-        : box.localToGlobal(Offset.zero) & box.size;
+    Rect origin;
+    if (box != null &&
+        box.hasSize &&
+        box.size.width > 0 &&
+        box.size.height > 0) {
+      origin = box.localToGlobal(Offset.zero) & box.size;
+    } else {
+      final size = MediaQuery.sizeOf(buttonContext);
+      origin = Rect.fromLTWH(size.width / 2 - 1, size.height / 2 - 1, 2, 2);
+    }
 
-    // share_plus requires sharePositionOrigin on iOS/iPadOS for the sheet
+    // share_plus requires a non-zero sharePositionOrigin on iOS for the sheet
     // to present reliably from the tapped control.
     // ignore: deprecated_member_use
     await Share.share(
