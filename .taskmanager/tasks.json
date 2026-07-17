@@ -207,7 +207,20 @@
       "status": "done",
       "createdAt": "2026-07-17T17:45:00.000Z",
       "updatedAt": "2026-07-17T17:46:00.000Z"
+    },
+    {
+      "id": "task-reset-generate-after-save-20260717",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Reset Generate form to defaults after Save Ticket",
+      "description": "Added GenerateCubit.resetToDefault(); after successful save, emit default ticket and sync header/title/subtitle controllers.",
+      "details": "generate_cubit.dart, generate_page.dart",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-17T17:52:00.000Z",
+      "updatedAt": "2026-07-17T17:53:00.000Z"
     }
   ],
-  "lastSync": "2026-07-17T17:46:02.822Z"
+  "lastSync": "2026-07-17T17:53:08.277Z"
 }

@@ -57,8 +57,14 @@ class _GenerateViewState extends State<_GenerateView> {
     if (_isSaving) return;
     setState(() => _isSaving = true);
     try {
-      final ticket = context.read<GenerateCubit>().state.ticket;
-      await context.read<TicketsCubit>().saveTicket(ticket);
+      final generateCubit = context.read<GenerateCubit>();
+      await context.read<TicketsCubit>().saveTicket(generateCubit.state.ticket);
+      if (!mounted) return;
+      generateCubit.resetToDefault();
+      final defaults = generateCubit.state.ticket;
+      _headerLabelController.text = defaults.headerLabel;
+      _titleController.text = defaults.title;
+      _subtitleController.text = defaults.subtitle;
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -109,23 +115,8 @@ class _GenerateViewState extends State<_GenerateView> {
             child: ColoredBox(
               color: AppColors.secondaryBackground,
               child: BlocBuilder<GenerateCubit, GenerateState>(
-                buildWhen: (previous, current) {
-                  final p = previous.ticket;
-                  final c = current.ticket;
-                  return p.code != c.code ||
-                      p.qrData != c.qrData ||
-                      p.imagePath != c.imagePath ||
-                      p.eyeColor != c.eyeColor ||
-                      p.dataModuleColor != c.dataModuleColor ||
-                      p.isSquare != c.isSquare ||
-                      p.topGradientStart != c.topGradientStart ||
-                      p.topGradientEnd != c.topGradientEnd ||
-                      p.bottomGradientStart != c.bottomGradientStart ||
-                      p.bottomGradientEnd != c.bottomGradientEnd ||
-                      p.dateLabel != c.dateLabel ||
-                      p.timeLabel != c.timeLabel ||
-                      p.eventAt != c.eventAt;
-                },
+                buildWhen: (previous, current) =>
+                    previous.ticket != current.ticket,
                 builder: (context, state) {
                   final ticket = state.ticket;
                   final bottomInset = MediaQuery.viewInsetsOf(context).bottom;

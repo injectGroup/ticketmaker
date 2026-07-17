@@ -252,6 +252,11 @@ class GenerateCubit extends Cubit<GenerateState> {
     }
   }
 
+  /// Restores the editor to the initial default ticket configuration.
+  void resetToDefault() {
+    emit(GenerateState(ticket: _defaultTicket));
+  }
+
   String _four() => (_random.nextInt(9000) + 1000).toString();
   String _three() => (_random.nextInt(900) + 100).toString();
 }
