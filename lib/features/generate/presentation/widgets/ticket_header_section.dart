@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/ticket.dart';
 import '../bloc/generate_cubit.dart';
 import 'generate_qr_code.dart';
+import 'top_bg_color_customizer_sheet.dart';
 
 class TicketHeaderSection extends StatelessWidget {
   const TicketHeaderSection({super.key, required this.ticket});
@@ -79,8 +80,7 @@ class TicketHeaderSection extends StatelessWidget {
               child: _IconAction(
                 icon: Icons.color_lens,
                 label: 'Bg color',
-                onPressed: () =>
-                    context.read<GenerateCubit>().cycleBackgroundColors(),
+                onPressed: () => TopBgColorCustomizerSheet.show(context),
               ),
             ),
           ),

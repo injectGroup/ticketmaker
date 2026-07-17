@@ -74,6 +74,76 @@ class GenerateCubit extends Cubit<GenerateState> {
     );
   }
 
+  /// Solid / gradient presets shown in the top background customizer sheet.
+  static const List<Color> topBgColorPresets = [
+    AppColors.primary,
+    AppColors.secondary,
+    AppColors.error,
+    AppColors.warning,
+    Color(0xFF1A1A2E),
+    Color(0xFFE94560),
+    Color(0xFF0F3460),
+    Color(0xFF16C79A),
+    Color(0xFF6A0572),
+    Color(0xFFFFB703),
+    Color(0xFF14181B),
+    Color(0xFFFFFFFF),
+  ];
+
+  /// Accepts `#RRGGBB` or `RRGGBB` (case-insensitive).
+  static Color? tryParseHexColor(String raw) {
+    final trimmed = raw.trim();
+    final match = RegExp(r'^#?([A-Fa-f0-9]{6})$').firstMatch(trimmed);
+    if (match == null) return null;
+    final value = int.parse(match.group(1)!, radix: 16);
+    return Color(0xFF000000 | value);
+  }
+
+  void setTopBackgroundGradient({
+    required Color start,
+    required Color end,
+  }) {
+    final ticket = state.ticket;
+    if (ticket.topGradientStart.toARGB32() == start.toARGB32() &&
+        ticket.topGradientEnd.toARGB32() == end.toARGB32()) {
+      return;
+    }
+    emit(
+      state.copyWith(
+        ticket: ticket.copyWith(
+          topGradientStart: start,
+          topGradientEnd: end,
+        ),
+      ),
+    );
+  }
+
+  /// Sets both top gradient stops to the same solid color.
+  void applyTopBackgroundSolid(Color color) {
+    setTopBackgroundGradient(start: color, end: color);
+  }
+
+  /// Parses `#RRGGBB` and applies a solid top background. Returns false if invalid.
+  bool applyTopBackgroundSolidHex(String raw) {
+    final color = tryParseHexColor(raw);
+    if (color == null) return false;
+    applyTopBackgroundSolid(color);
+    return true;
+  }
+
+  /// Parses two hex colors into topGradientStart / topGradientEnd.
+  /// Returns false if either value is invalid.
+  bool applyTopBackgroundGradientHex({
+    required String startRaw,
+    required String endRaw,
+  }) {
+    final start = tryParseHexColor(startRaw);
+    final end = tryParseHexColor(endRaw);
+    if (start == null || end == null) return false;
+    setTopBackgroundGradient(start: start, end: end);
+    return true;
+  }
+
   void cycleBackgroundColors() {
     final current = (
       state.ticket.topGradientStart,

@@ -90,7 +90,33 @@
       "status": "done",
       "createdAt": "2026-07-16T13:47:10.000Z",
       "updatedAt": "2026-07-16T13:47:18.000Z"
+    },
+    {
+      "id": "task-branch-feature-top-bg-gradient-20260717",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Create feature/top-bg-gradient branch",
+      "description": "Saved outstanding TaskManager tracking, updated main from origin, and created local branch feature/top-bg-gradient for top ticket background gradient work.",
+      "details": "Branched from up-to-date main.",
+      "operationalPhase": "COMPLETE",
+      "priority": "low",
+      "status": "done",
+      "createdAt": "2026-07-17T16:37:00.000Z",
+      "updatedAt": "2026-07-17T16:37:00.000Z"
+    },
+    {
+      "id": "task-top-bg-color-customizer-sheet-20260717",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Top background solid/gradient customizer sheet",
+      "description": "Replaced top Bg color cycle with a modal bottom sheet: Solid Color (presets + hex) and Gradient Color (Color A/B hex). Cubit updates topGradientStart/End; sheet dismisses after valid apply.",
+      "details": "Files: top_bg_color_customizer_sheet.dart, ticket_header_section.dart, generate_cubit.dart (applyTopBackgroundSolid/Hex, setTopBackgroundGradient, tryParseHexColor).",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-17T16:41:00.000Z",
+      "updatedAt": "2026-07-17T16:45:00.000Z"
     }
   ],
-  "lastSync": "2026-07-16T13:47:18.000Z"
+  "lastSync": "2026-07-17T16:45:00.000Z"
 }
