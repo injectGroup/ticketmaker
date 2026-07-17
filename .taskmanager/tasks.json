@@ -155,7 +155,20 @@
       "status": "done",
       "createdAt": "2026-07-17T16:52:00.000Z",
       "updatedAt": "2026-07-17T16:53:00.000Z"
+    },
+    {
+      "id": "task-2-4-bottom-half-upgrades-20260717",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Task 2.4 Bottom-Half Enhancements",
+      "description": "Branch feature/bottom-half-upgrades from main (FF Task 2.3). image_picker gallery → Ticket.imagePath + Image.file with asset fallback; date then time pickers; bottom BoxDecoration uses shared topGradient colors; cubit syncs both halves.",
+      "details": "Also added placeholder asset, iOS/macOS photo usage strings and macOS photo entitlements.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-17T16:55:00.000Z",
+      "updatedAt": "2026-07-17T16:59:00.000Z"
     }
   ],
-  "lastSync": "2026-07-17T16:53:05.961Z"
+  "lastSync": "2026-07-17T16:59:15.957Z"
 }

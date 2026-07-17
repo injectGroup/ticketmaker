@@ -81,7 +81,7 @@ class _GenerateViewState extends State<_GenerateView> {
                   final c = current.ticket;
                   return p.code != c.code ||
                       p.qrData != c.qrData ||
-                      p.imageUrl != c.imageUrl ||
+                      p.imagePath != c.imagePath ||
                       p.eyeColor != c.eyeColor ||
                       p.dataModuleColor != c.dataModuleColor ||
                       p.isSquare != c.isSquare ||
@@ -90,7 +90,8 @@ class _GenerateViewState extends State<_GenerateView> {
                       p.bottomGradientStart != c.bottomGradientStart ||
                       p.bottomGradientEnd != c.bottomGradientEnd ||
                       p.dateLabel != c.dateLabel ||
-                      p.timeLabel != c.timeLabel;
+                      p.timeLabel != c.timeLabel ||
+                      p.eventAt != c.eventAt;
                 },
                 builder: (context, state) {
                   final ticket = state.ticket;

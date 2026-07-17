@@ -7,7 +7,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Quick Ticket Maker'), findsOneWidget);
-    expect(find.text('[ MY TICKET ]'), findsOneWidget);
+    expect(find.text('My Ticket'), findsOneWidget);
+    expect(find.text('Circu Du Freak'), findsOneWidget);
     expect(find.text('Generate Qr Code'), findsOneWidget);
   });
 }

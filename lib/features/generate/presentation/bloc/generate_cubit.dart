@@ -16,23 +16,26 @@ class GenerateCubit extends Cubit<GenerateState> {
 
   final Random _random;
 
+  static final DateTime _defaultEventAt = DateTime(2026, 7, 18, 20, 0);
+
   static final Ticket _defaultTicket = Ticket(
     id: 'default',
     headerLabel: 'My Ticket',
     title: 'Circu Du Freak',
     subtitle: 'Vision & Sound Experience',
-    dateLabel: 'Sat, Jul 18',
-    timeLabel: '8:00 PM',
+    dateLabel: formatDateLabel(_defaultEventAt),
+    timeLabel: formatTimeLabel(_defaultEventAt),
+    eventAt: _defaultEventAt,
     code: '1234-5678-910',
     qrData: 'https://www.linkedin.com/in/abdulkadirmohammed/',
-    imageUrl: 'https://picsum.photos/seed/695/600',
+    imagePath: '',
     eyeColor: AppColors.error,
     dataModuleColor: AppColors.warning,
     isSquare: false,
     topGradientStart: const Color(0x354B39EF),
     topGradientEnd: const Color(0x3A39D2C0),
-    bottomGradientStart: const Color(0x8039D2C0),
-    bottomGradientEnd: const Color(0x804B39EF),
+    bottomGradientStart: const Color(0x354B39EF),
+    bottomGradientEnd: const Color(0x3A39D2C0),
   );
 
   static const List<(Color, Color)> _qrPalettes = [
@@ -50,6 +53,42 @@ class GenerateCubit extends Cubit<GenerateState> {
     (Color(0x55EE8B60), Color(0x554B39EF)),
     (Color(0x5514181B), Color(0x5539D2C0)),
   ];
+
+  static const List<String> _weekdays = [
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+    'Sun',
+  ];
+
+  static const List<String> _months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  static String formatDateLabel(DateTime date) {
+    return '${_weekdays[date.weekday - 1]}, ${_months[date.month - 1]} ${date.day}';
+  }
+
+  static String formatTimeLabel(DateTime date) {
+    final hour12 = date.hour % 12 == 0 ? 12 : date.hour % 12;
+    final minute = date.minute.toString().padLeft(2, '0');
+    final period = date.hour < 12 ? 'AM' : 'PM';
+    return '$hour12:$minute $period';
+  }
 
   void cycleQrColors() {
     final current = (state.ticket.eyeColor, state.ticket.dataModuleColor);
@@ -75,7 +114,7 @@ class GenerateCubit extends Cubit<GenerateState> {
     );
   }
 
-  /// Solid / gradient presets shown in the top background customizer sheet.
+  /// Solid / gradient presets shown in the background customizer sheet.
   static const List<Color> topBgColorPresets = [
     AppColors.primary,
     AppColors.secondary,
@@ -100,13 +139,16 @@ class GenerateCubit extends Cubit<GenerateState> {
     return Color(0xFF000000 | value);
   }
 
+  /// Applies the same solid/gradient to both ticket halves.
   void setTopBackgroundGradient({
     required Color start,
     required Color end,
   }) {
     final ticket = state.ticket;
     if (ticket.topGradientStart.toARGB32() == start.toARGB32() &&
-        ticket.topGradientEnd.toARGB32() == end.toARGB32()) {
+        ticket.topGradientEnd.toARGB32() == end.toARGB32() &&
+        ticket.bottomGradientStart.toARGB32() == start.toARGB32() &&
+        ticket.bottomGradientEnd.toARGB32() == end.toARGB32()) {
       return;
     }
     emit(
@@ -114,17 +156,19 @@ class GenerateCubit extends Cubit<GenerateState> {
         ticket: ticket.copyWith(
           topGradientStart: start,
           topGradientEnd: end,
+          bottomGradientStart: start,
+          bottomGradientEnd: end,
         ),
       ),
     );
   }
 
-  /// Sets both top gradient stops to the same solid color.
+  /// Sets both halves to the same solid color.
   void applyTopBackgroundSolid(Color color) {
     setTopBackgroundGradient(start: color, end: color);
   }
 
-  /// Parses `#RRGGBB` and applies a solid top background. Returns false if invalid.
+  /// Parses `#RRGGBB` and applies a solid background. Returns false if invalid.
   bool applyTopBackgroundSolidHex(String raw) {
     final color = tryParseHexColor(raw);
     if (color == null) return false;
@@ -132,7 +176,7 @@ class GenerateCubit extends Cubit<GenerateState> {
     return true;
   }
 
-  /// Parses two hex colors into topGradientStart / topGradientEnd.
+  /// Parses two hex colors into shared top/bottom gradient stops.
   /// Returns false if either value is invalid.
   bool applyTopBackgroundGradientHex({
     required String startRaw,
@@ -154,32 +198,33 @@ class GenerateCubit extends Cubit<GenerateState> {
       (p) => p.$1 == current.$1 && p.$2 == current.$2,
     );
     final next = _bgPalettes[(index + 1) % _bgPalettes.length];
+    setTopBackgroundGradient(start: next.$1, end: next.$2);
+  }
+
+  void setImagePath(String path) {
+    if (path == state.ticket.imagePath) return;
     emit(
       state.copyWith(
-        ticket: state.ticket.copyWith(
-          topGradientStart: next.$1,
-          topGradientEnd: next.$2,
-          bottomGradientStart: next.$2.withValues(alpha: 0.5),
-          bottomGradientEnd: next.$1.withValues(alpha: 0.5),
-        ),
+        ticket: state.ticket.copyWith(imagePath: path),
       ),
     );
   }
 
-  void refreshImage() {
-    final seed = _random.nextInt(10000);
+  void setEventDateTime(DateTime eventAt) {
+    if (eventAt == state.ticket.eventAt) return;
     emit(
       state.copyWith(
         ticket: state.ticket.copyWith(
-          imageUrl: 'https://picsum.photos/seed/$seed/600',
+          eventAt: eventAt,
+          dateLabel: formatDateLabel(eventAt),
+          timeLabel: formatTimeLabel(eventAt),
         ),
       ),
     );
   }
 
   void generateTicketCode() {
-    final code =
-        '${_four()}-${_four()}-${_three()}';
+    final code = '${_four()}-${_four()}-${_three()}';
     emit(
       state.copyWith(
         ticket: state.ticket.copyWith(

@@ -9,9 +9,10 @@ class Ticket extends Equatable {
     required this.subtitle,
     required this.dateLabel,
     required this.timeLabel,
+    required this.eventAt,
     required this.code,
     required this.qrData,
-    required this.imageUrl,
+    required this.imagePath,
     required this.eyeColor,
     required this.dataModuleColor,
     required this.isSquare,
@@ -27,9 +28,12 @@ class Ticket extends Equatable {
   final String subtitle;
   final String dateLabel;
   final String timeLabel;
+  final DateTime eventAt;
   final String code;
   final String qrData;
-  final String imageUrl;
+
+  /// Local gallery file path. Empty → show bundled placeholder asset.
+  final String imagePath;
   final Color eyeColor;
   final Color dataModuleColor;
   final bool isSquare;
@@ -45,9 +49,10 @@ class Ticket extends Equatable {
     String? subtitle,
     String? dateLabel,
     String? timeLabel,
+    DateTime? eventAt,
     String? code,
     String? qrData,
-    String? imageUrl,
+    String? imagePath,
     Color? eyeColor,
     Color? dataModuleColor,
     bool? isSquare,
@@ -63,9 +68,10 @@ class Ticket extends Equatable {
       subtitle: subtitle ?? this.subtitle,
       dateLabel: dateLabel ?? this.dateLabel,
       timeLabel: timeLabel ?? this.timeLabel,
+      eventAt: eventAt ?? this.eventAt,
       code: code ?? this.code,
       qrData: qrData ?? this.qrData,
-      imageUrl: imageUrl ?? this.imageUrl,
+      imagePath: imagePath ?? this.imagePath,
       eyeColor: eyeColor ?? this.eyeColor,
       dataModuleColor: dataModuleColor ?? this.dataModuleColor,
       isSquare: isSquare ?? this.isSquare,
@@ -84,9 +90,10 @@ class Ticket extends Equatable {
         subtitle,
         dateLabel,
         timeLabel,
+        eventAt,
         code,
         qrData,
-        imageUrl,
+        imagePath,
         eyeColor,
         dataModuleColor,
         isSquare,
