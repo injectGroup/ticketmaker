@@ -8,13 +8,37 @@ import 'generate_qr_code.dart';
 import 'top_bg_color_customizer_sheet.dart';
 
 class TicketHeaderSection extends StatelessWidget {
-  const TicketHeaderSection({super.key, required this.ticket});
+  const TicketHeaderSection({
+    super.key,
+    required this.ticket,
+    required this.headerLabelController,
+  });
 
   final Ticket ticket;
+  final TextEditingController headerLabelController;
+
+  static const InputDecoration _plainFieldDecoration = InputDecoration(
+    isDense: true,
+    isCollapsed: true,
+    filled: false,
+    fillColor: Colors.transparent,
+    border: InputBorder.none,
+    enabledBorder: InputBorder.none,
+    focusedBorder: InputBorder.none,
+    disabledBorder: InputBorder.none,
+    errorBorder: InputBorder.none,
+    focusedErrorBorder: InputBorder.none,
+    contentPadding: EdgeInsets.zero,
+    hoverColor: Colors.transparent,
+  );
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cubit = context.read<GenerateCubit>();
+    final labelStyle = theme.textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.w800,
+    );
 
     return Container(
       width: double.infinity,
@@ -28,10 +52,26 @@ class TicketHeaderSection extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 20),
-          Text(
-            '[ MY TICKET ]',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              children: [
+                Text('[ ', style: labelStyle),
+                Expanded(
+                  child: TextField(
+                    controller: headerLabelController,
+                    textAlign: TextAlign.center,
+                    textAlignVertical: TextAlignVertical.center,
+                    minLines: 1,
+                    maxLines: 2,
+                    style: labelStyle,
+                    cursorColor: AppColors.primaryText,
+                    decoration: _plainFieldDecoration,
+                    onChanged: cubit.updateHeaderLabel,
+                  ),
+                ),
+                Text(' ]', style: labelStyle),
+              ],
             ),
           ),
           const SizedBox(height: 30),

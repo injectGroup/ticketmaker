@@ -18,6 +18,7 @@ class GenerateCubit extends Cubit<GenerateState> {
 
   static final Ticket _defaultTicket = Ticket(
     id: 'default',
+    headerLabel: 'My Ticket',
     title: 'Circu Du Freak',
     subtitle: 'Vision & Sound Experience',
     dateLabel: 'Sat, Jul 18',
@@ -188,6 +189,25 @@ class GenerateCubit extends Cubit<GenerateState> {
         message: 'QR code generated',
       ),
     );
+  }
+
+  void updateHeaderLabel(String headerLabel) {
+    if (headerLabel == state.ticket.headerLabel) return;
+    emit(
+      state.copyWith(
+        ticket: state.ticket.copyWith(headerLabel: headerLabel),
+      ),
+    );
+  }
+
+  void updateTitle(String title) {
+    if (title == state.ticket.title) return;
+    emit(state.copyWith(ticket: state.ticket.copyWith(title: title)));
+  }
+
+  void updateSubtitle(String subtitle) {
+    if (subtitle == state.ticket.subtitle) return;
+    emit(state.copyWith(ticket: state.ticket.copyWith(subtitle: subtitle)));
   }
 
   void clearMessage() {

@@ -6,14 +6,37 @@ import '../../domain/entities/ticket.dart';
 import '../bloc/generate_cubit.dart';
 
 class TicketDetailsSection extends StatelessWidget {
-  const TicketDetailsSection({super.key, required this.ticket});
+  const TicketDetailsSection({
+    super.key,
+    required this.ticket,
+    required this.titleController,
+    required this.subtitleController,
+  });
 
   final Ticket ticket;
+  final TextEditingController titleController;
+  final TextEditingController subtitleController;
+
+  static const InputDecoration _plainFieldDecoration = InputDecoration(
+    isDense: true,
+    isCollapsed: true,
+    filled: false,
+    fillColor: Colors.transparent,
+    border: InputBorder.none,
+    enabledBorder: InputBorder.none,
+    focusedBorder: InputBorder.none,
+    disabledBorder: InputBorder.none,
+    errorBorder: InputBorder.none,
+    focusedErrorBorder: InputBorder.none,
+    contentPadding: EdgeInsets.zero,
+    hoverColor: Colors.transparent,
+  );
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final onGradient = AppColors.secondaryBackground;
+    final cubit = context.read<GenerateCubit>();
 
     return Container(
       width: double.infinity,
@@ -27,9 +50,40 @@ class TicketDetailsSection extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 30),
-          Text(
-            '[ ${ticket.title} ]',
-            style: theme.textTheme.headlineLarge?.copyWith(color: onGradient),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  '[ ',
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    color: onGradient,
+                  ),
+                ),
+                Expanded(
+                  child: TextField(
+                    controller: titleController,
+                    textAlign: TextAlign.center,
+                    textAlignVertical: TextAlignVertical.center,
+                    minLines: 1,
+                    maxLines: 3,
+                    style: theme.textTheme.headlineLarge?.copyWith(
+                      color: onGradient,
+                    ),
+                    cursorColor: onGradient,
+                    decoration: _plainFieldDecoration,
+                    onChanged: cubit.updateTitle,
+                  ),
+                ),
+                Text(
+                  ' ]',
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    color: onGradient,
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
           Stack(
@@ -69,39 +123,64 @@ class TicketDetailsSection extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(30, 30, 30, 16),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(Icons.threed_rotation, color: onGradient, size: 24),
                 const SizedBox(width: 20),
+                Text(
+                  '[ ',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: onGradient,
+                  ),
+                ),
                 Expanded(
-                  child: Text(
-                    '[ ${ticket.subtitle} ]',
+                  child: TextField(
+                    controller: subtitleController,
+                    textAlignVertical: TextAlignVertical.center,
+                    minLines: 1,
+                    maxLines: 4,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: onGradient,
                     ),
+                    cursorColor: onGradient,
+                    decoration: _plainFieldDecoration,
+                    onChanged: cubit.updateSubtitle,
+                  ),
+                ),
+                Text(
+                  ' ]',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: onGradient,
                   ),
                 ),
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(left: 30),
+            padding: const EdgeInsets.only(left: 30, right: 16),
             child: Row(
               children: [
                 Icon(Icons.date_range_sharp, color: onGradient, size: 24),
                 const SizedBox(width: 16),
-                Text(
-                  '[ ${ticket.dateLabel} ]',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: onGradient,
+                Flexible(
+                  child: Text(
+                    '[ ${ticket.dateLabel} ]',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: onGradient,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(width: 30),
+                const SizedBox(width: 16),
                 Icon(Icons.access_time_rounded, color: onGradient, size: 24),
-                const SizedBox(width: 20),
-                Text(
-                  '[ ${ticket.timeLabel} ]',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: onGradient,
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Text(
+                    '[ ${ticket.timeLabel} ]',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: onGradient,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

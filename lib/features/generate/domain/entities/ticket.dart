@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 class Ticket extends Equatable {
   const Ticket({
     required this.id,
+    required this.headerLabel,
     required this.title,
     required this.subtitle,
     required this.dateLabel,
@@ -21,6 +22,7 @@ class Ticket extends Equatable {
   });
 
   final String id;
+  final String headerLabel;
   final String title;
   final String subtitle;
   final String dateLabel;
@@ -38,6 +40,7 @@ class Ticket extends Equatable {
 
   Ticket copyWith({
     String? id,
+    String? headerLabel,
     String? title,
     String? subtitle,
     String? dateLabel,
@@ -55,6 +58,7 @@ class Ticket extends Equatable {
   }) {
     return Ticket(
       id: id ?? this.id,
+      headerLabel: headerLabel ?? this.headerLabel,
       title: title ?? this.title,
       subtitle: subtitle ?? this.subtitle,
       dateLabel: dateLabel ?? this.dateLabel,
@@ -75,6 +79,7 @@ class Ticket extends Equatable {
   @override
   List<Object?> get props => [
         id,
+        headerLabel,
         title,
         subtitle,
         dateLabel,

@@ -22,8 +22,34 @@ class GeneratePage extends StatelessWidget {
   }
 }
 
-class _GenerateView extends StatelessWidget {
+class _GenerateView extends StatefulWidget {
   const _GenerateView();
+
+  @override
+  State<_GenerateView> createState() => _GenerateViewState();
+}
+
+class _GenerateViewState extends State<_GenerateView> {
+  late final TextEditingController _headerLabelController;
+  late final TextEditingController _titleController;
+  late final TextEditingController _subtitleController;
+
+  @override
+  void initState() {
+    super.initState();
+    final ticket = context.read<GenerateCubit>().state.ticket;
+    _headerLabelController = TextEditingController(text: ticket.headerLabel);
+    _titleController = TextEditingController(text: ticket.title);
+    _subtitleController = TextEditingController(text: ticket.subtitle);
+  }
+
+  @override
+  void dispose() {
+    _headerLabelController.dispose();
+    _titleController.dispose();
+    _subtitleController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,14 +76,41 @@ class _GenerateView extends StatelessWidget {
             child: ColoredBox(
               color: AppColors.secondaryBackground,
               child: BlocBuilder<GenerateCubit, GenerateState>(
+                buildWhen: (previous, current) {
+                  final p = previous.ticket;
+                  final c = current.ticket;
+                  return p.code != c.code ||
+                      p.qrData != c.qrData ||
+                      p.imageUrl != c.imageUrl ||
+                      p.eyeColor != c.eyeColor ||
+                      p.dataModuleColor != c.dataModuleColor ||
+                      p.isSquare != c.isSquare ||
+                      p.topGradientStart != c.topGradientStart ||
+                      p.topGradientEnd != c.topGradientEnd ||
+                      p.bottomGradientStart != c.bottomGradientStart ||
+                      p.bottomGradientEnd != c.bottomGradientEnd ||
+                      p.dateLabel != c.dateLabel ||
+                      p.timeLabel != c.timeLabel;
+                },
                 builder: (context, state) {
                   final ticket = state.ticket;
+                  final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
                   return SingleChildScrollView(
+                    padding: EdgeInsets.only(bottom: bottomInset),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     child: Column(
                       children: [
-                        TicketHeaderSection(ticket: ticket),
+                        TicketHeaderSection(
+                          ticket: ticket,
+                          headerLabelController: _headerLabelController,
+                        ),
                         const TicketPerforation(),
-                        TicketDetailsSection(ticket: ticket),
+                        TicketDetailsSection(
+                          ticket: ticket,
+                          titleController: _titleController,
+                          subtitleController: _subtitleController,
+                        ),
                       ],
                     ),
                   );

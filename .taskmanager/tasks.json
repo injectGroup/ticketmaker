@@ -116,7 +116,20 @@
       "status": "done",
       "createdAt": "2026-07-17T16:41:00.000Z",
       "updatedAt": "2026-07-17T16:45:00.000Z"
+    },
+    {
+      "id": "task-editable-ticket-header-title-subtitle-20260717",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Make My Ticket, title, and subtitle editable",
+      "description": "Added Ticket.headerLabel and borderless TextFields for My Ticket, Circu Du Freak, and Vision & Sound Experience; wired to GenerateCubit with transparent decorations and keyboard inset padding.",
+      "details": "Files: ticket.dart (headerLabel), generate_cubit.dart (updateHeaderLabel/updateTitle/updateSubtitle), generate_page.dart (controllers), ticket_header_section.dart, ticket_details_section.dart.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-17T16:40:00.000Z",
+      "updatedAt": "2026-07-17T16:42:00.000Z"
     }
   ],
-  "lastSync": "2026-07-17T15:42:37.869Z"
+  "lastSync": "2026-07-17T16:41:38.908Z"
 }
