@@ -233,7 +233,33 @@
       "status": "done",
       "createdAt": "2026-07-17T18:30:00.000Z",
       "updatedAt": "2026-07-17T18:30:00.000Z"
+    },
+    {
+      "id": "task-hide-brackets-while-editing-20260720",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Hide ticket field brackets while editing",
+      "description": "Added BracketedTicketField; header/title/subtitle show [ ] when idle and hide them on focus.",
+      "details": "bracketed_ticket_field.dart; wired in ticket_header_section.dart and ticket_details_section.dart. Date/time and ticket code keep display brackets.",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-20T11:10:00.000Z",
+      "updatedAt": "2026-07-20T11:12:00.000Z"
+    },
+    {
+      "id": "task-sticky-brackets-new-ticket-20260720",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Keep brackets hidden until new ticket session",
+      "description": "Brackets dismiss on first focus and stay hidden until Save Ticket resets the form (_ticketSession / resetToken).",
+      "details": "BracketedTicketField sticky _showBrackets; generate_page bumps session after resetToDefault.",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-20T11:15:00.000Z",
+      "updatedAt": "2026-07-20T11:16:00.000Z"
     }
   ],
-  "lastSync": "2026-07-17T18:30:20.149Z"
+  "lastSync": "2026-07-20T11:17:20.725Z"
 }

@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/color_contrast.dart';
 import '../../domain/entities/ticket.dart';
 import '../bloc/generate_cubit.dart';
+import 'bracketed_ticket_field.dart';
 import 'generate_qr_code.dart';
 import 'top_bg_color_customizer_sheet.dart';
 
@@ -13,25 +14,12 @@ class TicketHeaderSection extends StatelessWidget {
     super.key,
     required this.ticket,
     required this.headerLabelController,
+    this.bracketResetToken,
   });
 
   final Ticket ticket;
   final TextEditingController headerLabelController;
-
-  static const InputDecoration _plainFieldDecoration = InputDecoration(
-    isDense: true,
-    isCollapsed: true,
-    filled: false,
-    fillColor: Colors.transparent,
-    border: InputBorder.none,
-    enabledBorder: InputBorder.none,
-    focusedBorder: InputBorder.none,
-    disabledBorder: InputBorder.none,
-    errorBorder: InputBorder.none,
-    focusedErrorBorder: InputBorder.none,
-    contentPadding: EdgeInsets.zero,
-    hoverColor: Colors.transparent,
-  );
+  final Object? bracketResetToken;
 
   @override
   Widget build(BuildContext context) {
@@ -60,24 +48,15 @@ class TicketHeaderSection extends StatelessWidget {
           const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Row(
-              children: [
-                Text('[ ', style: labelStyle),
-                Expanded(
-                  child: TextField(
-                    controller: headerLabelController,
-                    textAlign: TextAlign.center,
-                    textAlignVertical: TextAlignVertical.center,
-                    minLines: 1,
-                    maxLines: 2,
-                    style: labelStyle,
-                    cursorColor: onTop,
-                    decoration: _plainFieldDecoration,
-                    onChanged: cubit.updateHeaderLabel,
-                  ),
-                ),
-                Text(' ]', style: labelStyle),
-              ],
+            child: BracketedTicketField(
+              controller: headerLabelController,
+              resetToken: bracketResetToken,
+              textAlign: TextAlign.center,
+              minLines: 1,
+              maxLines: 2,
+              style: labelStyle,
+              cursorColor: onTop,
+              onChanged: cubit.updateHeaderLabel,
             ),
           ),
           const SizedBox(height: 30),
