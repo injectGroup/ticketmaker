@@ -17,11 +17,13 @@ class TicketDetailsSection extends StatelessWidget {
     required this.ticket,
     required this.titleController,
     required this.subtitleController,
+    this.bracketResetToken,
   });
 
   final Ticket ticket;
   final TextEditingController titleController;
   final TextEditingController subtitleController;
+  final Object? bracketResetToken;
 
   static const String placeholderAsset =
       'assets/images/ticket_event_placeholder.png';
@@ -119,6 +121,7 @@ class TicketDetailsSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: BracketedTicketField(
               controller: titleController,
+              resetToken: bracketResetToken,
               textAlign: TextAlign.center,
               minLines: 1,
               maxLines: 3,
@@ -156,6 +159,7 @@ class TicketDetailsSection extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(30, 30, 30, 16),
             child: BracketedTicketField(
               controller: subtitleController,
+              resetToken: bracketResetToken,
               minLines: 1,
               maxLines: 4,
               style: theme.textTheme.bodyMedium?.copyWith(

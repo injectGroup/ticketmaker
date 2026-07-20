@@ -14,10 +14,12 @@ class TicketHeaderSection extends StatelessWidget {
     super.key,
     required this.ticket,
     required this.headerLabelController,
+    this.bracketResetToken,
   });
 
   final Ticket ticket;
   final TextEditingController headerLabelController;
+  final Object? bracketResetToken;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +50,7 @@ class TicketHeaderSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: BracketedTicketField(
               controller: headerLabelController,
+              resetToken: bracketResetToken,
               textAlign: TextAlign.center,
               minLines: 1,
               maxLines: 2,

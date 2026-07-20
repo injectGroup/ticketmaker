@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
-/// Ticket text field that shows decorative `[ ]` when idle and hides them
-/// while the field is focused for editing.
+/// Ticket text field that shows decorative `[ ]` until the user starts editing.
+/// Brackets stay hidden after that until [resetToken] changes (new ticket).
 class BracketedTicketField extends StatefulWidget {
   const BracketedTicketField({
     super.key,
     required this.controller,
     required this.style,
     required this.onChanged,
+    this.resetToken,
     this.textAlign = TextAlign.start,
     this.minLines = 1,
     this.maxLines = 1,
@@ -18,6 +19,10 @@ class BracketedTicketField extends StatefulWidget {
   final TextEditingController controller;
   final TextStyle? style;
   final ValueChanged<String> onChanged;
+
+  /// When this value changes (e.g. after Save Ticket), brackets show again.
+  final Object? resetToken;
+
   final TextAlign textAlign;
   final int minLines;
   final int maxLines;
@@ -45,7 +50,7 @@ class BracketedTicketField extends StatefulWidget {
 
 class _BracketedTicketFieldState extends State<BracketedTicketField> {
   late final FocusNode _focusNode;
-  bool _editing = false;
+  bool _showBrackets = true;
 
   @override
   void initState() {
@@ -54,10 +59,17 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
     _focusNode.addListener(_onFocusChange);
   }
 
+  @override
+  void didUpdateWidget(covariant BracketedTicketField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.resetToken != widget.resetToken) {
+      setState(() => _showBrackets = true);
+    }
+  }
+
   void _onFocusChange() {
-    final focused = _focusNode.hasFocus;
-    if (focused == _editing) return;
-    setState(() => _editing = focused);
+    if (!_focusNode.hasFocus || !_showBrackets) return;
+    setState(() => _showBrackets = false);
   }
 
   @override
@@ -76,7 +88,7 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
           widget.leading!,
           const SizedBox(width: 20),
         ],
-        if (!_editing) Text('[ ', style: widget.style),
+        if (_showBrackets) Text('[ ', style: widget.style),
         Expanded(
           child: TextField(
             controller: widget.controller,
@@ -91,7 +103,7 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
             onChanged: widget.onChanged,
           ),
         ),
-        if (!_editing) Text(' ]', style: widget.style),
+        if (_showBrackets) Text(' ]', style: widget.style),
       ],
     );
   }

@@ -36,6 +36,9 @@ class _GenerateViewState extends State<_GenerateView> {
   late final TextEditingController _subtitleController;
   bool _isSaving = false;
 
+  /// Bumped after Save Ticket so bracket hints return for the next ticket.
+  int _ticketSession = 0;
+
   @override
   void initState() {
     super.initState();
@@ -65,6 +68,7 @@ class _GenerateViewState extends State<_GenerateView> {
       _headerLabelController.text = defaults.headerLabel;
       _titleController.text = defaults.title;
       _subtitleController.text = defaults.subtitle;
+      _ticketSession++;
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -129,12 +133,14 @@ class _GenerateViewState extends State<_GenerateView> {
                         TicketHeaderSection(
                           ticket: ticket,
                           headerLabelController: _headerLabelController,
+                          bracketResetToken: _ticketSession,
                         ),
                         const TicketPerforation(),
                         TicketDetailsSection(
                           ticket: ticket,
                           titleController: _titleController,
                           subtitleController: _subtitleController,
+                          bracketResetToken: _ticketSession,
                         ),
                         const SizedBox(height: 24),
                         Padding(
