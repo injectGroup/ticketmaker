@@ -50,6 +50,10 @@ class _TopBgColorCustomizerSheetState extends State<TopBgColorCustomizerSheet> {
   String? _startHexError;
   String? _endHexError;
 
+  late Color _solidPreview;
+  late Color _startPreview;
+  late Color _endPreview;
+
   @override
   void initState() {
     super.initState();
@@ -59,6 +63,9 @@ class _TopBgColorCustomizerSheetState extends State<TopBgColorCustomizerSheet> {
     final isSolid = start.toARGB32() == end.toARGB32();
 
     _mode = isSolid ? _TopBgMode.solid : _TopBgMode.gradient;
+    _solidPreview = start;
+    _startPreview = start;
+    _endPreview = end;
     _solidHexController = TextEditingController(text: _toHex(start));
     _startHexController = TextEditingController(text: _toHex(start));
     _endHexController = TextEditingController(text: _toHex(end));
@@ -84,8 +91,26 @@ class _TopBgColorCustomizerSheetState extends State<TopBgColorCustomizerSheet> {
   }
 
   void _onSolidPresetSelected(Color color) {
+    setState(() {
+      _solidPreview = color;
+      _solidHexController.text = _toHex(color);
+      _solidHexError = null;
+    });
     context.read<GenerateCubit>().applyTopBackgroundSolid(color);
     _dismissAfterApply();
+  }
+
+  void _onSolidHexChanged(String raw) {
+    final color = GenerateCubit.tryParseHexColor(raw);
+    setState(() {
+      _solidHexError = null;
+      if (color != null) {
+        _solidPreview = color;
+      }
+    });
+    if (color != null) {
+      context.read<GenerateCubit>().applyTopBackgroundSolid(color);
+    }
   }
 
   void _submitSolidHex() {
@@ -93,12 +118,49 @@ class _TopBgColorCustomizerSheetState extends State<TopBgColorCustomizerSheet> {
       _solidHexController.text,
     );
     if (ok) {
+      final color = GenerateCubit.tryParseHexColor(_solidHexController.text)!;
+      setState(() {
+        _solidPreview = color;
+        _solidHexError = null;
+      });
       _dismissAfterApply();
       return;
     }
     setState(() {
       _solidHexError = 'Enter a valid hex color (#RRGGBB)';
     });
+  }
+
+  void _onStartHexChanged(String raw) {
+    final color = GenerateCubit.tryParseHexColor(raw);
+    setState(() {
+      _startHexError = null;
+      if (color != null) {
+        _startPreview = color;
+      }
+    });
+    _liveApplyGradientIfReady();
+  }
+
+  void _onEndHexChanged(String raw) {
+    final color = GenerateCubit.tryParseHexColor(raw);
+    setState(() {
+      _endHexError = null;
+      if (color != null) {
+        _endPreview = color;
+      }
+    });
+    _liveApplyGradientIfReady();
+  }
+
+  void _liveApplyGradientIfReady() {
+    final start = GenerateCubit.tryParseHexColor(_startHexController.text);
+    final end = GenerateCubit.tryParseHexColor(_endHexController.text);
+    if (start == null || end == null) return;
+    context.read<GenerateCubit>().setTopBackgroundGradient(
+      start: start,
+      end: end,
+    );
   }
 
   void _submitGradientHex() {
@@ -120,6 +182,12 @@ class _TopBgColorCustomizerSheetState extends State<TopBgColorCustomizerSheet> {
       return;
     }
 
+    setState(() {
+      _startPreview = start;
+      _endPreview = end;
+      _startHexError = null;
+      _endHexError = null;
+    });
     context.read<GenerateCubit>().setTopBackgroundGradient(
       start: start,
       end: end,
@@ -173,12 +241,9 @@ class _TopBgColorCustomizerSheetState extends State<TopBgColorCustomizerSheet> {
               _SolidColorPanel(
                 hexController: _solidHexController,
                 hexError: _solidHexError,
+                previewColor: _solidPreview,
                 onPresetSelected: _onSolidPresetSelected,
-                onHexChanged: () {
-                  if (_solidHexError != null) {
-                    setState(() => _solidHexError = null);
-                  }
-                },
+                onHexChanged: _onSolidHexChanged,
                 onHexSubmitted: _submitSolidHex,
               )
             else
@@ -187,16 +252,10 @@ class _TopBgColorCustomizerSheetState extends State<TopBgColorCustomizerSheet> {
                 endController: _endHexController,
                 startError: _startHexError,
                 endError: _endHexError,
-                onStartChanged: () {
-                  if (_startHexError != null) {
-                    setState(() => _startHexError = null);
-                  }
-                },
-                onEndChanged: () {
-                  if (_endHexError != null) {
-                    setState(() => _endHexError = null);
-                  }
-                },
+                startPreview: _startPreview,
+                endPreview: _endPreview,
+                onStartChanged: _onStartHexChanged,
+                onEndChanged: _onEndHexChanged,
                 onApply: _submitGradientHex,
               ),
           ],
@@ -210,6 +269,7 @@ class _SolidColorPanel extends StatelessWidget {
   const _SolidColorPanel({
     required this.hexController,
     required this.hexError,
+    required this.previewColor,
     required this.onPresetSelected,
     required this.onHexChanged,
     required this.onHexSubmitted,
@@ -217,8 +277,9 @@ class _SolidColorPanel extends StatelessWidget {
 
   final TextEditingController hexController;
   final String? hexError;
+  final Color previewColor;
   final ValueChanged<Color> onPresetSelected;
-  final VoidCallback onHexChanged;
+  final ValueChanged<String> onHexChanged;
   final VoidCallback onHexSubmitted;
 
   @override
@@ -226,35 +287,26 @@ class _SolidColorPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        BlocBuilder<GenerateCubit, GenerateState>(
-          buildWhen: (previous, current) =>
-              previous.ticket.topGradientStart !=
-                  current.ticket.topGradientStart ||
-              previous.ticket.topGradientEnd != current.ticket.topGradientEnd,
-          builder: (context, state) {
-            final selected = state.ticket.topGradientStart;
-            final isSolid =
-                selected.toARGB32() == state.ticket.topGradientEnd.toARGB32();
-            return SizedBox(
-              height: 44,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: GenerateCubit.topBgColorPresets.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 10),
-                itemBuilder: (context, index) {
-                  final color = GenerateCubit.topBgColorPresets[index];
-                  final isSelected =
-                      isSolid && color.toARGB32() == selected.toARGB32();
-                  return _ColorSwatch(
-                    color: color,
-                    selected: isSelected,
-                    onTap: () => onPresetSelected(color),
-                  );
-                },
-              ),
-            );
-          },
+        SizedBox(
+          height: 44,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: GenerateCubit.topBgColorPresets.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              final color = GenerateCubit.topBgColorPresets[index];
+              final isSelected =
+                  color.toARGB32() == previewColor.toARGB32();
+              return _ColorSwatch(
+                color: color,
+                selected: isSelected,
+                onTap: () => onPresetSelected(color),
+              );
+            },
+          ),
         ),
+        const SizedBox(height: 16),
+        _ColorPreviewBar(color: previewColor),
         const SizedBox(height: 20),
         TextField(
           controller: hexController,
@@ -276,7 +328,7 @@ class _SolidColorPanel extends StatelessWidget {
             ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          onChanged: (_) => onHexChanged(),
+          onChanged: onHexChanged,
           onSubmitted: (_) => onHexSubmitted(),
         ),
       ],
@@ -290,6 +342,8 @@ class _GradientColorPanel extends StatelessWidget {
     required this.endController,
     required this.startError,
     required this.endError,
+    required this.startPreview,
+    required this.endPreview,
     required this.onStartChanged,
     required this.onEndChanged,
     required this.onApply,
@@ -299,8 +353,10 @@ class _GradientColorPanel extends StatelessWidget {
   final TextEditingController endController;
   final String? startError;
   final String? endError;
-  final VoidCallback onStartChanged;
-  final VoidCallback onEndChanged;
+  final Color startPreview;
+  final Color endPreview;
+  final ValueChanged<String> onStartChanged;
+  final ValueChanged<String> onEndChanged;
   final VoidCallback onApply;
 
   @override
@@ -324,34 +380,45 @@ class _GradientColorPanel extends StatelessWidget {
           onSubmitted: onApply,
         ),
         const SizedBox(height: 16),
-        BlocBuilder<GenerateCubit, GenerateState>(
-          buildWhen: (previous, current) =>
-              previous.ticket.topGradientStart !=
-                  current.ticket.topGradientStart ||
-              previous.ticket.topGradientEnd != current.ticket.topGradientEnd,
-          builder: (context, state) {
-            return Container(
-              height: 48,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: LinearGradient(
-                  colors: [
-                    state.ticket.topGradientStart,
-                    state.ticket.topGradientEnd,
-                  ],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-                border: Border.all(
-                  color: AppColors.secondaryText.withValues(alpha: 0.2),
-                ),
-              ),
-            );
-          },
+        _ColorPreviewBar(
+          color: startPreview,
+          endColor: endPreview,
         ),
         const SizedBox(height: 16),
         FilledButton(onPressed: onApply, child: const Text('Apply gradient')),
       ],
+    );
+  }
+}
+
+class _ColorPreviewBar extends StatelessWidget {
+  const _ColorPreviewBar({
+    required this.color,
+    this.endColor,
+  });
+
+  final Color color;
+  final Color? endColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 120),
+      height: 48,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: endColor == null ? color : null,
+        gradient: endColor == null
+            ? null
+            : LinearGradient(
+                colors: [color, endColor!],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+        border: Border.all(
+          color: AppColors.secondaryText.withValues(alpha: 0.2),
+        ),
+      ),
     );
   }
 }
@@ -368,7 +435,7 @@ class _HexColorField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final String? errorText;
-  final VoidCallback onChanged;
+  final ValueChanged<String> onChanged;
   final VoidCallback onSubmitted;
 
   @override
@@ -388,7 +455,7 @@ class _HexColorField extends StatelessWidget {
         prefixIcon: const Icon(Icons.tag),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      onChanged: (_) => onChanged(),
+      onChanged: onChanged,
       onSubmitted: (_) => onSubmitted(),
     );
   }

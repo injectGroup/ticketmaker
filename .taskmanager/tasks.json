@@ -259,7 +259,20 @@
       "status": "done",
       "createdAt": "2026-07-20T11:15:00.000Z",
       "updatedAt": "2026-07-20T11:16:00.000Z"
+    },
+    {
+      "id": "task-live-hex-color-preview-20260720",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Live-update bg color preview from hex input",
+      "description": "Hex typing updates the solid/gradient display bar and ticket background as soon as #RRGGBB is valid; Apply still dismisses the sheet.",
+      "details": "top_bg_color_customizer_sheet.dart — local preview + live cubit apply on valid parse.",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-20T11:37:00.000Z",
+      "updatedAt": "2026-07-20T11:38:00.000Z"
     }
   ],
-  "lastSync": "2026-07-20T11:17:20.725Z"
+  "lastSync": "2026-07-20T11:38:11.631Z"
 }
