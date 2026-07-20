@@ -8,6 +8,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/color_contrast.dart';
 import '../../domain/entities/ticket.dart';
 import '../bloc/generate_cubit.dart';
+import 'bracketed_ticket_field.dart';
 import 'top_bg_color_customizer_sheet.dart';
 
 class TicketDetailsSection extends StatelessWidget {
@@ -24,21 +25,6 @@ class TicketDetailsSection extends StatelessWidget {
 
   static const String placeholderAsset =
       'assets/images/ticket_event_placeholder.png';
-
-  static const InputDecoration _plainFieldDecoration = InputDecoration(
-    isDense: true,
-    isCollapsed: true,
-    filled: false,
-    fillColor: Colors.transparent,
-    border: InputBorder.none,
-    enabledBorder: InputBorder.none,
-    focusedBorder: InputBorder.none,
-    disabledBorder: InputBorder.none,
-    errorBorder: InputBorder.none,
-    focusedErrorBorder: InputBorder.none,
-    contentPadding: EdgeInsets.zero,
-    hoverColor: Colors.transparent,
-  );
 
   Future<void> _pickGalleryImage(BuildContext context) async {
     final file = await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -131,37 +117,16 @@ class TicketDetailsSection extends StatelessWidget {
           const SizedBox(height: 30),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  '[ ',
-                  style: theme.textTheme.headlineLarge?.copyWith(
-                    color: onGradient,
-                  ),
-                ),
-                Expanded(
-                  child: TextField(
-                    controller: titleController,
-                    textAlign: TextAlign.center,
-                    textAlignVertical: TextAlignVertical.center,
-                    minLines: 1,
-                    maxLines: 3,
-                    style: theme.textTheme.headlineLarge?.copyWith(
-                      color: onGradient,
-                    ),
-                    cursorColor: onGradient,
-                    decoration: _plainFieldDecoration,
-                    onChanged: cubit.updateTitle,
-                  ),
-                ),
-                Text(
-                  ' ]',
-                  style: theme.textTheme.headlineLarge?.copyWith(
-                    color: onGradient,
-                  ),
-                ),
-              ],
+            child: BracketedTicketField(
+              controller: titleController,
+              textAlign: TextAlign.center,
+              minLines: 1,
+              maxLines: 3,
+              style: theme.textTheme.headlineLarge?.copyWith(
+                color: onGradient,
+              ),
+              cursorColor: onGradient,
+              onChanged: cubit.updateTitle,
             ),
           ),
           const SizedBox(height: 16),
@@ -189,38 +154,20 @@ class TicketDetailsSection extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(30, 30, 30, 16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Icon(Icons.threed_rotation, color: onGradient, size: 24),
-                const SizedBox(width: 20),
-                Text(
-                  '[ ',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: onGradient,
-                  ),
-                ),
-                Expanded(
-                  child: TextField(
-                    controller: subtitleController,
-                    textAlignVertical: TextAlignVertical.center,
-                    minLines: 1,
-                    maxLines: 4,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: onGradient,
-                    ),
-                    cursorColor: onGradient,
-                    decoration: _plainFieldDecoration,
-                    onChanged: cubit.updateSubtitle,
-                  ),
-                ),
-                Text(
-                  ' ]',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: onGradient,
-                  ),
-                ),
-              ],
+            child: BracketedTicketField(
+              controller: subtitleController,
+              minLines: 1,
+              maxLines: 4,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: onGradient,
+              ),
+              cursorColor: onGradient,
+              onChanged: cubit.updateSubtitle,
+              leading: Icon(
+                Icons.threed_rotation,
+                color: onGradient,
+                size: 24,
+              ),
             ),
           ),
           Padding(
