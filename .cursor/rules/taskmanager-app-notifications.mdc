@@ -1,0 +1,35 @@
+---
+description: Notify TaskManager Web UI and Google Chat on Quick Ticket Maker app updates
+alwaysApply: true
+---
+
+# App update notifications (TaskManager)
+
+When an **app feature/task is completed** or after a successful **push/merge to `main`** for this repo, notify both channels.
+
+## Project ID
+
+Use notification project id from [`.taskmanager/tasks.json`](.taskmanager/tasks.json) field `notificationProjectId` (currently `project-1784709204130`).
+
+Legacy local backup tasks may still use `S48ODI73lfsZJSn8Kke2` — do **not** pass that id to cloud milestone APIs.
+
+## Required steps (after work is done / after main land)
+
+1. **Web UI milestone** — MCP `notify_milestone_reached`:
+   - `projectId`: value of `notificationProjectId`
+   - `message`: short plain description of the app update
+   - `taskId`: related task id when available
+   - If Firebase is not configured / tool fails: still write `projects[].lastMilestone` on the notification project in `.taskmanager/tasks.json` (`message`, `taskId`, `updatedAt` ISO).
+
+2. **Google Chat** — MCP `chat_webhook_notify` with plain text, e.g.  
+   `ticketmaker: <message> (<commit sha or task id>)`  
+   Requires `GOOGLE_CHAT_WEBHOOK_URL` (or `CHAT_WEBHOOK_URL`). If unset, note that in the session summary; do not invent a URL.
+
+3. Keep messages short; never include secrets, tokens, or webhook URLs.
+
+## Triggers
+
+- Marking a ticketmaker app TaskManager task **done**
+- After `git push` / merge that updates **`main`** for this app
+
+GitHub Actions also posts Chat on `main` pushes via [`.github/workflows/notify-app-update.yml`](.github/workflows/notify-app-update.yml). Agent still records the Web UI milestone when the agent lands the change.

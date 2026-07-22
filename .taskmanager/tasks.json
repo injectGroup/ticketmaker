@@ -1,15 +1,34 @@
 {
   "version": "1.0.0",
+  "notificationProjectId": "project-1784709204130",
   "projects": [
     {
       "id": "S48ODI73lfsZJSn8Kke2",
       "name": "ticketmaker",
-      "description": "Quick Ticket Maker — generate styled event tickets with customizable QR codes.",
+      "description": "Quick Ticket Maker \u2014 generate styled event tickets with customizable QR codes.",
       "ownerEmail": "abdulkadirhaldu@gmail.com",
       "proposedOwnerEmail": "abdulkadirhaldu@gmail.com",
       "ownershipStatus": "needs_owner_claim",
       "createdAt": "2026-07-16T12:00:00.000Z",
       "updatedAt": "2026-07-16T12:05:00.000Z"
+    },
+    {
+      "id": "project-1784709204130",
+      "name": "Quick Ticket Maker",
+      "description": "Firestore-facing TaskManager project for milestones and app-update notifications. Legacy local backup id: S48ODI73lfsZJSn8Kke2.",
+      "ownerEmail": "ejike@agathakakalogical.com",
+      "proposedOwnerEmail": "ejike@agathakakalogical.com",
+      "ownershipStatus": "pending_owner_claim",
+      "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
+      "createdAt": "2026-07-22T08:32:00.000Z",
+      "updatedAt": "2026-07-22T08:35:30.000Z",
+      "lastMilestone": {
+        "message": "App update: TaskManager + Google Chat notifications wired",
+        "taskId": "task-app-update-notifications-20260722",
+        "updatedAt": "2026-07-22T08:35:30.000Z",
+        "source": "local-fallback",
+        "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
+      }
     }
   ],
   "tasks": [
@@ -161,7 +180,7 @@
       "projectId": "S48ODI73lfsZJSn8Kke2",
       "epicId": null,
       "title": "Task 2.4 Bottom-Half Enhancements",
-      "description": "Branch feature/bottom-half-upgrades from main (FF Task 2.3). image_picker gallery → Ticket.imagePath + Image.file with asset fallback; date then time pickers; bottom BoxDecoration uses shared topGradient colors; cubit syncs both halves.",
+      "description": "Branch feature/bottom-half-upgrades from main (FF Task 2.3). image_picker gallery \u2192 Ticket.imagePath + Image.file with asset fallback; date then time pickers; bottom BoxDecoration uses shared topGradient colors; cubit syncs both halves.",
       "details": "Also added placeholder asset, iOS/macOS photo usage strings and macOS photo entitlements.",
       "operationalPhase": "COMPLETE",
       "priority": "high",
@@ -266,7 +285,7 @@
       "epicId": null,
       "title": "Live-update bg color preview from hex input",
       "description": "Hex typing updates the solid/gradient display bar and ticket background as soon as #RRGGBB is valid; Apply still dismisses the sheet.",
-      "details": "top_bg_color_customizer_sheet.dart — local preview + live cubit apply on valid parse.",
+      "details": "top_bg_color_customizer_sheet.dart \u2014 local preview + live cubit apply on valid parse.",
       "operationalPhase": "COMPLETE",
       "priority": "medium",
       "status": "done",
@@ -285,7 +304,20 @@
       "status": "done",
       "createdAt": "2026-07-22T08:24:00.000Z",
       "updatedAt": "2026-07-22T08:25:00.000Z"
+    },
+    {
+      "id": "task-app-update-notifications-20260722",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Notify TaskManager and Google Chat on app updates",
+      "description": "Added notificationProjectId project-1784709204130, Cursor rule, CONTRIBUTING setup, GHA notify-app-update.yml, and scripts/notify_app_update.sh. Cloud milestone/Chat need Firebase + GOOGLE_CHAT_WEBHOOK_URL secrets.",
+      "details": "Local lastMilestone fallback written when MCP Firebase is unavailable. Dry-run: milestone cloud blocked (no Firebase); Chat blocked (webhook unset).",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-22T08:32:00.000Z",
+      "updatedAt": "2026-07-22T08:36:00.000Z"
     }
   ],
-  "lastSync": "2026-07-22T08:25:50.583Z"
+  "lastSync": "2026-07-22T08:35:30.678Z"
 }

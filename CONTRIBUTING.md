@@ -166,6 +166,25 @@ Inject uses TaskManager for delivery tracking. When working on tracked work:
 2. Mark **done** when merged / verified.
 3. Keep `.taskmanager/tasks.json` consistent with reality (local backup).
 
+### App update notifications
+
+Quick Ticket Maker posts updates to **TaskManager Web UI** (project milestone) and **Google Chat** when app work is completed or lands on `main`.
+
+| Item | Value |
+| --- | --- |
+| Notification project id | `notificationProjectId` in `.taskmanager/tasks.json` (`project-1784709204130`) |
+| Legacy local project id | `S48ODI73lfsZJSn8Kke2` (task backup only; do not use for cloud milestones) |
+| Agent rule | `.cursor/rules/taskmanager-app-notifications.mdc` |
+| Chat on `main` push | `.github/workflows/notify-app-update.yml` |
+
+**Setup required**
+
+1. Configure Firebase/service account for TaskManager MCP so `notify_milestone_reached` can write milestones (or rely on local `lastMilestone` fallback in `.taskmanager/tasks.json`).
+2. Set `GOOGLE_CHAT_WEBHOOK_URL` for local MCP / `scripts/notify_app_update.sh`.
+3. Add repository secret `GOOGLE_CHAT_WEBHOOK_URL` so the GitHub Action can post on `main` pushes.
+
+Owner claim for `project-1784709204130` may still be `pending_owner_claim` — complete claim in TaskManager Web UI if prompted.
+
 ---
 
 ## License
