@@ -89,6 +89,33 @@ class DiscoverEventCard extends StatelessWidget {
                 color: AppColors.primaryText,
               ),
             ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: SizedBox(
+                height: 8,
+                width: double.infinity,
+                child: Row(
+                  children: [
+                    Expanded(child: ColoredBox(color: event.eyeColor)),
+                    Expanded(child: ColoredBox(color: event.dataModuleColor)),
+                    Expanded(
+                      flex: 2,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              event.backgroundStart.withValues(alpha: 1),
+                              event.backgroundEnd.withValues(alpha: 1),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),

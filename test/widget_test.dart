@@ -54,15 +54,21 @@ void main() {
 
     expect(find.text('Discover · Abuja'), findsOneWidget);
     expect(find.text('Abuja Jazz Night'), findsOneWidget);
+    expect(find.text('Music'), findsWidgets);
 
     await tester.enterText(find.byType(TextField), 'zzzz-no-match');
     await tester.pumpAndSettle();
     expect(find.textContaining('No events match'), findsOneWidget);
 
+    await tester.enterText(find.byType(TextField), 'Wedding');
+    await tester.pumpAndSettle();
+    expect(find.text('Asokoro Garden Wedding Fair'), findsOneWidget);
+    expect(find.text('Abuja Jazz Night'), findsNothing);
+
     await tester.enterText(find.byType(TextField), 'Flutter');
     await tester.pumpAndSettle();
     expect(find.text('Flutter Abuja Meetup'), findsOneWidget);
-    expect(find.text('Abuja Jazz Night'), findsNothing);
+    expect(find.text('Tech'), findsWidgets);
   });
 
   testWidgets('Account tab opens placeholder screen', (tester) async {
