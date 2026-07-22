@@ -8,7 +8,7 @@ import '../../features/tickets/presentation/pages/tickets_page.dart';
 import '../theme/app_theme.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: GeneratePage.routePath,
+  initialLocation: DiscoverPage.routePath,
   routes: [
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {

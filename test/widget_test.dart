@@ -10,8 +10,19 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
+  testWidgets('App opens on Discover home', (tester) async {
+    await tester.pumpWidget(const TicketMakerApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Discover · Abuja'), findsOneWidget);
+    expect(find.text('Abuja Jazz Night'), findsOneWidget);
+  });
+
   testWidgets('Generate page shows ticket title branding', (tester) async {
     await tester.pumpWidget(const TicketMakerApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Generate'));
     await tester.pumpAndSettle();
 
     expect(find.text('Quick Ticket Maker'), findsOneWidget);

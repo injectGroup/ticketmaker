@@ -29,8 +29,8 @@ There is no authenticated end-user role in the current release.
 
 | Destination | Route | Description |
 | --- | --- | --- |
-| Discover | `/discover` | Curated Abuja events list with local search |
-| Generate | `/generate` | Ticket designer (default) |
+| Discover | `/discover` | Curated Abuja events list with local search (default) |
+| Generate | `/generate` | Ticket designer |
 | Tickets | `/tickets` | Saved tickets list |
 | Account | `/account` | Account placeholder |
 
