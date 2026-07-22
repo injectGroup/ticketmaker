@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ticket_maker/features/tickets/data/ticket_image_store.dart';
@@ -24,7 +25,7 @@ void main() {
     final source = File('${tempRoot.path}/picker_temp.jpg')
       ..writeAsBytesSync(List<int>.filled(16, 7));
 
-    final durable = await store.import(source.path);
+    final durable = await store.import(sourcePath: source.path);
 
     expect(durable, isNotEmpty);
     expect(File(durable).existsSync(), isTrue);
@@ -32,8 +33,20 @@ void main() {
     expect(File(durable).readAsBytesSync(), source.readAsBytesSync());
   });
 
+  test('import writes bytes when path is missing', () async {
+    final durable = await store.import(
+      bytes: Uint8List.fromList(List<int>.filled(12, 9)),
+    );
+
+    expect(durable, isNotEmpty);
+    expect(File(durable).existsSync(), isTrue);
+    expect(File(durable).readAsBytesSync().length, 12);
+  });
+
   test('import returns empty when source is missing', () async {
-    final durable = await store.import('${tempRoot.path}/missing.jpg');
+    final durable = await store.import(
+      sourcePath: '${tempRoot.path}/missing.jpg',
+    );
     expect(durable, isEmpty);
   });
 
@@ -55,7 +68,16 @@ void main() {
     final existing = File('${imagesDir.path}/already.jpg')
       ..writeAsBytesSync(const [1, 2, 3]);
 
-    final durable = await store.import(existing.path);
+    final durable = await store.import(sourcePath: existing.path);
     expect(durable, existing.absolute.path);
+  });
+
+  test('findExistingForTicket locates durable file by id', () async {
+    await imagesDir.create(recursive: true);
+    final file = File('${imagesDir.path}/ticket-99.jpg')
+      ..writeAsBytesSync(const [4, 5, 6]);
+
+    final found = await store.findExistingForTicket('ticket-99');
+    expect(found, file.path);
   });
 }

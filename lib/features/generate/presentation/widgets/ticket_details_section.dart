@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -32,15 +33,25 @@ class TicketDetailsSection extends StatelessWidget {
   Future<void> _pickGalleryImage(BuildContext context) async {
     final file = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (file == null || !context.mounted) return;
-    final durablePath = await (imageStore ?? TicketImageStore()).import(
-      file.path,
+
+    final store = imageStore ?? TicketImageStore();
+    Uint8List? bytes;
+    try {
+      bytes = await file.readAsBytes();
+    } catch (_) {
+      bytes = null;
+    }
+
+    final durablePath = await store.import(
+      sourcePath: file.path,
+      bytes: bytes,
     );
     if (!context.mounted) return;
-    // Fall back to picker path only if import somehow returned empty but file
-    // still exists in-session; empty durable path clears to placeholder.
-    context.read<GenerateCubit>().setImagePath(
-      durablePath.isNotEmpty ? durablePath : file.path,
-    );
+
+    // Prefer durable path; only keep temp path if import failed but bytes/path
+    // may still work for this session.
+    final nextPath = durablePath.isNotEmpty ? durablePath : file.path;
+    context.read<GenerateCubit>().setImagePath(nextPath);
   }
 
   Future<void> _pickDateTime(BuildContext context) async {

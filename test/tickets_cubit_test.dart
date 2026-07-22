@@ -1,0 +1,101 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ticket_maker/features/generate/domain/entities/ticket.dart';
+import 'package:ticket_maker/features/tickets/data/ticket_image_store.dart';
+import 'package:ticket_maker/features/tickets/data/ticket_local_repository.dart';
+import 'package:ticket_maker/features/tickets/presentation/bloc/tickets_cubit.dart';
+
+Ticket _sample({required String imagePath}) {
+  return Ticket(
+    id: 'default',
+    headerLabel: 'VIP',
+    title: 'Concert',
+    subtitle: 'Venue',
+    dateLabel: 'Sat, Jul 18',
+    timeLabel: '8:00 PM',
+    eventAt: DateTime(2026, 7, 18, 20),
+    code: '1111-2222',
+    qrData: 'https://example.com',
+    imagePath: imagePath,
+    eyeColor: const Color(0xFFF44336),
+    dataModuleColor: const Color(0xFFFF9800),
+    isSquare: false,
+    topGradientStart: const Color(0xFF4B39EF),
+    topGradientEnd: const Color(0xFF39D2C0),
+    bottomGradientStart: const Color(0xFF4B39EF),
+    bottomGradientEnd: const Color(0xFF39D2C0),
+  );
+}
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  late Directory tempRoot;
+  late TicketLocalRepository repository;
+  late TicketImageStore imageStore;
+  late TicketsCubit cubit;
+
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    tempRoot = await Directory.systemTemp.createTemp('tickets_cubit_');
+    final imagesDir = Directory('${tempRoot.path}/ticket_images');
+    imageStore = TicketImageStore(overrideImagesDirectory: imagesDir);
+    repository = TicketLocalRepository();
+    cubit = TicketsCubit(repository, imageStore: imageStore);
+  });
+
+  tearDown(() async {
+    await cubit.close();
+    if (tempRoot.existsSync()) {
+      await tempRoot.delete(recursive: true);
+    }
+  });
+
+  test('saveTicket keeps imagePath when persist fails', () async {
+    final missing = '${tempRoot.path}/gone.jpg';
+    await cubit.saveTicket(_sample(imagePath: missing));
+
+    final saved = cubit.state.tickets.single;
+    expect(saved.imagePath, missing);
+    expect(
+      cubit.state.message,
+      'Ticket saved, but photo could not be stored',
+    );
+  });
+
+  test('saveTicket stores durable path when file exists', () async {
+    final source = File('${tempRoot.path}/photo.jpg')
+      ..writeAsBytesSync(List<int>.filled(20, 1));
+
+    await cubit.saveTicket(_sample(imagePath: source.path));
+
+    final saved = cubit.state.tickets.single;
+    expect(saved.imagePath, isNotEmpty);
+    expect(File(saved.imagePath).existsSync(), isTrue);
+    expect(saved.imagePath.contains('ticket_images'), isTrue);
+    expect(cubit.state.message, 'Ticket saved');
+  });
+
+  test('loadTickets repairs missing path from durable file by id', () async {
+    final source = File('${tempRoot.path}/photo.jpg')
+      ..writeAsBytesSync(List<int>.filled(10, 2));
+    await cubit.saveTicket(_sample(imagePath: source.path));
+    final id = cubit.state.tickets.single.id;
+    final durable = cubit.state.tickets.single.imagePath;
+
+    // Point prefs at a dead path while leaving the durable file in place.
+    final broken = cubit.state.tickets.single.copyWith(
+      imagePath: '${tempRoot.path}/missing-elsewhere.jpg',
+    );
+    await repository.saveTickets([broken]);
+
+    await cubit.loadTickets();
+
+    expect(cubit.state.tickets.single.id, id);
+    expect(cubit.state.tickets.single.imagePath, durable);
+    expect(File(cubit.state.tickets.single.imagePath).existsSync(), isTrue);
+  });
+}

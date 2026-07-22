@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:path_provider/path_provider.dart';
 
@@ -30,7 +31,7 @@ class TicketImageStore {
     final name = sourcePath.split(Platform.pathSeparator).last;
     final dot = name.lastIndexOf('.');
     if (dot <= 0 || dot == name.length - 1) return '.jpg';
-    return name.substring(dot);
+    return name.substring(dot).toLowerCase();
   }
 
   bool _isUnderImagesDir(String path, Directory imagesDir) {
@@ -40,53 +41,96 @@ class TicketImageStore {
         normalized.startsWith('$root${Platform.pathSeparator}');
   }
 
-  /// Copies [sourcePath] into durable storage with a unique name.
-  /// Returns the durable path, or `''` if the copy fails / source missing.
-  Future<String> import(String sourcePath) async {
-    if (sourcePath.isEmpty) return '';
-    final source = File(sourcePath);
-    if (!source.existsSync()) return '';
+  Future<String> _writeBytes({
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
+    if (bytes.isEmpty) return '';
+    final imagesDir = await _imagesDirectory();
+    final dest = File('${imagesDir.path}/$fileName');
+    await dest.writeAsBytes(bytes, flush: true);
+    if (!dest.existsSync() || dest.lengthSync() == 0) return '';
+    return dest.path;
+  }
 
+  Future<Uint8List?> _readBytes(String sourcePath) async {
+    if (sourcePath.isEmpty) return null;
+    final source = File(sourcePath);
+    if (!source.existsSync()) return null;
     try {
-      final imagesDir = await _imagesDirectory();
-      if (_isUnderImagesDir(sourcePath, imagesDir)) {
-        return source.absolute.path;
-      }
-      final ext = _extensionFor(sourcePath);
-      final dest = File(
-        '${imagesDir.path}/${DateTime.now().millisecondsSinceEpoch}$ext',
-      );
-      await source.copy(dest.path);
-      return dest.path;
+      return await source.readAsBytes();
     } on FileSystemException {
-      return '';
+      return null;
     }
   }
 
-  /// Copies [sourcePath] to a stable `ticketId` filename under durable storage.
-  /// Returns the durable path, or `''` if the copy fails / source missing.
-  Future<String> persistForTicket({
-    required String sourcePath,
-    required String ticketId,
+  /// Writes [bytes] (or reads from [sourcePath]) into durable storage with a
+  /// unique name. Returns the durable path, or `''` on failure.
+  Future<String> import({
+    String sourcePath = '',
+    Uint8List? bytes,
   }) async {
-    if (sourcePath.isEmpty || ticketId.isEmpty) return '';
-    final source = File(sourcePath);
-    if (!source.existsSync()) return '';
+    final payload = bytes ?? await _readBytes(sourcePath);
+    if (payload == null || payload.isEmpty) return '';
+
+    if (sourcePath.isNotEmpty) {
+      final imagesDir = await _imagesDirectory();
+      if (_isUnderImagesDir(sourcePath, imagesDir) &&
+          File(sourcePath).existsSync()) {
+        return File(sourcePath).absolute.path;
+      }
+    }
+
+    final ext = sourcePath.isEmpty ? '.jpg' : _extensionFor(sourcePath);
+    final name = '${DateTime.now().millisecondsSinceEpoch}$ext';
+    return _writeBytes(bytes: payload, fileName: name);
+  }
+
+  /// Writes bytes under a stable `ticketId` filename.
+  /// Returns the durable path, or `''` on failure (never clears an existing file
+  /// unless a successful write replaces it).
+  Future<String> persistForTicket({
+    required String ticketId,
+    String sourcePath = '',
+    Uint8List? bytes,
+  }) async {
+    if (ticketId.isEmpty) return '';
+    final payload = bytes ?? await _readBytes(sourcePath);
+    if (payload == null || payload.isEmpty) return '';
+
+    final imagesDir = await _imagesDirectory();
+    final ext = sourcePath.isEmpty ? '.jpg' : _extensionFor(sourcePath);
+    final dest = File('${imagesDir.path}/$ticketId$ext');
+
+    if (sourcePath.isNotEmpty &&
+        _isUnderImagesDir(sourcePath, imagesDir) &&
+        File(sourcePath).absolute.path == dest.absolute.path &&
+        dest.existsSync()) {
+      return dest.path;
+    }
+
+    return _writeBytes(bytes: payload, fileName: '$ticketId$ext');
+  }
+
+  /// Finds an existing durable file for [ticketId] (any extension).
+  Future<String?> findExistingForTicket(String ticketId) async {
+    if (ticketId.isEmpty) return null;
+    final imagesDir = await _imagesDirectory();
+    if (!imagesDir.existsSync()) return null;
 
     try {
-      final imagesDir = await _imagesDirectory();
-      final ext = _extensionFor(sourcePath);
-      final dest = File('${imagesDir.path}/$ticketId$ext');
-
-      if (_isUnderImagesDir(sourcePath, imagesDir) &&
-          source.absolute.path == dest.absolute.path) {
-        return dest.path;
+      await for (final entity in imagesDir.list()) {
+        if (entity is! File) continue;
+        final name = entity.uri.pathSegments.last;
+        final dot = name.lastIndexOf('.');
+        final base = dot > 0 ? name.substring(0, dot) : name;
+        if (base == ticketId && entity.existsSync()) {
+          return entity.path;
+        }
       }
-
-      await source.copy(dest.path);
-      return dest.path;
     } on FileSystemException {
-      return '';
+      return null;
     }
+    return null;
   }
 }

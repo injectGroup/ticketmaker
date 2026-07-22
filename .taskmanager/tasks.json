@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: fix ticket contrast, photo fallback, share overflow",
-        "taskId": "task-fix-ticket-layout-20260722",
-        "updatedAt": "2026-07-22T12:40:00.000Z",
+        "message": "App update: harden ticket photo retention on save/load",
+        "taskId": "task-harden-ticket-image-retention-20260722",
+        "updatedAt": "2026-07-22T16:45:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -408,7 +408,20 @@
       "status": "done",
       "createdAt": "2026-07-22T12:40:00.000Z",
       "updatedAt": "2026-07-22T12:40:00.000Z"
+    },
+    {
+      "id": "task-harden-ticket-image-retention-20260722",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Harden ticket image retention on save and load",
+      "description": "Do not clear imagePath when persist fails; write picker bytes to Documents; repair missing paths by ticket id on load.",
+      "details": "ticket_image_store.dart byte writes; TicketsCubit.saveTicket/loadTickets; XFile.readAsBytes on pick",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-22T16:45:00.000Z",
+      "updatedAt": "2026-07-22T16:45:00.000Z"
     }
   ],
-  "lastSync": "2026-07-22T12:37:57.647Z"
+  "lastSync": "2026-07-22T16:45:19.165Z"
 }

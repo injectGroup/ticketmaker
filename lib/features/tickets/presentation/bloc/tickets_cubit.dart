@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -18,8 +20,14 @@ class TicketsCubit extends Cubit<TicketsState> {
   Future<void> loadTickets() async {
     emit(state.copyWith(isLoading: true, clearMessage: true));
     try {
-      final tickets = await _repository.loadTickets();
-      emit(state.copyWith(tickets: tickets, isLoading: false));
+      final loaded = await _repository.loadTickets();
+      final repaired = await _repairMissingImagePaths(loaded);
+      final changed = repaired.length == loaded.length &&
+          !_sameImagePaths(loaded, repaired);
+      if (changed) {
+        await _repository.saveTickets(repaired);
+      }
+      emit(state.copyWith(tickets: repaired, isLoading: false));
     } catch (_) {
       emit(
         state.copyWith(
@@ -34,19 +42,33 @@ class TicketsCubit extends Cubit<TicketsState> {
   Future<void> saveTicket(Ticket ticket) async {
     final id = 'ticket-${DateTime.now().millisecondsSinceEpoch}';
     var imagePath = ticket.imagePath;
+    var photoWarning = false;
+
     if (imagePath.isNotEmpty) {
       final durable = await _imageStore.persistForTicket(
         sourcePath: imagePath,
         ticketId: id,
       );
-      imagePath = durable;
+      if (durable.isNotEmpty) {
+        imagePath = durable;
+      } else {
+        // Never wipe imagePath on a failed persist.
+        photoWarning = true;
+      }
     }
 
     final saved = ticket.copyWith(id: id, imagePath: imagePath);
     final updated = [saved, ...state.tickets];
     try {
       await _repository.saveTickets(updated);
-      emit(state.copyWith(tickets: updated, message: 'Ticket saved'));
+      emit(
+        state.copyWith(
+          tickets: updated,
+          message: photoWarning
+              ? 'Ticket saved, but photo could not be stored'
+              : 'Ticket saved',
+        ),
+      );
     } catch (_) {
       emit(state.copyWith(message: 'Could not save ticket'));
     }
@@ -56,5 +78,35 @@ class TicketsCubit extends Cubit<TicketsState> {
     if (state.message != null) {
       emit(state.copyWith(clearMessage: true));
     }
+  }
+
+  Future<List<Ticket>> _repairMissingImagePaths(List<Ticket> tickets) async {
+    final result = <Ticket>[];
+    for (final ticket in tickets) {
+      final path = ticket.imagePath;
+      if (path.isEmpty) {
+        result.add(ticket);
+        continue;
+      }
+      if (File(path).existsSync()) {
+        result.add(ticket);
+        continue;
+      }
+      final found = await _imageStore.findExistingForTicket(ticket.id);
+      if (found != null && found.isNotEmpty) {
+        result.add(ticket.copyWith(imagePath: found));
+      } else {
+        result.add(ticket);
+      }
+    }
+    return result;
+  }
+
+  bool _sameImagePaths(List<Ticket> a, List<Ticket> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].imagePath != b[i].imagePath) return false;
+    }
+    return true;
   }
 }
