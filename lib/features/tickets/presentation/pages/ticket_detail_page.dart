@@ -1,43 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../generate/domain/entities/ticket.dart';
+import '../../data/ticket_share_helper.dart';
 import '../bloc/tickets_cubit.dart';
 import '../widgets/saved_ticket_view.dart';
 
-class TicketDetailPage extends StatelessWidget {
+class TicketDetailPage extends StatefulWidget {
   const TicketDetailPage({super.key, required this.ticketId});
 
   static const String routeName = 'ticketDetail';
 
   final String ticketId;
 
-  Future<void> _share(BuildContext buttonContext, Ticket ticket) async {
-    final box = buttonContext.findRenderObject() as RenderBox?;
-    final Rect sharePositionOrigin;
-    if (box != null &&
-        box.hasSize &&
-        box.size.width > 0 &&
-        box.size.height > 0) {
-      sharePositionOrigin = box.localToGlobal(Offset.zero) & box.size;
-    } else {
-      final size = MediaQuery.sizeOf(buttonContext);
-      sharePositionOrigin = Rect.fromLTWH(
-        size.width / 2 - 1,
-        size.height / 2 - 1,
-        2,
-        2,
-      );
-    }
+  @override
+  State<TicketDetailPage> createState() => _TicketDetailPageState();
+}
 
-    // sharePositionOrigin is required on iOS/iPadOS so the popover anchors.
-    // ignore: deprecated_member_use
-    await Share.share(
-      ticket.toShareText(),
-      subject: 'My Custom Ticket Design',
-      sharePositionOrigin: sharePositionOrigin,
+class _TicketDetailPageState extends State<TicketDetailPage> {
+  final GlobalKey _ticketBoundaryKey = GlobalKey();
+
+  Future<void> _share(BuildContext buttonContext, Ticket ticket) async {
+    await TicketShareHelper.share(
+      context,
+      ticket,
+      boundaryKey: _ticketBoundaryKey,
+      sharePositionOrigin: TicketShareHelper.shareOriginFrom(buttonContext),
     );
   }
 
@@ -47,7 +36,7 @@ class TicketDetailPage extends StatelessWidget {
       builder: (context, state) {
         Ticket? ticket;
         for (final entry in state.tickets) {
-          if (entry.id == ticketId) {
+          if (entry.id == widget.ticketId) {
             ticket = entry;
             break;
           }
@@ -100,7 +89,10 @@ class TicketDetailPage extends StatelessWidget {
                   ),
                 )
               : SingleChildScrollView(
-                  child: SavedTicketView(ticket: ticket),
+                  child: RepaintBoundary(
+                    key: _ticketBoundaryKey,
+                    child: SavedTicketView(ticket: ticket),
+                  ),
                 ),
         );
       },

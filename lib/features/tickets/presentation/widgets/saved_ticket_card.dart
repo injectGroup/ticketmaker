@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../generate/domain/entities/ticket.dart';
+import '../../data/ticket_share_helper.dart';
 import '../pages/tickets_page.dart';
 
 /// List card for a persisted ticket, with a native share action.
@@ -13,29 +13,10 @@ class SavedTicketCard extends StatelessWidget {
   final Ticket ticket;
 
   Future<void> _share(BuildContext buttonContext) async {
-    final box = buttonContext.findRenderObject() as RenderBox?;
-    final Rect sharePositionOrigin;
-    if (box != null &&
-        box.hasSize &&
-        box.size.width > 0 &&
-        box.size.height > 0) {
-      sharePositionOrigin = box.localToGlobal(Offset.zero) & box.size;
-    } else {
-      final size = MediaQuery.sizeOf(buttonContext);
-      sharePositionOrigin = Rect.fromLTWH(
-        size.width / 2 - 1,
-        size.height / 2 - 1,
-        2,
-        2,
-      );
-    }
-
-    // sharePositionOrigin is required on iOS/iPadOS so the popover anchors.
-    // ignore: deprecated_member_use
-    await Share.share(
-      ticket.toShareText(),
-      subject: 'My Custom Ticket Design',
-      sharePositionOrigin: sharePositionOrigin,
+    await TicketShareHelper.share(
+      buttonContext,
+      ticket,
+      sharePositionOrigin: TicketShareHelper.shareOriginFrom(buttonContext),
     );
   }
 
