@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/account/presentation/pages/account_page.dart';
+import '../../features/discover/presentation/pages/discover_page.dart';
 import '../../features/generate/presentation/pages/generate_page.dart';
 import '../../features/tickets/presentation/pages/tickets_page.dart';
 import '../theme/app_theme.dart';
@@ -25,9 +27,27 @@ final GoRouter appRouter = GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
+              path: DiscoverPage.routePath,
+              name: DiscoverPage.routeName,
+              builder: (context, state) => const DiscoverPage(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
               path: TicketsPage.routePath,
               name: TicketsPage.routeName,
               builder: (context, state) => const TicketsPage(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AccountPage.routePath,
+              name: AccountPage.routeName,
+              builder: (context, state) => const AccountPage(),
             ),
           ],
         ),
@@ -56,9 +76,19 @@ class HomeShell extends StatelessWidget {
             label: 'Generate',
           ),
           NavigationDestination(
+            icon: Icon(Icons.explore_outlined),
+            selectedIcon: Icon(Icons.explore),
+            label: 'Discover',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.confirmation_number_outlined),
             selectedIcon: Icon(Icons.confirmation_number),
             label: 'Tickets',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outlined),
+            selectedIcon: Icon(Icons.person),
+            label: 'Account',
           ),
         ],
       ),

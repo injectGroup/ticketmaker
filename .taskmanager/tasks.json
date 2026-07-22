@@ -272,7 +272,20 @@
       "status": "done",
       "createdAt": "2026-07-20T11:37:00.000Z",
       "updatedAt": "2026-07-20T11:38:00.000Z"
+    },
+    {
+      "id": "task-bottom-nav-discover-account-20260722",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Add Discover and Account bottom tabs",
+      "description": "Extended HomeShell NavigationBar with Discover and Account branches; placeholder pages under features/discover and features/account.",
+      "details": "Tab order: Generate, Discover, Tickets, Account. Widget test covers tab navigation.",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-22T08:24:00.000Z",
+      "updatedAt": "2026-07-22T08:25:00.000Z"
     }
   ],
-  "lastSync": "2026-07-20T11:38:11.631Z"
+  "lastSync": "2026-07-22T08:25:50.583Z"
 }

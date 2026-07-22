@@ -30,4 +30,19 @@ void main() {
     expect(find.text('No saved tickets yet'), findsOneWidget);
     expect(find.text('Circu Du Freak'), findsNothing);
   });
+
+  testWidgets('Discover and Account tabs open placeholder screens', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const TicketMakerApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Discover'));
+    await tester.pumpAndSettle();
+    expect(find.text('Discover events'), findsOneWidget);
+
+    await tester.tap(find.text('Account'));
+    await tester.pumpAndSettle();
+    expect(find.text('Your account'), findsOneWidget);
+  });
 }
