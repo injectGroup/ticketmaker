@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: tap a saved ticket to view full content",
-        "taskId": "task-ticket-detail-view-20260722",
-        "updatedAt": "2026-07-22T10:24:51.000Z",
+        "message": "App update: saved ticket images persist for detail view",
+        "taskId": "task-fix-saved-ticket-images-20260722",
+        "updatedAt": "2026-07-22T10:55:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -369,7 +369,20 @@
       "status": "done",
       "createdAt": "2026-07-22T10:24:51.000Z",
       "updatedAt": "2026-07-22T10:24:51.000Z"
+    },
+    {
+      "id": "task-fix-saved-ticket-images-20260722",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Fix saved ticket images not showing on view",
+      "description": "Persist gallery picks into app documents via TicketImageStore on pick and save so detail view can load Image.file.",
+      "details": "ticket_image_store.dart; TicketsCubit.persistForTicket; TicketDetailsSection.import; existsSync fallback",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-22T10:55:00.000Z",
+      "updatedAt": "2026-07-22T10:55:00.000Z"
     }
   ],
-  "lastSync": "2026-07-22T10:25:24.740Z"
+  "lastSync": "2026-07-22T10:57:55.355Z"
 }

@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/color_contrast.dart';
+import '../../../tickets/data/ticket_image_store.dart';
 import '../../domain/entities/ticket.dart';
 import '../bloc/generate_cubit.dart';
 import 'bracketed_ticket_field.dart';
@@ -18,12 +19,14 @@ class TicketDetailsSection extends StatelessWidget {
     required this.titleController,
     required this.subtitleController,
     this.bracketResetToken,
+    this.imageStore,
   });
 
   final Ticket ticket;
   final TextEditingController titleController;
   final TextEditingController subtitleController;
   final Object? bracketResetToken;
+  final TicketImageStore? imageStore;
 
   static const String placeholderAsset =
       'assets/images/ticket_event_placeholder.png';
@@ -31,7 +34,15 @@ class TicketDetailsSection extends StatelessWidget {
   Future<void> _pickGalleryImage(BuildContext context) async {
     final file = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (file == null || !context.mounted) return;
-    context.read<GenerateCubit>().setImagePath(file.path);
+    final durablePath = await (imageStore ?? TicketImageStore()).import(
+      file.path,
+    );
+    if (!context.mounted) return;
+    // Fall back to picker path only if import somehow returned empty but file
+    // still exists in-session; empty durable path clears to placeholder.
+    context.read<GenerateCubit>().setImagePath(
+      durablePath.isNotEmpty ? durablePath : file.path,
+    );
   }
 
   Future<void> _pickDateTime(BuildContext context) async {
@@ -61,7 +72,9 @@ class TicketDetailsSection extends StatelessWidget {
     const width = 300.0;
     const height = 200.0;
 
-    if (ticket.imagePath.isEmpty) {
+    final path = ticket.imagePath;
+    final hasFile = path.isNotEmpty && File(path).existsSync();
+    if (!hasFile) {
       return Image.asset(
         placeholderAsset,
         width: width,
@@ -72,7 +85,7 @@ class TicketDetailsSection extends StatelessWidget {
     }
 
     return Image.file(
-      File(ticket.imagePath),
+      File(path),
       width: width,
       height: height,
       fit: BoxFit.cover,

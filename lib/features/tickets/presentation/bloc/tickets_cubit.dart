@@ -2,14 +2,18 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../generate/domain/entities/ticket.dart';
+import '../../data/ticket_image_store.dart';
 import '../../data/ticket_local_repository.dart';
 
 part 'tickets_state.dart';
 
 class TicketsCubit extends Cubit<TicketsState> {
-  TicketsCubit(this._repository) : super(const TicketsState());
+  TicketsCubit(this._repository, {TicketImageStore? imageStore})
+    : _imageStore = imageStore ?? TicketImageStore(),
+      super(const TicketsState());
 
   final TicketLocalRepository _repository;
+  final TicketImageStore _imageStore;
 
   Future<void> loadTickets() async {
     emit(state.copyWith(isLoading: true, clearMessage: true));
@@ -28,9 +32,17 @@ class TicketsCubit extends Cubit<TicketsState> {
 
   /// Serializes [ticket] to JSON via the repository and refreshes list state.
   Future<void> saveTicket(Ticket ticket) async {
-    final saved = ticket.copyWith(
-      id: 'ticket-${DateTime.now().millisecondsSinceEpoch}',
-    );
+    final id = 'ticket-${DateTime.now().millisecondsSinceEpoch}';
+    var imagePath = ticket.imagePath;
+    if (imagePath.isNotEmpty) {
+      final durable = await _imageStore.persistForTicket(
+        sourcePath: imagePath,
+        ticketId: id,
+      );
+      imagePath = durable;
+    }
+
+    final saved = ticket.copyWith(id: id, imagePath: imagePath);
     final updated = [saved, ...state.tickets];
     try {
       await _repository.saveTickets(updated);

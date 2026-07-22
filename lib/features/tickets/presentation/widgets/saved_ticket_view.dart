@@ -21,7 +21,9 @@ class SavedTicketView extends StatelessWidget {
     const width = 300.0;
     const height = 200.0;
 
-    if (ticket.imagePath.isEmpty) {
+    final path = ticket.imagePath;
+    final hasFile = path.isNotEmpty && File(path).existsSync();
+    if (!hasFile) {
       return Image.asset(
         placeholderAsset,
         width: width,
@@ -32,7 +34,7 @@ class SavedTicketView extends StatelessWidget {
     }
 
     return Image.file(
-      File(ticket.imagePath),
+      File(path),
       width: width,
       height: height,
       fit: BoxFit.cover,
