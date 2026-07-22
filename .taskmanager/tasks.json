@@ -5,7 +5,7 @@
     {
       "id": "S48ODI73lfsZJSn8Kke2",
       "name": "ticketmaker",
-      "description": "Quick Ticket Maker \u2014 generate styled event tickets with customizable QR codes.",
+      "description": "Quick Ticket Maker — generate styled event tickets with customizable QR codes.",
       "ownerEmail": "abdulkadirhaldu@gmail.com",
       "proposedOwnerEmail": "abdulkadirhaldu@gmail.com",
       "ownershipStatus": "needs_owner_claim",
@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: TaskManager + Google Chat notifications wired",
-        "taskId": "task-app-update-notifications-20260722",
-        "updatedAt": "2026-07-22T08:35:30.000Z",
+        "message": "App update: Discover curated Abuja events with search",
+        "taskId": "task-discover-abuja-events-20260722",
+        "updatedAt": "2026-07-22T08:45:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -180,7 +180,7 @@
       "projectId": "S48ODI73lfsZJSn8Kke2",
       "epicId": null,
       "title": "Task 2.4 Bottom-Half Enhancements",
-      "description": "Branch feature/bottom-half-upgrades from main (FF Task 2.3). image_picker gallery \u2192 Ticket.imagePath + Image.file with asset fallback; date then time pickers; bottom BoxDecoration uses shared topGradient colors; cubit syncs both halves.",
+      "description": "Branch feature/bottom-half-upgrades from main (FF Task 2.3). image_picker gallery → Ticket.imagePath + Image.file with asset fallback; date then time pickers; bottom BoxDecoration uses shared topGradient colors; cubit syncs both halves.",
       "details": "Also added placeholder asset, iOS/macOS photo usage strings and macOS photo entitlements.",
       "operationalPhase": "COMPLETE",
       "priority": "high",
@@ -285,7 +285,7 @@
       "epicId": null,
       "title": "Live-update bg color preview from hex input",
       "description": "Hex typing updates the solid/gradient display bar and ticket background as soon as #RRGGBB is valid; Apply still dismisses the sheet.",
-      "details": "top_bg_color_customizer_sheet.dart \u2014 local preview + live cubit apply on valid parse.",
+      "details": "top_bg_color_customizer_sheet.dart — local preview + live cubit apply on valid parse.",
       "operationalPhase": "COMPLETE",
       "priority": "medium",
       "status": "done",
@@ -317,7 +317,20 @@
       "status": "done",
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:36:00.000Z"
+    },
+    {
+      "id": "task-discover-abuja-events-20260722",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Discover curated Abuja events with search",
+      "description": "Replaced Discover placeholder with Event catalog, DiscoverCubit filter, search field, and event cards for Abuja.",
+      "details": "10 curated events; widget tests cover list + search empty/match.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-22T08:42:00.000Z",
+      "updatedAt": "2026-07-22T08:45:00.000Z"
     }
   ],
-  "lastSync": "2026-07-22T08:35:30.678Z"
+  "lastSync": "2026-07-22T08:45:05.922Z"
 }

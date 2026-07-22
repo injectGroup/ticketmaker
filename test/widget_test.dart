@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ticket_maker/app.dart';
@@ -31,7 +32,7 @@ void main() {
     expect(find.text('Circu Du Freak'), findsNothing);
   });
 
-  testWidgets('Discover and Account tabs open placeholder screens', (
+  testWidgets('Discover lists Abuja events and filters by search', (
     tester,
   ) async {
     await tester.pumpWidget(const TicketMakerApp());
@@ -39,7 +40,23 @@ void main() {
 
     await tester.tap(find.text('Discover'));
     await tester.pumpAndSettle();
-    expect(find.text('Discover events'), findsOneWidget);
+
+    expect(find.text('Discover · Abuja'), findsOneWidget);
+    expect(find.text('Abuja Jazz Night'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'zzzz-no-match');
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No events match'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'Flutter');
+    await tester.pumpAndSettle();
+    expect(find.text('Flutter Abuja Meetup'), findsOneWidget);
+    expect(find.text('Abuja Jazz Night'), findsNothing);
+  });
+
+  testWidgets('Account tab opens placeholder screen', (tester) async {
+    await tester.pumpWidget(const TicketMakerApp());
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Account'));
     await tester.pumpAndSettle();
