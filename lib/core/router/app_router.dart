@@ -18,18 +18,18 @@ final GoRouter appRouter = GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: GeneratePage.routePath,
-              name: GeneratePage.routeName,
-              builder: (context, state) => const GeneratePage(),
+              path: DiscoverPage.routePath,
+              name: DiscoverPage.routeName,
+              builder: (context, state) => const DiscoverPage(),
             ),
           ],
         ),
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: DiscoverPage.routePath,
-              name: DiscoverPage.routeName,
-              builder: (context, state) => const DiscoverPage(),
+              path: GeneratePage.routePath,
+              name: GeneratePage.routeName,
+              builder: (context, state) => const GeneratePage(),
             ),
           ],
         ),
@@ -71,14 +71,14 @@ class HomeShell extends StatelessWidget {
         indicatorColor: AppColors.primary.withValues(alpha: 0.15),
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.qr_code_2_outlined),
-            selectedIcon: Icon(Icons.qr_code_2),
-            label: 'Generate',
-          ),
-          NavigationDestination(
             icon: Icon(Icons.explore_outlined),
             selectedIcon: Icon(Icons.explore),
             label: 'Discover',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.qr_code_2_outlined),
+            selectedIcon: Icon(Icons.qr_code_2),
+            label: 'Generate',
           ),
           NavigationDestination(
             icon: Icon(Icons.confirmation_number_outlined),
