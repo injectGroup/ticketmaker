@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/color_contrast.dart';
+import '../../../../core/widgets/ticket_photo_placeholder.dart';
 import '../../../tickets/data/ticket_image_store.dart';
 import '../../domain/entities/ticket.dart';
 import '../bloc/generate_cubit.dart';
@@ -27,9 +28,6 @@ class TicketDetailsSection extends StatelessWidget {
   final TextEditingController subtitleController;
   final Object? bracketResetToken;
   final TicketImageStore? imageStore;
-
-  static const String placeholderAsset =
-      'assets/images/ticket_event_placeholder.png';
 
   Future<void> _pickGalleryImage(BuildContext context) async {
     final file = await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -75,13 +73,7 @@ class TicketDetailsSection extends StatelessWidget {
     final path = ticket.imagePath;
     final hasFile = path.isNotEmpty && File(path).existsSync();
     if (!hasFile) {
-      return Image.asset(
-        placeholderAsset,
-        width: width,
-        height: height,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => _imageFallback(width, height),
-      );
+      return const TicketPhotoPlaceholder(width: width, height: height);
     }
 
     return Image.file(
@@ -89,22 +81,11 @@ class TicketDetailsSection extends StatelessWidget {
       width: width,
       height: height,
       fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => Image.asset(
-        placeholderAsset,
+      errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
         width: width,
         height: height,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => _imageFallback(width, height),
+        broken: true,
       ),
-    );
-  }
-
-  Widget _imageFallback(double width, double height) {
-    return Container(
-      width: width,
-      height: height,
-      color: AppColors.secondaryText.withValues(alpha: 0.3),
-      child: const Icon(Icons.broken_image, size: 48),
     );
   }
 

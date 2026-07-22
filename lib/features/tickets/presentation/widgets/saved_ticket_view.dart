@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/color_contrast.dart';
+import '../../../../core/widgets/ticket_photo_placeholder.dart';
 import '../../../generate/domain/entities/ticket.dart';
 import '../../../generate/presentation/widgets/generate_qr_code.dart';
 import '../../../generate/presentation/widgets/ticket_perforation.dart';
@@ -14,9 +14,6 @@ class SavedTicketView extends StatelessWidget {
 
   final Ticket ticket;
 
-  static const String placeholderAsset =
-      'assets/images/ticket_event_placeholder.png';
-
   Widget _eventImage() {
     const width = 300.0;
     const height = 200.0;
@@ -24,13 +21,7 @@ class SavedTicketView extends StatelessWidget {
     final path = ticket.imagePath;
     final hasFile = path.isNotEmpty && File(path).existsSync();
     if (!hasFile) {
-      return Image.asset(
-        placeholderAsset,
-        width: width,
-        height: height,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => _imageFallback(width, height),
-      );
+      return const TicketPhotoPlaceholder(width: width, height: height);
     }
 
     return Image.file(
@@ -38,22 +29,11 @@ class SavedTicketView extends StatelessWidget {
       width: width,
       height: height,
       fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => Image.asset(
-        placeholderAsset,
+      errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
         width: width,
         height: height,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => _imageFallback(width, height),
+        broken: true,
       ),
-    );
-  }
-
-  Widget _imageFallback(double width, double height) {
-    return Container(
-      width: width,
-      height: height,
-      color: AppColors.secondaryText.withValues(alpha: 0.3),
-      child: const Icon(Icons.broken_image, size: 48),
     );
   }
 
@@ -66,6 +46,7 @@ class SavedTicketView extends StatelessWidget {
     );
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: double.infinity,

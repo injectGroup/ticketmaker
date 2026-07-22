@@ -109,8 +109,12 @@ class TicketShareHelper {
             opacity: 0.01,
             child: Align(
               alignment: Alignment.topLeft,
-              child: SizedBox(
-                width: width,
+              child: OverflowBox(
+                alignment: Alignment.topLeft,
+                minWidth: width,
+                maxWidth: width,
+                minHeight: 0,
+                maxHeight: double.infinity,
                 child: Material(
                   color: Colors.transparent,
                   child: RepaintBoundary(
@@ -145,13 +149,6 @@ class TicketShareHelper {
     BuildContext context,
     Ticket ticket,
   ) async {
-    try {
-      await precacheImage(
-        const AssetImage(SavedTicketView.placeholderAsset),
-        context,
-      );
-    } catch (_) {}
-
     if (!context.mounted) return;
 
     final path = ticket.imagePath;
