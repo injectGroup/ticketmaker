@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/account/presentation/pages/account_page.dart';
 import '../../features/discover/presentation/pages/discover_page.dart';
 import '../../features/generate/presentation/pages/generate_page.dart';
+import '../../features/tickets/presentation/pages/ticket_detail_page.dart';
 import '../../features/tickets/presentation/pages/tickets_page.dart';
 import '../theme/app_theme.dart';
 
@@ -39,6 +40,15 @@ final GoRouter appRouter = GoRouter(
               path: TicketsPage.routePath,
               name: TicketsPage.routeName,
               builder: (context, state) => const TicketsPage(),
+              routes: [
+                GoRoute(
+                  path: ':ticketId',
+                  name: TicketDetailPage.routeName,
+                  builder: (context, state) => TicketDetailPage(
+                    ticketId: state.pathParameters['ticketId']!,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

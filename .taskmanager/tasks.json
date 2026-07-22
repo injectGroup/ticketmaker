@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: category palettes live under Generate",
-        "taskId": "task-generate-category-palettes-20260722",
-        "updatedAt": "2026-07-22T09:53:00.000Z",
+        "message": "App update: tap a saved ticket to view full content",
+        "taskId": "task-ticket-detail-view-20260722",
+        "updatedAt": "2026-07-22T10:24:51.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -356,7 +356,20 @@
       "status": "done",
       "createdAt": "2026-07-22T09:52:00.000Z",
       "updatedAt": "2026-07-22T09:53:00.000Z"
+    },
+    {
+      "id": "task-ticket-detail-view-20260722",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Ticket detail view on tap",
+      "description": "Nested /tickets/:ticketId detail page with read-only SavedTicketView; list card tap opens full ticket content.",
+      "details": "ticket_detail_page.dart; saved_ticket_view.dart; app_router nested route; SavedTicketCard onTap",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-22T10:24:51.000Z",
+      "updatedAt": "2026-07-22T10:24:51.000Z"
     }
   ],
-  "lastSync": "2026-07-22T09:54:52.738Z"
+  "lastSync": "2026-07-22T10:25:24.740Z"
 }
