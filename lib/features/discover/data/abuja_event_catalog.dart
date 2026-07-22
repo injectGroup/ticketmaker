@@ -1,8 +1,7 @@
-import 'event_category_palettes.dart';
 import '../domain/entities/event.dart';
 
 /// Curated sample events in Abuja (no network).
-/// Each [Event.category] maps to [EventCategoryPalettes] for ticket color defaults.
+/// Category labels align with Generate [TicketCategoryPalettes].
 abstract final class AbujaEventCatalog {
   static const String city = 'Abuja';
 
@@ -15,7 +14,7 @@ abstract final class AbujaEventCatalog {
       venue: 'Transcorp Hilton — Ballroom',
       city: city,
       eventAt: DateTime(2026, 7, 25, 20, 0),
-      category: EventCategoryPalettes.music,
+      category: 'Music',
       description: 'Live jazz ensembles and guest vocalists under the city lights.',
     ),
     Event(
@@ -24,7 +23,7 @@ abstract final class AbujaEventCatalog {
       venue: 'Jabi Lake Mall Amphitheatre',
       city: city,
       eventAt: DateTime(2026, 7, 26, 19, 30),
-      category: EventCategoryPalettes.comedy,
+      category: 'Comedy',
       description: 'Stand-up from Abuja and Lagos comics in an open-air set.',
     ),
     Event(
@@ -33,7 +32,7 @@ abstract final class AbujaEventCatalog {
       venue: 'Andela Learning Hub, Wuse II',
       city: city,
       eventAt: DateTime(2026, 8, 2, 14, 0),
-      category: EventCategoryPalettes.tech,
+      category: 'Tech',
       description: 'Talks on Flutter UI patterns, state management, and shipping apps.',
     ),
     Event(
@@ -42,7 +41,7 @@ abstract final class AbujaEventCatalog {
       venue: 'Moshood Abiola National Stadium',
       city: city,
       eventAt: DateTime(2026, 8, 8, 16, 0),
-      category: EventCategoryPalettes.sports,
+      category: 'Sports',
       description: 'Exhibition match with youth academies from the FCT.',
     ),
     Event(
@@ -51,7 +50,7 @@ abstract final class AbujaEventCatalog {
       venue: 'Shehu Musa Yar’Adua Centre gardens',
       city: city,
       eventAt: DateTime(2026, 8, 9, 11, 0),
-      category: EventCategoryPalettes.wedding,
+      category: 'Wedding',
       description: 'Ivory & blush showcase of venues, planners, and live strings.',
     ),
     Event(
@@ -60,7 +59,7 @@ abstract final class AbujaEventCatalog {
       venue: 'Jabi Lake Mall Kids Zone',
       city: city,
       eventAt: DateTime(2026, 8, 15, 12, 0),
-      category: EventCategoryPalettes.birthday,
+      category: 'Birthday',
       description: 'Rainbow games, cake stations, and family-friendly DJ sets.',
     ),
     Event(
@@ -69,7 +68,7 @@ abstract final class AbujaEventCatalog {
       venue: 'Transcorp Hilton — Crystal Ballroom',
       city: city,
       eventAt: DateTime(2026, 8, 22, 18, 0),
-      category: EventCategoryPalettes.anniversary,
+      category: 'Anniversary',
       description: 'Gold & white evening celebrating milestone couples.',
     ),
     Event(
@@ -78,7 +77,7 @@ abstract final class AbujaEventCatalog {
       venue: 'University of Abuja Convocation Arena',
       city: city,
       eventAt: DateTime(2026, 8, 28, 10, 0),
-      category: EventCategoryPalettes.graduation,
+      category: 'Graduation',
       description: 'Black, silver, and gold ceremony with family photo lanes.',
     ),
     Event(
@@ -87,7 +86,7 @@ abstract final class AbujaEventCatalog {
       venue: 'Gwarinpa Estate Clubhouse',
       city: city,
       eventAt: DateTime(2026, 9, 5, 20, 0),
-      category: EventCategoryPalettes.generalParty,
+      category: 'General party',
       description: 'White & silver night with primary accent lighting and DJs.',
     ),
     Event(
@@ -96,7 +95,7 @@ abstract final class AbujaEventCatalog {
       venue: 'International Conference Centre',
       city: city,
       eventAt: DateTime(2026, 9, 12, 15, 0),
-      category: EventCategoryPalettes.generalEvent,
+      category: 'General event',
       description: 'Cream & gold civic program with exhibitors and guest speakers.',
     ),
   ];

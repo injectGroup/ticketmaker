@@ -1,7 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart';
-
-import '../../data/event_category_palettes.dart';
 
 class Event extends Equatable {
   const Event({
@@ -21,14 +18,6 @@ class Event extends Equatable {
   final DateTime eventAt;
   final String category;
   final String description;
-
-  /// Category-driven QR + background defaults for Generate.
-  EventPalette get palette => EventCategoryPalettes.forCategory(category);
-
-  Color get eyeColor => palette.eyeColor;
-  Color get dataModuleColor => palette.dataModuleColor;
-  Color get backgroundStart => palette.backgroundStart;
-  Color get backgroundEnd => palette.backgroundEnd;
 
   String get dateLabel {
     const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

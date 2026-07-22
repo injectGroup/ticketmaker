@@ -71,6 +71,21 @@ void main() {
     expect(find.text('Tech'), findsWidgets);
   });
 
+  testWidgets('Generate category palette applies wedding colors', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const TicketMakerApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Generate'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Event category palette'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilterChip, 'Wedding'));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(FilterChip, 'Wedding'), findsOneWidget);
+  });
+
   testWidgets('Account tab opens placeholder screen', (tester) async {
     await tester.pumpWidget(const TicketMakerApp());
     await tester.pumpAndSettle();

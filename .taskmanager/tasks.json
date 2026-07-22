@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: category color palettes mapped into Discover catalog",
-        "taskId": "task-event-category-palettes-20260722",
-        "updatedAt": "2026-07-22T09:50:00.000Z",
+        "message": "App update: category palettes live under Generate",
+        "taskId": "task-generate-category-palettes-20260722",
+        "updatedAt": "2026-07-22T09:53:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -343,7 +343,20 @@
       "status": "done",
       "createdAt": "2026-07-22T09:49:00.000Z",
       "updatedAt": "2026-07-22T09:50:00.000Z"
+    },
+    {
+      "id": "task-generate-category-palettes-20260722",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Move category palettes under Generate",
+      "description": "Moved TicketCategoryPalettes to features/generate; category chip bar applies QR/bg defaults; removed Discover palette mapping UI.",
+      "details": "ticket_category_palettes.dart; TicketCategoryPaletteBar; GenerateCubit.applyCategoryPalette",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-22T09:52:00.000Z",
+      "updatedAt": "2026-07-22T09:53:00.000Z"
     }
   ],
-  "lastSync": "2026-07-22T09:51:33.448Z"
+  "lastSync": "2026-07-22T09:54:52.738Z"
 }

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../tickets/presentation/bloc/tickets_cubit.dart';
 import '../bloc/generate_cubit.dart';
+import '../widgets/ticket_category_palette_bar.dart';
 import '../widgets/ticket_details_section.dart';
 import '../widgets/ticket_header_section.dart';
 import '../widgets/ticket_perforation.dart';
@@ -120,7 +121,8 @@ class _GenerateViewState extends State<_GenerateView> {
               color: AppColors.secondaryBackground,
               child: BlocBuilder<GenerateCubit, GenerateState>(
                 buildWhen: (previous, current) =>
-                    previous.ticket != current.ticket,
+                    previous.ticket != current.ticket ||
+                    previous.selectedCategory != current.selectedCategory,
                 builder: (context, state) {
                   final ticket = state.ticket;
                   final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
@@ -130,6 +132,9 @@ class _GenerateViewState extends State<_GenerateView> {
                         ScrollViewKeyboardDismissBehavior.onDrag,
                     child: Column(
                       children: [
+                        const SizedBox(height: 16),
+                        const TicketCategoryPaletteBar(),
+                        const SizedBox(height: 16),
                         TicketHeaderSection(
                           ticket: ticket,
                           headerLabelController: _headerLabelController,

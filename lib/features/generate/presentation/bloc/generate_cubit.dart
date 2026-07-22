@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../data/ticket_category_palettes.dart';
 import '../../domain/entities/ticket.dart';
 
 part 'generate_state.dart';
@@ -250,6 +251,25 @@ class GenerateCubit extends Cubit<GenerateState> {
     if (state.message != null) {
       emit(state.copyWith(clearMessage: true));
     }
+  }
+
+  /// Applies QR + background defaults for an event [category].
+  void applyCategoryPalette(String category) {
+    final palette = TicketCategoryPalettes.forCategory(category);
+    final ticket = state.ticket;
+    emit(
+      state.copyWith(
+        selectedCategory: category,
+        ticket: ticket.copyWith(
+          eyeColor: palette.eyeColor,
+          dataModuleColor: palette.dataModuleColor,
+          topGradientStart: palette.backgroundStart,
+          topGradientEnd: palette.backgroundEnd,
+          bottomGradientStart: palette.backgroundStart,
+          bottomGradientEnd: palette.backgroundEnd,
+        ),
+      ),
+    );
   }
 
   /// Restores the editor to the initial default ticket configuration.
