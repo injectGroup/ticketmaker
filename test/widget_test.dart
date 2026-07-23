@@ -96,18 +96,6 @@ void main() {
     expect(find.text('Sign in to book'), findsOneWidget);
   });
 
-  testWidgets('Generate category palette applies wedding colors', (
-    tester,
-  ) async {
-    await tester.pumpWidget(buildTestApp());
-    await tester.pumpAndSettle();
-
-    expect(find.text('Event category palette'), findsOneWidget);
-    await tester.tap(find.widgetWithText(FilterChip, 'Wedding'));
-    await tester.pumpAndSettle();
-    expect(find.widgetWithText(FilterChip, 'Wedding'), findsOneWidget);
-  });
-
   testWidgets('Tapping a saved ticket opens read-only detail view', (
     tester,
   ) async {

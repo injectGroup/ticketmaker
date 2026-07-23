@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Fix Clear all AppBar visibility on My Tickets",
-        "taskId": "task-fix-clear-all-visibility-20260723",
-        "updatedAt": "2026-07-23T14:10:00.000Z",
+        "message": "App update: Remove Event category palette from Generate",
+        "taskId": "task-remove-category-palette-bar-20260723",
+        "updatedAt": "2026-07-23T14:15:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -525,7 +525,20 @@
       "status": "done",
       "createdAt": "2026-07-23T14:07:00.000Z",
       "updatedAt": "2026-07-23T14:10:00.000Z"
+    },
+    {
+      "id": "task-remove-category-palette-bar-20260723",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Remove Event category palette from Generate",
+      "description": "Remove TicketCategoryPaletteBar from GeneratePage; delete unused widget; keep TicketCategoryPalettes data for other flows.",
+      "details": "generate_page.dart; deleted ticket_category_palette_bar.dart; widget_test updated",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-23T14:11:00.000Z",
+      "updatedAt": "2026-07-23T14:15:00.000Z"
     }
   ],
-  "lastSync": "2026-07-23T14:10:00.000Z"
+  "lastSync": "2026-07-23T14:15:00.000Z"
 }
