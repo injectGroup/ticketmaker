@@ -273,17 +273,22 @@ class GenerateCubit extends Cubit<GenerateState> {
     );
   }
 
-  /// Prefills the editor from a Discover [event] (Book a Spot).
-  void prefillFromEvent(Event event) {
+  /// Prefills the editor from a Discover [event] (Book a Spot / seating).
+  ///
+  /// When [seatSummary] is set (e.g. `B4, C2`), it is appended to the
+  /// subtitle and header so checkout reflects selected seats.
+  void prefillFromEvent(Event event, {String? seatSummary}) {
     final palette = TicketCategoryPalettes.forCategory(event.category);
     final imagePath = event.hasAssetImage ? event.imageUrl! : '';
+    final seats = seatSummary?.trim();
+    final hasSeats = seats != null && seats.isNotEmpty;
     emit(
       GenerateState(
         selectedCategory: event.category,
         ticket: state.ticket.copyWith(
-          headerLabel: event.host,
+          headerLabel: hasSeats ? '${event.host} · $seats' : event.host,
           title: event.title,
-          subtitle: event.venue,
+          subtitle: hasSeats ? '${event.venue} · Seats $seats' : event.venue,
           eventAt: event.eventAt,
           dateLabel: formatDateLabel(event.eventAt),
           timeLabel: formatTimeLabel(event.eventAt),

@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: unified Auth gate for Book Spot and Save Ticket",
-        "taskId": "task-unified-auth-gate-20260723",
-        "updatedAt": "2026-07-23T10:00:00.000Z",
+        "message": "App update: Interactive Seating Map after Book Spot",
+        "taskId": "task-interactive-seating-map-20260723",
+        "updatedAt": "2026-07-23T11:25:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -473,7 +473,20 @@
       "status": "done",
       "createdAt": "2026-07-23T09:49:00.000Z",
       "updatedAt": "2026-07-23T10:00:00.000Z"
+    },
+    {
+      "id": "task-interactive-seating-map-20260723",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Interactive Seating Map",
+      "description": "Auth-gated Book Spot → seating map (rows A–C, seats 1–10) → Proceed to Checkout prefills Generate with selected seats.",
+      "details": "InteractiveSeatingCubit; seating layout factory; /seating route; sticky summary drawer; cubit + widget tests",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-23T11:11:00.000Z",
+      "updatedAt": "2026-07-23T11:25:00.000Z"
     }
   ],
-  "lastSync": "2026-07-23T10:00:00.000Z"
+  "lastSync": "2026-07-23T11:25:00.000Z"
 }

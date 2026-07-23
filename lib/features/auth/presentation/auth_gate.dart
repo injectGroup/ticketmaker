@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../account/presentation/pages/account_page.dart';
 import '../../discover/domain/entities/event.dart';
 import '../../generate/presentation/bloc/generate_cubit.dart';
-import '../../generate/presentation/pages/generate_page.dart';
+import '../../seating/presentation/pages/interactive_seating_page.dart';
 import '../../tickets/presentation/bloc/tickets_cubit.dart';
 import '../domain/pending_auth_action.dart';
 import 'bloc/auth_cubit.dart';
@@ -75,8 +75,7 @@ Future<void> _executePending(
       if (navigator.canPop()) {
         navigator.pop();
       }
-      context.read<GenerateCubit>().prefillFromEvent(event);
-      context.go(GeneratePage.routePath);
+      context.go(InteractiveSeatingPage.routePath, extra: event);
     case PendingSaveTicketAction():
       final generateCubit = context.read<GenerateCubit>();
       await context.read<TicketsCubit>().saveTicket(generateCubit.state.ticket);

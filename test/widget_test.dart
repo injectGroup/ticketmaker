@@ -165,7 +165,7 @@ void main() {
     expect(find.text('Sign Up'), findsWidgets);
   });
 
-  testWidgets('Signed-in Book Spot prefills Generate', (tester) async {
+  testWidgets('Signed-in Book Spot opens seating map', (tester) async {
     final repo = await seedSignedInUser();
     await tester.pumpWidget(buildTestApp(authRepository: repo));
     await tester.pump();
@@ -177,10 +177,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 800));
 
     expect(find.text('Sign in to book'), findsNothing);
-    expect(find.text('Quick Ticket Maker'), findsOneWidget);
-    expect(find.text('Abuja Jazz Night'), findsWidgets);
-    expect(find.text('Transcorp Hilton — Ballroom'), findsOneWidget);
-    expect(find.text('Capital Jazz Collective'), findsOneWidget);
+    expect(find.text('STAGE / FRONT'), findsOneWidget);
+    expect(find.text('Proceed to Checkout'), findsOneWidget);
+    expect(find.text('Available'), findsOneWidget);
   });
 
   testWidgets('Guest Save Ticket opens auth gate', (tester) async {
