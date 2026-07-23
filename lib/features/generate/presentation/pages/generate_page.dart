@@ -17,10 +17,7 @@ class GeneratePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => GenerateCubit(),
-      child: const _GenerateView(),
-    );
+    return const _GenerateView();
   }
 }
 
@@ -57,6 +54,13 @@ class _GenerateViewState extends State<_GenerateView> {
     super.dispose();
   }
 
+  void _syncControllersFromTicket() {
+    final ticket = context.read<GenerateCubit>().state.ticket;
+    _headerLabelController.text = ticket.headerLabel;
+    _titleController.text = ticket.title;
+    _subtitleController.text = ticket.subtitle;
+  }
+
   Future<void> _saveTicket() async {
     if (_isSaving) return;
     setState(() => _isSaving = true);
@@ -65,10 +69,7 @@ class _GenerateViewState extends State<_GenerateView> {
       await context.read<TicketsCubit>().saveTicket(generateCubit.state.ticket);
       if (!mounted) return;
       generateCubit.resetToDefault();
-      final defaults = generateCubit.state.ticket;
-      _headerLabelController.text = defaults.headerLabel;
-      _titleController.text = defaults.title;
-      _subtitleController.text = defaults.subtitle;
+      _syncControllersFromTicket();
       _ticketSession++;
     } finally {
       if (mounted) {
@@ -100,6 +101,18 @@ class _GenerateViewState extends State<_GenerateView> {
                   ..hideCurrentSnackBar()
                   ..showSnackBar(SnackBar(content: Text(message)));
                 context.read<GenerateCubit>().clearMessage();
+              },
+            ),
+            BlocListener<GenerateCubit, GenerateState>(
+              listenWhen: (previous, current) =>
+                  previous.ticket.headerLabel != current.ticket.headerLabel ||
+                  previous.ticket.title != current.ticket.title ||
+                  previous.ticket.subtitle != current.ticket.subtitle ||
+                  previous.ticket.eventAt != current.ticket.eventAt,
+              listener: (context, state) {
+                _headerLabelController.text = state.ticket.headerLabel;
+                _titleController.text = state.ticket.title;
+                _subtitleController.text = state.ticket.subtitle;
               },
             ),
             BlocListener<TicketsCubit, TicketsState>(

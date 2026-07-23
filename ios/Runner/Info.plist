@@ -68,5 +68,7 @@
 	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Select an event photo for your ticket.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Show nearby Discover events based on your city.</string>
 </dict>
 </plist>

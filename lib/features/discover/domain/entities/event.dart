@@ -9,6 +9,9 @@ class Event extends Equatable {
     required this.eventAt,
     required this.category,
     required this.description,
+    required this.host,
+    required this.priceLabel,
+    this.imageUrl,
   });
 
   final String id;
@@ -18,6 +21,11 @@ class Event extends Equatable {
   final DateTime eventAt;
   final String category;
   final String description;
+  final String host;
+  final String priceLabel;
+
+  /// Asset path (`assets/...`) or network URL. Null → palette color fallback.
+  final String? imageUrl;
 
   String get dateLabel {
     const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -45,6 +53,13 @@ class Event extends Equatable {
     return '$hour:$minute $period';
   }
 
+  bool get hasAssetImage =>
+      imageUrl != null && imageUrl!.startsWith('assets/');
+
+  bool get hasNetworkImage =>
+      imageUrl != null &&
+      (imageUrl!.startsWith('http://') || imageUrl!.startsWith('https://'));
+
   @override
   List<Object?> get props => [
     id,
@@ -54,5 +69,8 @@ class Event extends Equatable {
     eventAt,
     category,
     description,
+    host,
+    priceLabel,
+    imageUrl,
   ];
 }

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../discover/domain/entities/event.dart';
 import '../../data/ticket_category_palettes.dart';
 import '../../domain/entities/ticket.dart';
 
@@ -261,6 +262,32 @@ class GenerateCubit extends Cubit<GenerateState> {
       state.copyWith(
         selectedCategory: category,
         ticket: ticket.copyWith(
+          eyeColor: palette.eyeColor,
+          dataModuleColor: palette.dataModuleColor,
+          topGradientStart: palette.backgroundStart,
+          topGradientEnd: palette.backgroundEnd,
+          bottomGradientStart: palette.backgroundStart,
+          bottomGradientEnd: palette.backgroundEnd,
+        ),
+      ),
+    );
+  }
+
+  /// Prefills the editor from a Discover [event] (Book a Spot).
+  void prefillFromEvent(Event event) {
+    final palette = TicketCategoryPalettes.forCategory(event.category);
+    final imagePath = event.hasAssetImage ? event.imageUrl! : '';
+    emit(
+      GenerateState(
+        selectedCategory: event.category,
+        ticket: state.ticket.copyWith(
+          headerLabel: event.host,
+          title: event.title,
+          subtitle: event.venue,
+          eventAt: event.eventAt,
+          dateLabel: formatDateLabel(event.eventAt),
+          timeLabel: formatTimeLabel(event.eventAt),
+          imagePath: imagePath,
           eyeColor: palette.eyeColor,
           dataModuleColor: palette.dataModuleColor,
           topGradientStart: palette.backgroundStart,

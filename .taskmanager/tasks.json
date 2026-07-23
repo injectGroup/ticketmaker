@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: harden ticket photo retention on save/load",
-        "taskId": "task-harden-ticket-image-retention-20260722",
-        "updatedAt": "2026-07-22T16:45:00.000Z",
+        "message": "App update: Discover themed cards, details sheet, Book a Spot, city filter",
+        "taskId": "task-discover-cards-details-location-20260723",
+        "updatedAt": "2026-07-23T09:00:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -421,7 +421,20 @@
       "status": "done",
       "createdAt": "2026-07-22T16:45:00.000Z",
       "updatedAt": "2026-07-22T16:45:00.000Z"
+    },
+    {
+      "id": "task-discover-cards-details-location-20260723",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Discover screen: cards, details, theme, location",
+      "description": "Themed hero/fallback event cards; Material 3 details bottom sheet with Book a Spot prefilling Generate; geolocator city filter with manual city switch; multi-city EventCatalog.",
+      "details": "Event + EventCatalog; EventTheme; EventDetailsSheet; GenerateCubit.prefillFromEvent; GeolocatorCityService; DiscoverCubit city filter; geolocator/geocoding deps",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-23T08:56:00.000Z",
+      "updatedAt": "2026-07-23T09:00:00.000Z"
     }
   ],
-  "lastSync": "2026-07-22T16:45:19.165Z"
+  "lastSync": "2026-07-23T09:02:54.646Z"
 }

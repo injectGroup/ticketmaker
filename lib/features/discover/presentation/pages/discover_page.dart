@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../bloc/discover_cubit.dart';
 import '../widgets/discover_event_card.dart';
+import '../widgets/event_details_sheet.dart';
 
 class DiscoverPage extends StatelessWidget {
   const DiscoverPage({super.key});
@@ -13,10 +14,7 @@ class DiscoverPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => DiscoverCubit(),
-      child: const _DiscoverView(),
-    );
+    return const _DiscoverView();
   }
 }
 
@@ -49,41 +47,115 @@ class _DiscoverViewState extends State<_DiscoverView> {
     return Scaffold(
       backgroundColor: AppColors.primaryBackground,
       appBar: AppBar(
-        title: const Text('Discover · Abuja'),
+        title: BlocBuilder<DiscoverCubit, DiscoverState>(
+          buildWhen: (previous, current) =>
+              previous.selectedCity != current.selectedCity,
+          builder: (context, state) {
+            return Text('Discover · ${state.selectedCity}');
+          },
+        ),
         automaticallyImplyLeading: false,
       ),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: TextField(
-              controller: _searchController,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                hintText: 'Search Abuja events',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: AppColors.secondaryBackground,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: _searchController,
-                  builder: (context, value, _) {
-                    if (value.text.isEmpty) return const SizedBox.shrink();
-                    return IconButton(
-                      tooltip: 'Clear',
-                      onPressed: () {
-                        _searchController.clear();
-                        context.read<DiscoverCubit>().updateQuery('');
-                      },
-                      icon: const Icon(Icons.clear),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                BlocBuilder<DiscoverCubit, DiscoverState>(
+                  buildWhen: (previous, current) =>
+                      previous.selectedCity != current.selectedCity ||
+                      previous.availableCities != current.availableCities ||
+                      previous.locationStatus != current.locationStatus,
+                  builder: (context, state) {
+                    final nearYou =
+                        state.locationStatus == DiscoverLocationStatus.granted;
+                    return Row(
+                      children: [
+                        Icon(
+                          nearYou
+                              ? Icons.my_location
+                              : Icons.location_city_outlined,
+                          size: 18,
+                          color: AppColors.secondaryText,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            nearYou
+                                ? 'Near you · ${state.selectedCity}'
+                                : 'Showing · ${state.selectedCity}',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: AppColors.secondaryText,
+                            ),
+                          ),
+                        ),
+                        if (state.availableCities.isNotEmpty)
+                          PopupMenuButton<String>(
+                            tooltip: 'Switch city',
+                            initialValue: state.selectedCity,
+                            onSelected: context.read<DiscoverCubit>().selectCity,
+                            itemBuilder: (context) {
+                              return [
+                                for (final city in state.availableCities)
+                                  PopupMenuItem(
+                                    value: city,
+                                    child: Text(city),
+                                  ),
+                              ];
+                            },
+                            child: Chip(
+                              avatar: const Icon(Icons.place, size: 16),
+                              label: Text(state.selectedCity),
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                      ],
                     );
                   },
                 ),
-              ),
-              onChanged: context.read<DiscoverCubit>().updateQuery,
+                const SizedBox(height: 12),
+                BlocBuilder<DiscoverCubit, DiscoverState>(
+                  buildWhen: (previous, current) =>
+                      previous.selectedCity != current.selectedCity,
+                  builder: (context, state) {
+                    return TextField(
+                      controller: _searchController,
+                      textInputAction: TextInputAction.search,
+                      decoration: InputDecoration(
+                        hintText: 'Search ${state.selectedCity} events',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: AppColors.secondaryBackground,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: _searchController,
+                          builder: (context, value, _) {
+                            if (value.text.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+                            return IconButton(
+                              tooltip: 'Clear',
+                              onPressed: () {
+                                _searchController.clear();
+                                context.read<DiscoverCubit>().updateQuery('');
+                              },
+                              icon: const Icon(Icons.clear),
+                            );
+                          },
+                        ),
+                      ),
+                      onChanged: context.read<DiscoverCubit>().updateQuery,
+                    );
+                  },
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -99,7 +171,7 @@ class _DiscoverViewState extends State<_DiscoverView> {
                       padding: const EdgeInsets.all(24),
                       child: Text(
                         state.query.trim().isEmpty
-                            ? 'No events in Abuja yet.'
+                            ? 'No events in ${state.selectedCity} yet.'
                             : 'No events match “${state.query.trim()}”.',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: AppColors.secondaryText,
@@ -115,8 +187,13 @@ class _DiscoverViewState extends State<_DiscoverView> {
                   itemCount: state.filteredEvents.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
+                    final event = state.filteredEvents[index];
                     return DiscoverEventCard(
-                      event: state.filteredEvents[index],
+                      event: event,
+                      onTap: () => showEventDetailsSheet(
+                        context,
+                        event: event,
+                      ),
                     );
                   },
                 );

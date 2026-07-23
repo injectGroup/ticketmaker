@@ -4,7 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ticket_maker/app.dart';
+import 'package:ticket_maker/features/discover/domain/location_city_service.dart';
 import 'package:ticket_maker/features/tickets/data/ticket_local_repository.dart';
+
+Widget buildTestApp({LocationCityService? location}) {
+  return TicketMakerApp(
+    locationCityService: location ?? FakeLocationCityService('Abuja'),
+  );
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -14,7 +21,7 @@ void main() {
   });
 
   testWidgets('App opens on Discover home', (tester) async {
-    await tester.pumpWidget(const TicketMakerApp());
+    await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
     expect(find.text('Discover · Abuja'), findsOneWidget);
@@ -22,7 +29,7 @@ void main() {
   });
 
   testWidgets('Generate page shows ticket title branding', (tester) async {
-    await tester.pumpWidget(const TicketMakerApp());
+    await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Generate'));
@@ -36,7 +43,7 @@ void main() {
   });
 
   testWidgets('Tickets tab starts empty without saved records', (tester) async {
-    await tester.pumpWidget(const TicketMakerApp());
+    await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Tickets'));
@@ -49,7 +56,7 @@ void main() {
   testWidgets('Discover lists Abuja events and filters by search', (
     tester,
   ) async {
-    await tester.pumpWidget(const TicketMakerApp());
+    await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Discover'));
@@ -74,10 +81,49 @@ void main() {
     expect(find.text('Tech'), findsWidgets);
   });
 
+  testWidgets('Discover city switch filters events', (tester) async {
+    await tester.pumpWidget(buildTestApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Abuja Jazz Night'), findsOneWidget);
+    expect(find.text('Lagos Afrobeats Night'), findsNothing);
+
+    await tester.tap(find.widgetWithText(Chip, 'Abuja'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Lagos').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Discover · Lagos'), findsOneWidget);
+    expect(find.text('Lagos Afrobeats Night'), findsOneWidget);
+    expect(find.text('Abuja Jazz Night'), findsNothing);
+  });
+
+  testWidgets('Discover card opens details and Book a Spot prefills Generate', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildTestApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Abuja Jazz Night'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Book a Spot'), findsOneWidget);
+    expect(find.text('Capital Jazz Collective'), findsOneWidget);
+    expect(find.text('₦8,500'), findsOneWidget);
+
+    await tester.tap(find.text('Book a Spot'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Quick Ticket Maker'), findsOneWidget);
+    expect(find.text('Abuja Jazz Night'), findsWidgets);
+    expect(find.text('Transcorp Hilton — Ballroom'), findsOneWidget);
+    expect(find.text('Capital Jazz Collective'), findsOneWidget);
+  });
+
   testWidgets('Generate category palette applies wedding colors', (
     tester,
   ) async {
-    await tester.pumpWidget(const TicketMakerApp());
+    await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Generate'));
@@ -115,7 +161,7 @@ void main() {
       TicketLocalRepository.storageKey: <String>[jsonEncode(ticketJson)],
     });
 
-    await tester.pumpWidget(const TicketMakerApp());
+    await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Tickets'));
@@ -133,7 +179,7 @@ void main() {
   });
 
   testWidgets('Account tab opens placeholder screen', (tester) async {
-    await tester.pumpWidget(const TicketMakerApp());
+    await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Account'));
