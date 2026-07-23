@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Remove Event category palette from Generate",
-        "taskId": "task-remove-category-palette-bar-20260723",
-        "updatedAt": "2026-07-23T14:15:00.000Z",
+        "message": "App update: Tighten gap under Generate AppBar",
+        "taskId": "task-remove-generate-header-gap-20260723",
+        "updatedAt": "2026-07-23T14:16:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -538,7 +538,20 @@
       "status": "done",
       "createdAt": "2026-07-23T14:11:00.000Z",
       "updatedAt": "2026-07-23T14:15:00.000Z"
+    },
+    {
+      "id": "task-remove-generate-header-gap-20260723",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Remove gap under Generate AppBar",
+      "description": "Remove leftover SizedBox spacers between Quick Ticket Maker AppBar and My Ticket header field.",
+      "details": "generate_page.dart; ticket_header_section.dart",
+      "operationalPhase": "COMPLETE",
+      "priority": "low",
+      "status": "done",
+      "createdAt": "2026-07-23T14:15:00.000Z",
+      "updatedAt": "2026-07-23T14:16:00.000Z"
     }
   ],
-  "lastSync": "2026-07-23T14:15:00.000Z"
+  "lastSync": "2026-07-23T14:16:00.000Z"
 }

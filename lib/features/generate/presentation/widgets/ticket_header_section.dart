@@ -45,7 +45,6 @@ class TicketHeaderSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: BracketedTicketField(

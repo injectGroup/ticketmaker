@@ -142,7 +142,6 @@ class _GenerateViewState extends State<_GenerateView> {
                         ScrollViewKeyboardDismissBehavior.onDrag,
                     child: Column(
                       children: [
-                        const SizedBox(height: 16),
                         TicketHeaderSection(
                           ticket: ticket,
                           headerLabelController: _headerLabelController,
