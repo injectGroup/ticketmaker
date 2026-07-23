@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Discover themed cards, details sheet, Book a Spot, city filter",
-        "taskId": "task-discover-cards-details-location-20260723",
-        "updatedAt": "2026-07-23T09:00:00.000Z",
+        "message": "App update: Discover event hero photos via picsum URLs",
+        "taskId": "task-fix-discover-event-images-20260723",
+        "updatedAt": "2026-07-23T09:15:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -434,7 +434,20 @@
       "status": "done",
       "createdAt": "2026-07-23T08:56:00.000Z",
       "updatedAt": "2026-07-23T09:00:00.000Z"
+    },
+    {
+      "id": "task-fix-discover-event-images-20260723",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Fix Discover event images",
+      "description": "Replace gradient placeholder/null heroes with unique picsum photo URLs per event; add Image.network loadingBuilder with palette fallback.",
+      "details": "event_catalog.dart picsum seeds; EventHeroHeader loadingBuilder",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-23T09:11:00.000Z",
+      "updatedAt": "2026-07-23T09:15:00.000Z"
     }
   ],
-  "lastSync": "2026-07-23T09:02:54.646Z"
+  "lastSync": "2026-07-23T09:15:39.284Z"
 }

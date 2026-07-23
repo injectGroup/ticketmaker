@@ -22,10 +22,29 @@ void main() {
 
   testWidgets('App opens on Discover home', (tester) async {
     await tester.pumpWidget(buildTestApp());
-    await tester.pumpAndSettle();
+    await tester.pump(); // Avoid hang on Image.network loading animation
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Discover · Abuja'), findsOneWidget);
     expect(find.text('Abuja Jazz Night'), findsOneWidget);
+    expect(find.byType(Image), findsWidgets);
+  });
+
+  testWidgets('Discover cards use network hero images', (tester) async {
+    await tester.pumpWidget(buildTestApp());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final networkImages = tester.widgetList<Image>(find.byType(Image)).where((
+      image,
+    ) {
+      return image.image is NetworkImage;
+    });
+    expect(networkImages, isNotEmpty);
+    expect(
+      (networkImages.first.image as NetworkImage).url,
+      contains('picsum.photos/seed/'),
+    );
   });
 
   testWidgets('Generate page shows ticket title branding', (tester) async {
@@ -57,41 +76,49 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(buildTestApp());
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     await tester.tap(find.text('Discover'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Discover · Abuja'), findsOneWidget);
     expect(find.text('Abuja Jazz Night'), findsOneWidget);
     expect(find.text('Music'), findsWidgets);
 
     await tester.enterText(find.byType(TextField), 'zzzz-no-match');
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
     expect(find.textContaining('No events match'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), 'Wedding');
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('Asokoro Garden Wedding Fair'), findsOneWidget);
     expect(find.text('Abuja Jazz Night'), findsNothing);
 
     await tester.enterText(find.byType(TextField), 'Flutter');
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('Flutter Abuja Meetup'), findsOneWidget);
     expect(find.text('Tech'), findsWidgets);
   });
 
   testWidgets('Discover city switch filters events', (tester) async {
     await tester.pumpWidget(buildTestApp());
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Abuja Jazz Night'), findsOneWidget);
     expect(find.text('Lagos Afrobeats Night'), findsNothing);
 
     await tester.tap(find.widgetWithText(Chip, 'Abuja'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
     await tester.tap(find.text('Lagos').last);
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Discover · Lagos'), findsOneWidget);
     expect(find.text('Lagos Afrobeats Night'), findsOneWidget);
@@ -102,17 +129,21 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(buildTestApp());
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     await tester.tap(find.text('Abuja Jazz Night'));
-    await tester.pumpAndSettle();
+    // Finish modal sheet animation without waiting on Image.network indicators.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
 
     expect(find.text('Book a Spot'), findsOneWidget);
     expect(find.text('Capital Jazz Collective'), findsOneWidget);
     expect(find.text('₦8,500'), findsOneWidget);
 
-    await tester.tap(find.text('Book a Spot'));
-    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Book a Spot'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
 
     expect(find.text('Quick Ticket Maker'), findsOneWidget);
     expect(find.text('Abuja Jazz Night'), findsWidgets);

@@ -45,6 +45,29 @@ class EventHeroHeader extends StatelessWidget {
           category: event.category,
           height: height,
         ),
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              _FallbackHeader(category: event.category, height: height),
+              Center(
+                child: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: EventTheme.onAccent(event.category),
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                        : null,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       );
     } else {
       media = _FallbackHeader(category: event.category, height: height);
