@@ -167,6 +167,7 @@ class TicketDetailsSection extends StatelessWidget {
             child: BracketedTicketField(
               controller: subtitleController,
               resetToken: bracketResetToken,
+              textAlign: TextAlign.center,
               minLines: 1,
               maxLines: 4,
               style: theme.textTheme.bodyMedium?.copyWith(

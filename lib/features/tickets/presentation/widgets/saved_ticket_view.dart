@@ -119,10 +119,14 @@ class SavedTicketView extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(30, 30, 30, 16),
-                child: Text(
-                  ticket.subtitle,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: onTop,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    ticket.subtitle,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: onTop,
+                    ),
                   ),
                 ),
               ),
