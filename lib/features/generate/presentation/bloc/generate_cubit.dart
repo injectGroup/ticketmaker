@@ -25,6 +25,7 @@ class GenerateCubit extends Cubit<GenerateState> {
     headerLabel: 'My Ticket',
     title: 'Circu Du Freak',
     subtitle: 'Vision & Sound Experience',
+    venue: 'National Stadium, Abuja',
     dateLabel: formatDateLabel(_defaultEventAt),
     timeLabel: formatTimeLabel(_defaultEventAt),
     eventAt: _defaultEventAt,
@@ -248,6 +249,11 @@ class GenerateCubit extends Cubit<GenerateState> {
     emit(state.copyWith(ticket: state.ticket.copyWith(subtitle: subtitle)));
   }
 
+  void updateVenue(String venue) {
+    if (venue == state.ticket.venue) return;
+    emit(state.copyWith(ticket: state.ticket.copyWith(venue: venue)));
+  }
+
   void clearMessage() {
     if (state.message != null) {
       emit(state.copyWith(clearMessage: true));
@@ -276,7 +282,7 @@ class GenerateCubit extends Cubit<GenerateState> {
   /// Prefills the editor from a Discover [event] (Book a Spot / seating).
   ///
   /// When [seatSummary] is set (e.g. `B4, C2`), it is appended to the
-  /// subtitle and header so checkout reflects selected seats.
+  /// venue and header so checkout reflects selected seats.
   void prefillFromEvent(Event event, {String? seatSummary}) {
     final palette = TicketCategoryPalettes.forCategory(event.category);
     final imagePath = event.hasAssetImage ? event.imageUrl! : '';
@@ -288,7 +294,8 @@ class GenerateCubit extends Cubit<GenerateState> {
         ticket: state.ticket.copyWith(
           headerLabel: hasSeats ? '${event.host} · $seats' : event.host,
           title: event.title,
-          subtitle: hasSeats ? '${event.venue} · Seats $seats' : event.venue,
+          subtitle: 'Vision & Sound Experience',
+          venue: hasSeats ? '${event.venue} · Seats $seats' : event.venue,
           eventAt: event.eventAt,
           dateLabel: formatDateLabel(event.eventAt),
           timeLabel: formatTimeLabel(event.eventAt),

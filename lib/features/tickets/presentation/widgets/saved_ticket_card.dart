@@ -56,6 +56,10 @@ class SavedTicketCard extends StatelessWidget {
                     Text(ticket.title, style: theme.textTheme.titleSmall),
                     const SizedBox(height: 4),
                     Text(ticket.subtitle, style: theme.textTheme.bodySmall),
+                    if (ticket.venue.trim().isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(ticket.venue, style: theme.textTheme.bodySmall),
+                    ],
                     const SizedBox(height: 4),
                     Text(
                       '${ticket.dateLabel} · ${ticket.timeLabel}',

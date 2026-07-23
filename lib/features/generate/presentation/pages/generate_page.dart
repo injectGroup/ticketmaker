@@ -32,6 +32,7 @@ class _GenerateViewState extends State<_GenerateView> {
   late final TextEditingController _headerLabelController;
   late final TextEditingController _titleController;
   late final TextEditingController _subtitleController;
+  late final TextEditingController _venueController;
   bool _isSaving = false;
 
   /// Bumped after Save Ticket so bracket hints return for the next ticket.
@@ -44,6 +45,7 @@ class _GenerateViewState extends State<_GenerateView> {
     _headerLabelController = TextEditingController(text: ticket.headerLabel);
     _titleController = TextEditingController(text: ticket.title);
     _subtitleController = TextEditingController(text: ticket.subtitle);
+    _venueController = TextEditingController(text: ticket.venue);
   }
 
   @override
@@ -51,6 +53,7 @@ class _GenerateViewState extends State<_GenerateView> {
     _headerLabelController.dispose();
     _titleController.dispose();
     _subtitleController.dispose();
+    _venueController.dispose();
     super.dispose();
   }
 
@@ -59,6 +62,7 @@ class _GenerateViewState extends State<_GenerateView> {
     _headerLabelController.text = ticket.headerLabel;
     _titleController.text = ticket.title;
     _subtitleController.text = ticket.subtitle;
+    _venueController.text = ticket.venue;
   }
 
   Future<void> _saveTicket() async {
@@ -106,11 +110,13 @@ class _GenerateViewState extends State<_GenerateView> {
                   previous.ticket.headerLabel != current.ticket.headerLabel ||
                   previous.ticket.title != current.ticket.title ||
                   previous.ticket.subtitle != current.ticket.subtitle ||
+                  previous.ticket.venue != current.ticket.venue ||
                   previous.ticket.eventAt != current.ticket.eventAt,
               listener: (context, state) {
                 _headerLabelController.text = state.ticket.headerLabel;
                 _titleController.text = state.ticket.title;
                 _subtitleController.text = state.ticket.subtitle;
+                _venueController.text = state.ticket.venue;
               },
             ),
             BlocListener<TicketsCubit, TicketsState>(
@@ -152,6 +158,7 @@ class _GenerateViewState extends State<_GenerateView> {
                           ticket: ticket,
                           titleController: _titleController,
                           subtitleController: _subtitleController,
+                          venueController: _venueController,
                           bracketResetToken: _ticketSession,
                         ),
                         const SizedBox(height: 24),

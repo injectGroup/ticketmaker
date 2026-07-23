@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Fix ticket text contrast on light washes",
-        "taskId": "task-fix-color-contrast-blended-20260723",
-        "updatedAt": "2026-07-23T14:42:00.000Z",
+        "message": "App update: Venue field and remove 3D badge on Generate",
+        "taskId": "task-venue-field-remove-3d-20260723",
+        "updatedAt": "2026-07-23T14:55:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -577,7 +577,20 @@
       "status": "done",
       "createdAt": "2026-07-23T14:40:00.000Z",
       "updatedAt": "2026-07-23T14:42:00.000Z"
+    },
+    {
+      "id": "task-venue-field-remove-3d-20260723",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Remove 3D badge and add editable Venue",
+      "description": "Drop threed_rotation beside subtitle; add Ticket.venue with live BracketedTicketField under date/time; SavedTicketView/card updated.",
+      "details": "ticket.dart; generate_cubit; ticket_details_section; generate_page; saved_ticket_view; saved_ticket_card",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-23T14:50:00.000Z",
+      "updatedAt": "2026-07-23T14:55:00.000Z"
     }
   ],
-  "lastSync": "2026-07-23T14:42:00.000Z"
+  "lastSync": "2026-07-23T14:55:00.000Z"
 }

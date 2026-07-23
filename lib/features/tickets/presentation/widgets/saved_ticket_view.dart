@@ -119,24 +119,15 @@ class SavedTicketView extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(30, 30, 30, 16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.threed_rotation, color: onTop, size: 24),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        ticket.subtitle,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: onTop,
-                        ),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  ticket.subtitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: onTop,
+                  ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(30, 0, 30, 32),
+                padding: const EdgeInsets.fromLTRB(30, 0, 30, 8),
                 child: Row(
                   children: [
                     Icon(Icons.date_range_sharp, color: onTop, size: 24),
@@ -165,6 +156,27 @@ class SavedTicketView extends StatelessWidget {
                   ],
                 ),
               ),
+              if (ticket.venue.trim().isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(30, 0, 30, 32),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.place_outlined, color: onTop, size: 24),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          ticket.venue,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: onTop,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                const SizedBox(height: 24),
             ],
           ),
         ),

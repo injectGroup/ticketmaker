@@ -20,6 +20,7 @@ class TicketDetailsSection extends StatelessWidget {
     required this.ticket,
     required this.titleController,
     required this.subtitleController,
+    required this.venueController,
     this.bracketResetToken,
     this.imageStore,
   });
@@ -27,6 +28,7 @@ class TicketDetailsSection extends StatelessWidget {
   final Ticket ticket;
   final TextEditingController titleController;
   final TextEditingController subtitleController;
+  final TextEditingController venueController;
   final Object? bracketResetToken;
   final TicketImageStore? imageStore;
 
@@ -172,11 +174,6 @@ class TicketDetailsSection extends StatelessWidget {
               ),
               cursorColor: onGradient,
               onChanged: cubit.updateSubtitle,
-              leading: Icon(
-                Icons.threed_rotation,
-                color: onGradient,
-                size: 24,
-              ),
             ),
           ),
           Padding(
@@ -220,6 +217,25 @@ class TicketDetailsSection extends StatelessWidget {
                     ],
                   ),
                 ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(30, 8, 30, 0),
+            child: BracketedTicketField(
+              controller: venueController,
+              resetToken: bracketResetToken,
+              minLines: 1,
+              maxLines: 3,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: onGradient,
+              ),
+              cursorColor: onGradient,
+              onChanged: cubit.updateVenue,
+              leading: Icon(
+                Icons.place_outlined,
+                color: onGradient,
+                size: 24,
               ),
             ),
           ),

@@ -7,6 +7,7 @@ class Ticket extends Equatable {
     required this.headerLabel,
     required this.title,
     required this.subtitle,
+    required this.venue,
     required this.dateLabel,
     required this.timeLabel,
     required this.eventAt,
@@ -26,6 +27,7 @@ class Ticket extends Equatable {
   final String headerLabel;
   final String title;
   final String subtitle;
+  final String venue;
   final String dateLabel;
   final String timeLabel;
   final DateTime eventAt;
@@ -47,6 +49,7 @@ class Ticket extends Equatable {
     'headerLabel': headerLabel,
     'title': title,
     'subtitle': subtitle,
+    'venue': venue,
     'dateLabel': dateLabel,
     'timeLabel': timeLabel,
     'eventAt': eventAt.toIso8601String(),
@@ -68,6 +71,7 @@ class Ticket extends Equatable {
       headerLabel: json['headerLabel'] as String? ?? 'My Ticket',
       title: json['title'] as String,
       subtitle: json['subtitle'] as String,
+      venue: json['venue'] as String? ?? '',
       dateLabel: json['dateLabel'] as String,
       timeLabel: json['timeLabel'] as String,
       eventAt: DateTime.parse(json['eventAt'] as String),
@@ -86,8 +90,10 @@ class Ticket extends Equatable {
 
   /// Plain-text summary for the native share sheet.
   String toShareText() {
-    final venue = subtitle.trim().isEmpty ? 'Venue' : subtitle.trim();
-    return 'Check out my ticket: $title at $venue on ${dateLabel.trim()}!';
+    final place = venue.trim().isNotEmpty
+        ? venue.trim()
+        : (subtitle.trim().isEmpty ? 'Venue' : subtitle.trim());
+    return 'Check out my ticket: $title at $place on ${dateLabel.trim()}!';
   }
 
   Ticket copyWith({
@@ -95,6 +101,7 @@ class Ticket extends Equatable {
     String? headerLabel,
     String? title,
     String? subtitle,
+    String? venue,
     String? dateLabel,
     String? timeLabel,
     DateTime? eventAt,
@@ -114,6 +121,7 @@ class Ticket extends Equatable {
       headerLabel: headerLabel ?? this.headerLabel,
       title: title ?? this.title,
       subtitle: subtitle ?? this.subtitle,
+      venue: venue ?? this.venue,
       dateLabel: dateLabel ?? this.dateLabel,
       timeLabel: timeLabel ?? this.timeLabel,
       eventAt: eventAt ?? this.eventAt,
@@ -136,6 +144,7 @@ class Ticket extends Equatable {
     headerLabel,
     title,
     subtitle,
+    venue,
     dateLabel,
     timeLabel,
     eventAt,

@@ -14,6 +14,7 @@ void main() {
     headerLabel: 'VIP Pass',
     title: 'Share Capture Concert',
     subtitle: 'National Stadium',
+    venue: 'National Stadium',
     dateLabel: 'Sat, Jul 18',
     timeLabel: '8:00 PM',
     eventAt: DateTime(2026, 7, 18, 20),

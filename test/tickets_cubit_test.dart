@@ -14,6 +14,7 @@ Ticket _sample({required String imagePath}) {
     headerLabel: 'VIP',
     title: 'Concert',
     subtitle: 'Venue',
+    venue: '',
     dateLabel: 'Sat, Jul 18',
     timeLabel: '8:00 PM',
     eventAt: DateTime(2026, 7, 18, 20),

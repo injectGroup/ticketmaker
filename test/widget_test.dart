@@ -68,6 +68,10 @@ void main() {
     expect(find.text('Quick Ticket Maker'), findsOneWidget);
     expect(find.text('My Ticket'), findsOneWidget);
     expect(find.text('Circu Du Freak'), findsOneWidget);
+    expect(find.text('Vision & Sound Experience'), findsOneWidget);
+    expect(find.text('National Stadium, Abuja'), findsOneWidget);
+    expect(find.byIcon(Icons.threed_rotation), findsNothing);
+    expect(find.byIcon(Icons.place_outlined), findsOneWidget);
     expect(find.text('Generate Qr Code'), findsOneWidget);
     expect(find.text('Save Ticket'), findsOneWidget);
   });
@@ -103,7 +107,8 @@ void main() {
       'id': 'ticket-detail-test-1',
       'headerLabel': 'VIP Pass',
       'title': 'Detail View Concert',
-      'subtitle': 'National Stadium Abuja',
+      'subtitle': 'Detail View Concert Tagline',
+      'venue': 'National Stadium Abuja',
       'dateLabel': 'Sat, Jul 18',
       'timeLabel': '8:00 PM',
       'eventAt': '2026-07-18T20:00:00.000',
@@ -133,6 +138,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('VIP Pass'), findsOneWidget);
+    expect(find.text('Detail View Concert Tagline'), findsOneWidget);
     expect(find.text('National Stadium Abuja'), findsOneWidget);
     expect(find.text('[ 9999-8888-777 ]'), findsOneWidget);
     expect(find.text('Generate Qr Code'), findsNothing);
