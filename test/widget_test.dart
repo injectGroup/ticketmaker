@@ -7,8 +7,8 @@ import 'package:ticket_maker/app.dart';
 import 'package:ticket_maker/core/router/app_router.dart';
 import 'package:ticket_maker/features/auth/data/auth_repository.dart';
 import 'package:ticket_maker/features/discover/domain/location_city_service.dart';
+import 'package:ticket_maker/features/generate/presentation/pages/generate_page.dart';
 import 'package:ticket_maker/features/tickets/data/ticket_local_repository.dart';
-import 'package:ticket_maker/presentation/pages/discover_screen.dart';
 
 Widget buildTestApp({
   LocationCityService? location,
@@ -40,42 +40,29 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    // Global GoRouter retains location across tests; reset to Discover.
-    appRouter.go(DiscoverScreen.routePath);
+    // Global GoRouter retains location across tests; reset to Generate.
+    appRouter.go(GeneratePage.routePath);
   });
 
-  testWidgets('App opens on Discover home', (tester) async {
+  testWidgets('App opens on Generate home with Generate and Tickets nav', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildTestApp());
-    await tester.pump(); // Avoid hang on Image.network loading animation
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pumpAndSettle();
 
-    expect(find.text('Discover · Abuja'), findsOneWidget);
-    expect(find.text('Abuja Jazz Night'), findsOneWidget);
-    expect(find.byType(Image), findsWidgets);
-  });
+    expect(find.text('Quick Ticket Maker'), findsOneWidget);
+    expect(find.text('Circu Du Freak'), findsOneWidget);
+    expect(find.text('Generate Qr Code'), findsOneWidget);
+    expect(find.text('Save Ticket'), findsOneWidget);
 
-  testWidgets('Discover cards use network hero images', (tester) async {
-    await tester.pumpWidget(buildTestApp());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-
-    final networkImages = tester.widgetList<Image>(find.byType(Image)).where((
-      image,
-    ) {
-      return image.image is NetworkImage;
-    });
-    expect(networkImages, isNotEmpty);
-    expect(
-      (networkImages.first.image as NetworkImage).url,
-      contains('images.unsplash.com/'),
-    );
+    expect(find.text('Generate'), findsWidgets);
+    expect(find.text('Tickets'), findsOneWidget);
+    expect(find.text('Discover'), findsNothing);
+    expect(find.text('Account'), findsNothing);
   });
 
   testWidgets('Generate page shows ticket title branding', (tester) async {
     await tester.pumpWidget(buildTestApp());
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Generate'));
     await tester.pumpAndSettle();
 
     expect(find.text('Quick Ticket Maker'), findsOneWidget);
@@ -96,100 +83,10 @@ void main() {
     expect(find.text('Circu Du Freak'), findsNothing);
   });
 
-  testWidgets('Discover lists Abuja events and filters by search', (
-    tester,
-  ) async {
-    await tester.pumpWidget(buildTestApp());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-
-    await tester.tap(find.text('Discover'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-
-    expect(find.text('Discover · Abuja'), findsOneWidget);
-    expect(find.text('Abuja Jazz Night'), findsOneWidget);
-    expect(find.text('Music'), findsWidgets);
-
-    await tester.enterText(find.byType(TextField), 'zzzz-no-match');
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(find.textContaining('No events match'), findsOneWidget);
-
-    await tester.enterText(find.byType(TextField), 'Wedding');
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('Asokoro Garden Wedding Fair'), findsOneWidget);
-    expect(find.text('Abuja Jazz Night'), findsNothing);
-
-    await tester.enterText(find.byType(TextField), 'Flutter');
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('Flutter Abuja Meetup'), findsOneWidget);
-    expect(find.text('Tech'), findsWidgets);
-  });
-
-  testWidgets('Discover city switch filters events', (tester) async {
-    await tester.pumpWidget(buildTestApp());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-
-    expect(find.text('Abuja Jazz Night'), findsOneWidget);
-    expect(find.text('Lagos Afrobeats Night'), findsNothing);
-
-    await tester.tap(find.widgetWithText(Chip, 'Abuja'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.text('Lagos').last);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-
-    expect(find.text('Discover · Lagos'), findsOneWidget);
-    expect(find.text('Lagos Afrobeats Night'), findsOneWidget);
-    expect(find.text('Abuja Jazz Night'), findsNothing);
-  });
-
-  testWidgets('Guest Book Spot opens auth gate', (tester) async {
-    await tester.pumpWidget(buildTestApp());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-
-    expect(find.text('Book Spot'), findsWidgets);
-    await tester.ensureVisible(find.text('Book Spot').first);
-    await tester.tap(find.text('Book Spot').first);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 800));
-
-    expect(find.text('Sign in to book'), findsOneWidget);
-    expect(find.text('Sign In'), findsWidgets);
-    expect(find.text('Sign Up'), findsWidgets);
-  });
-
-  testWidgets('Signed-in Book Spot opens seating map', (tester) async {
-    final repo = await seedSignedInUser();
-    await tester.pumpWidget(buildTestApp(authRepository: repo));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-
-    await tester.ensureVisible(find.text('Book Spot').first);
-    await tester.tap(find.text('Book Spot').first);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 800));
-
-    expect(find.text('Sign in to book'), findsNothing);
-    expect(find.text('STAGE / FRONT'), findsOneWidget);
-    expect(find.text('Proceed to Checkout'), findsOneWidget);
-    expect(find.text('Available'), findsOneWidget);
-  });
-
   testWidgets('Guest Save Ticket opens auth gate', (tester) async {
     await tester.pumpWidget(buildTestApp());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-
-    await tester.tap(find.text('Generate'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
 
     await tester.ensureVisible(find.text('Save Ticket'));
     await tester.tap(find.text('Save Ticket'));
@@ -199,33 +96,10 @@ void main() {
     expect(find.text('Sign in to book'), findsOneWidget);
   });
 
-  testWidgets('Discover card opens details sheet', (tester) async {
-    await tester.pumpWidget(buildTestApp());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-
-    expect(find.text('Abuja Jazz Night'), findsWidgets);
-    await tester.scrollUntilVisible(
-      find.text('Abuja Jazz Night').first,
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(find.text('Abuja Jazz Night').first);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 800));
-
-    expect(find.text('Book a Spot'), findsOneWidget);
-    expect(find.text('Capital Jazz Collective'), findsOneWidget);
-    expect(find.textContaining('₦8,500'), findsWidgets);
-  });
-
   testWidgets('Generate category palette applies wedding colors', (
     tester,
   ) async {
     await tester.pumpWidget(buildTestApp());
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Generate'));
     await tester.pumpAndSettle();
 
     expect(find.text('Event category palette'), findsOneWidget);
@@ -275,15 +149,5 @@ void main() {
     expect(find.text('[ 9999-8888-777 ]'), findsOneWidget);
     expect(find.text('Generate Qr Code'), findsNothing);
     expect(find.text('Save Ticket'), findsNothing);
-  });
-
-  testWidgets('Account tab shows sign-in CTA when guest', (tester) async {
-    await tester.pumpWidget(buildTestApp());
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Account'));
-    await tester.pumpAndSettle();
-    expect(find.text('Your account'), findsOneWidget);
-    expect(find.text('Sign In / Sign Up'), findsOneWidget);
   });
 }

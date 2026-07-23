@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Interactive Seating Map after Book Spot",
-        "taskId": "task-interactive-seating-map-20260723",
-        "updatedAt": "2026-07-23T11:25:00.000Z",
+        "message": "App update: gen_tic isolates Generate + Tickets nav",
+        "taskId": "task-gen-tic-nav-isolation-20260723",
+        "updatedAt": "2026-07-23T13:40:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -486,7 +486,20 @@
       "status": "done",
       "createdAt": "2026-07-23T11:11:00.000Z",
       "updatedAt": "2026-07-23T11:25:00.000Z"
+    },
+    {
+      "id": "task-gen-tic-nav-isolation-20260723",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "gen_tic: Isolate Generate + Tickets navigation",
+      "description": "Feature branch gen_tic: bottom nav only Generate and Tickets; launch on /generate; Account kept as top-level for auth personalize snackbar.",
+      "details": "app_router.dart HomeShell; widget_test Generate home; Discover/seating routes removed from router on this branch",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-23T13:37:00.000Z",
+      "updatedAt": "2026-07-23T13:40:00.000Z"
     }
   ],
-  "lastSync": "2026-07-23T11:25:00.000Z"
+  "lastSync": "2026-07-23T13:40:00.000Z"
 }
