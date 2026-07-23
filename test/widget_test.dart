@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ticket_maker/app.dart';
+import 'package:ticket_maker/core/router/app_router.dart';
 import 'package:ticket_maker/features/discover/domain/location_city_service.dart';
 import 'package:ticket_maker/features/tickets/data/ticket_local_repository.dart';
+import 'package:ticket_maker/presentation/pages/discover_screen.dart';
 
 Widget buildTestApp({LocationCityService? location}) {
   return TicketMakerApp(
@@ -18,6 +20,8 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    // Global GoRouter retains location across tests; reset to Discover.
+    appRouter.go(DiscoverScreen.routePath);
   });
 
   testWidgets('App opens on Discover home', (tester) async {
@@ -43,7 +47,7 @@ void main() {
     expect(networkImages, isNotEmpty);
     expect(
       (networkImages.first.image as NetworkImage).url,
-      contains('picsum.photos/seed/'),
+      contains('images.unsplash.com/'),
     );
   });
 
@@ -115,33 +119,24 @@ void main() {
 
     await tester.tap(find.widgetWithText(Chip, 'Abuja'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 400));
     await tester.tap(find.text('Lagos').last);
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.text('Discover · Lagos'), findsOneWidget);
     expect(find.text('Lagos Afrobeats Night'), findsOneWidget);
     expect(find.text('Abuja Jazz Night'), findsNothing);
   });
 
-  testWidgets('Discover card opens details and Book a Spot prefills Generate', (
-    tester,
-  ) async {
+  testWidgets('Discover Book Spot on card prefills Generate', (tester) async {
     await tester.pumpWidget(buildTestApp());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    await tester.tap(find.text('Abuja Jazz Night'));
-    // Finish modal sheet animation without waiting on Image.network indicators.
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 800));
-
-    expect(find.text('Book a Spot'), findsOneWidget);
-    expect(find.text('Capital Jazz Collective'), findsOneWidget);
-    expect(find.text('₦8,500'), findsOneWidget);
-
-    await tester.tap(find.widgetWithText(FilledButton, 'Book a Spot'));
+    expect(find.text('Book Spot'), findsWidgets);
+    await tester.ensureVisible(find.text('Book Spot').first);
+    await tester.tap(find.text('Book Spot').first);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
 
@@ -149,6 +144,26 @@ void main() {
     expect(find.text('Abuja Jazz Night'), findsWidgets);
     expect(find.text('Transcorp Hilton — Ballroom'), findsOneWidget);
     expect(find.text('Capital Jazz Collective'), findsOneWidget);
+  });
+
+  testWidgets('Discover card opens details sheet', (tester) async {
+    await tester.pumpWidget(buildTestApp());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text('Abuja Jazz Night'), findsWidgets);
+    await tester.scrollUntilVisible(
+      find.text('Abuja Jazz Night').first,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Abuja Jazz Night').first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+
+    expect(find.text('Book a Spot'), findsOneWidget);
+    expect(find.text('Capital Jazz Collective'), findsOneWidget);
+    expect(find.textContaining('₦8,500'), findsWidgets);
   });
 
   testWidgets('Generate category palette applies wedding colors', (

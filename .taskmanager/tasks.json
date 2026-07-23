@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Discover event hero photos via picsum URLs",
-        "taskId": "task-fix-discover-event-images-20260723",
-        "updatedAt": "2026-07-23T09:15:00.000Z",
+        "message": "App update: Discover Atomic Design UI + Unsplash heroes",
+        "taskId": "task-discover-atomic-design-20260723",
+        "updatedAt": "2026-07-23T09:40:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -449,5 +449,5 @@
       "updatedAt": "2026-07-23T09:15:00.000Z"
     }
   ],
-  "lastSync": "2026-07-23T09:15:39.284Z"
+  "lastSync": "2026-07-23T09:37:55.564Z"
 }

@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/account/presentation/pages/account_page.dart';
-import '../../features/discover/presentation/pages/discover_page.dart';
 import '../../features/generate/presentation/pages/generate_page.dart';
 import '../../features/tickets/presentation/pages/ticket_detail_page.dart';
 import '../../features/tickets/presentation/pages/tickets_page.dart';
+import '../../presentation/pages/discover_screen.dart';
 import '../theme/app_theme.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: DiscoverPage.routePath,
+  initialLocation: DiscoverScreen.routePath,
   routes: [
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
@@ -19,9 +19,9 @@ final GoRouter appRouter = GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: DiscoverPage.routePath,
-              name: DiscoverPage.routeName,
-              builder: (context, state) => const DiscoverPage(),
+              path: DiscoverScreen.routePath,
+              name: DiscoverScreen.routeName,
+              builder: (context, state) => const DiscoverScreen(),
             ),
           ],
         ),

@@ -2,12 +2,12 @@ import '../domain/entities/event.dart';
 
 /// Curated sample events across cities.
 /// Category labels align with Generate [TicketCategoryPalettes].
-/// Hero photos use stable picsum seeds (HTTPS); palette fallback on load failure.
+/// Hero photos use stable Unsplash CDN URLs; palette fallback on load failure.
 abstract final class EventCatalog {
   static const String defaultCity = 'Abuja';
 
-  static String _photo(String seed) =>
-      'https://picsum.photos/seed/$seed/800/450';
+  static String _photo(String photoId) =>
+      'https://images.unsplash.com/$photoId?auto=format&fit=crop&w=800&h=450&q=80';
 
   static List<Event> all() => List<Event>.unmodifiable(_events);
 
@@ -32,7 +32,7 @@ abstract final class EventCatalog {
           'Live jazz ensembles and guest vocalists under the city lights.',
       host: 'Capital Jazz Collective',
       priceLabel: '₦8,500',
-      imageUrl: _photo('abuja-jazz-night'),
+      imageUrl: _photo('photo-1511192336575-5a79af67a629'),
     ),
     Event(
       id: 'jabi-lake-comedy',
@@ -44,7 +44,7 @@ abstract final class EventCatalog {
       description: 'Stand-up from Abuja and Lagos comics in an open-air set.',
       host: 'Laugh Yard Abuja',
       priceLabel: '₦4,000',
-      imageUrl: _photo('jabi-lake-comedy'),
+      imageUrl: _photo('photo-1527224857830-43a7acc85260'),
     ),
     Event(
       id: 'flutter-abuja-meetup',
@@ -57,7 +57,7 @@ abstract final class EventCatalog {
           'Talks on Flutter UI patterns, state management, and shipping apps.',
       host: 'Flutter Abuja',
       priceLabel: 'Free',
-      imageUrl: _photo('flutter-abuja-meetup'),
+      imageUrl: _photo('photo-1517694712202-14dd9538aa97'),
     ),
     Event(
       id: 'national-stadium-friendly',
@@ -69,7 +69,7 @@ abstract final class EventCatalog {
       description: 'Exhibition match with youth academies from the FCT.',
       host: 'FCT Sports Council',
       priceLabel: '₦2,000',
-      imageUrl: _photo('national-stadium-friendly'),
+      imageUrl: _photo('photo-1574629810360-7efbbe195018'),
     ),
     Event(
       id: 'asokoro-garden-wedding',
@@ -81,7 +81,7 @@ abstract final class EventCatalog {
       description: 'Ivory & blush showcase of venues, planners, and live strings.',
       host: 'Bloom Events NG',
       priceLabel: '₦3,500',
-      imageUrl: _photo('asokoro-garden-wedding'),
+      imageUrl: _photo('photo-1519741497674-611481863552'),
     ),
     Event(
       id: 'wuse-birthday-bash',
@@ -93,7 +93,7 @@ abstract final class EventCatalog {
       description: 'Rainbow games, cake stations, and family-friendly DJ sets.',
       host: 'Party Pop Kids',
       priceLabel: '₦6,000',
-      imageUrl: _photo('wuse-birthday-bash'),
+      imageUrl: _photo('photo-1530103862676-de8c9debad1d'),
     ),
     Event(
       id: 'maitama-anniversary-gala',
@@ -105,7 +105,7 @@ abstract final class EventCatalog {
       description: 'Gold & white evening celebrating milestone couples.',
       host: 'Golden Hour Hosts',
       priceLabel: '₦15,000',
-      imageUrl: _photo('maitama-anniversary-gala'),
+      imageUrl: _photo('photo-1464366400600-7168b8af9bc3'),
     ),
     Event(
       id: 'uniabuja-graduation',
@@ -117,7 +117,7 @@ abstract final class EventCatalog {
       description: 'Black, silver, and gold ceremony with family photo lanes.',
       host: 'UniAbuja Alumni',
       priceLabel: 'Free',
-      imageUrl: _photo('uniabuja-graduation'),
+      imageUrl: _photo('photo-1523050854058-8df90110c9f1'),
     ),
     Event(
       id: 'gwarinpa-general-party',
@@ -129,7 +129,7 @@ abstract final class EventCatalog {
       description: 'White & silver night with primary accent lighting and DJs.',
       host: 'Rooftop Society',
       priceLabel: '₦7,500',
-      imageUrl: _photo('gwarinpa-general-party'),
+      imageUrl: _photo('photo-1492684223066-81342ee5ff30'),
     ),
     Event(
       id: 'central-area-general-event',
@@ -141,7 +141,7 @@ abstract final class EventCatalog {
       description: 'Cream & gold civic program with exhibitors and guest speakers.',
       host: 'FCT Civic Arts',
       priceLabel: 'Free',
-      imageUrl: _photo('central-area-general-event'),
+      imageUrl: _photo('photo-1540575467063-178a50c2df87'),
     ),
     Event(
       id: 'lagos-afrobeats-night',
@@ -153,7 +153,7 @@ abstract final class EventCatalog {
       description: 'High-energy Afrobeats showcase with rising Lagos artists.',
       host: 'Mainland Sound',
       priceLabel: '₦12,000',
-      imageUrl: _photo('lagos-afrobeats-night'),
+      imageUrl: _photo('photo-1470229722913-7c0e2dbbafd3'),
     ),
     Event(
       id: 'lagos-tech-summit',
@@ -165,7 +165,7 @@ abstract final class EventCatalog {
       description: 'Workshops on Flutter, Kotlin, and shipping to production.',
       host: 'DevCircle Lagos',
       priceLabel: '₦5,000',
-      imageUrl: _photo('lagos-tech-summit'),
+      imageUrl: _photo('photo-1504384764586-bb4cdc1707b0'),
     ),
     Event(
       id: 'lagos-comedy-basement',
@@ -177,7 +177,7 @@ abstract final class EventCatalog {
       description: 'Intimate stand-up night with Lagos circuit headliners.',
       host: 'Basement Tickets',
       priceLabel: '₦6,500',
-      imageUrl: _photo('lagos-comedy-basement'),
+      imageUrl: _photo('photo-1585699324559-f59fa999ff90'),
     ),
     Event(
       id: 'ph-riverfront-sports',
@@ -189,7 +189,7 @@ abstract final class EventCatalog {
       description: '5K community run along the waterfront with live drumming.',
       host: 'Garden City Run Club',
       priceLabel: '₦2,500',
-      imageUrl: _photo('ph-riverfront-sports'),
+      imageUrl: _photo('photo-1452626038306-9aae5e071dd3'),
     ),
     Event(
       id: 'ph-graduation-gala',
@@ -201,7 +201,7 @@ abstract final class EventCatalog {
       description: 'Formal celebration for new graduates and families.',
       host: 'Rivers Alumni Network',
       priceLabel: '₦10,000',
-      imageUrl: _photo('ph-graduation-gala'),
+      imageUrl: _photo('photo-1627556704290-2b1f5853ff78'),
     ),
   ];
 }
