@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
+import '../../features/auth/presentation/auth_gate.dart';
 import '../../features/discover/domain/entities/event.dart';
 import '../../features/discover/presentation/bloc/discover_cubit.dart';
 import '../../features/discover/presentation/widgets/event_details_sheet.dart';
-import '../../features/generate/presentation/bloc/generate_cubit.dart';
-import '../../features/generate/presentation/pages/generate_page.dart';
 import '../molecules/location_search_bar.dart';
 import '../organisms/event_card_tile.dart';
 import '../templates/discover_feed_template.dart';
@@ -69,9 +67,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     context.read<DiscoverCubit>().selectCity(selected);
   }
 
-  void _bookSpot(BuildContext context, Event event) {
-    context.read<GenerateCubit>().prefillFromEvent(event);
-    context.go(GeneratePage.routePath);
+  Future<void> _bookSpot(BuildContext context, Event event) {
+    return requireAuthThenBook(context, event);
   }
 
   @override

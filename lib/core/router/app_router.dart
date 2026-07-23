@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/account/presentation/pages/account_page.dart';
+import '../../features/account/presentation/pages/legal_document_page.dart';
 import '../../features/generate/presentation/pages/generate_page.dart';
 import '../../features/tickets/presentation/pages/ticket_detail_page.dart';
 import '../../features/tickets/presentation/pages/tickets_page.dart';
@@ -57,7 +58,29 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: AccountPage.routePath,
               name: AccountPage.routeName,
-              builder: (context, state) => const AccountPage(),
+              builder: (context, state) {
+                final personalize =
+                    state.uri.queryParameters['personalize'] == '1';
+                return AccountPage(personalize: personalize);
+              },
+              routes: [
+                GoRoute(
+                  path: 'terms',
+                  name: LegalDocumentPage.termsName,
+                  builder: (context, state) => const LegalDocumentPage(
+                    title: 'Terms of Service',
+                    body: LegalDocumentPage.termsBody,
+                  ),
+                ),
+                GoRoute(
+                  path: 'privacy',
+                  name: LegalDocumentPage.privacyName,
+                  builder: (context, state) => const LegalDocumentPage(
+                    title: 'Privacy Policy',
+                    body: LegalDocumentPage.privacyBody,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

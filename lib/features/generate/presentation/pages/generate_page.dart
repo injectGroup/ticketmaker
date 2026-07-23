@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/presentation/auth_gate.dart';
 import '../../../tickets/presentation/bloc/tickets_cubit.dart';
 import '../bloc/generate_cubit.dart';
 import '../widgets/ticket_category_palette_bar.dart';
@@ -65,10 +66,8 @@ class _GenerateViewState extends State<_GenerateView> {
     if (_isSaving) return;
     setState(() => _isSaving = true);
     try {
-      final generateCubit = context.read<GenerateCubit>();
-      await context.read<TicketsCubit>().saveTicket(generateCubit.state.ticket);
+      await requireAuthThenSaveTicket(context);
       if (!mounted) return;
-      generateCubit.resetToDefault();
       _syncControllersFromTicket();
       _ticketSession++;
     } finally {

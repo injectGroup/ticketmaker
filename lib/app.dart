@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'features/auth/data/auth_repository.dart';
+import 'features/auth/presentation/bloc/auth_cubit.dart';
 import 'features/discover/domain/location_city_service.dart';
 import 'features/discover/presentation/bloc/discover_cubit.dart';
 import 'features/generate/presentation/bloc/generate_cubit.dart';
@@ -14,6 +16,7 @@ class TicketMakerApp extends StatelessWidget {
     super.key,
     this.ticketsRepository,
     this.locationCityService,
+    this.authRepository,
   });
 
   /// Optional override for tests.
@@ -22,10 +25,16 @@ class TicketMakerApp extends StatelessWidget {
   /// Optional override for tests (defaults to geolocator-backed service).
   final LocationCityService? locationCityService;
 
+  /// Optional override for tests.
+  final AuthRepository? authRepository;
+
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider(
+          create: (_) => AuthCubit(repository: authRepository),
+        ),
         BlocProvider(
           create: (_) =>
               TicketsCubit(ticketsRepository ?? TicketLocalRepository())

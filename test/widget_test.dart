@@ -5,14 +5,34 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ticket_maker/app.dart';
 import 'package:ticket_maker/core/router/app_router.dart';
+import 'package:ticket_maker/features/auth/data/auth_repository.dart';
 import 'package:ticket_maker/features/discover/domain/location_city_service.dart';
 import 'package:ticket_maker/features/tickets/data/ticket_local_repository.dart';
 import 'package:ticket_maker/presentation/pages/discover_screen.dart';
 
-Widget buildTestApp({LocationCityService? location}) {
+Widget buildTestApp({
+  LocationCityService? location,
+  AuthRepository? authRepository,
+}) {
   return TicketMakerApp(
     locationCityService: location ?? FakeLocationCityService('Abuja'),
+    authRepository: authRepository,
   );
+}
+
+Future<AuthRepository> seedSignedInUser() async {
+  final prefs = await SharedPreferences.getInstance();
+  final repo = AuthRepository(prefs: prefs);
+  await repo.signUp(
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+    email: 'ada@example.com',
+    phone: '+2348000000000',
+    password: 'secret1',
+    dateOfBirth: DateTime(1990, 1, 1),
+    marketingOptIn: false,
+  );
+  return repo;
 }
 
 void main() {
@@ -129,7 +149,7 @@ void main() {
     expect(find.text('Abuja Jazz Night'), findsNothing);
   });
 
-  testWidgets('Discover Book Spot on card prefills Generate', (tester) async {
+  testWidgets('Guest Book Spot opens auth gate', (tester) async {
     await tester.pumpWidget(buildTestApp());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
@@ -140,10 +160,44 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
 
+    expect(find.text('Sign in to book'), findsOneWidget);
+    expect(find.text('Sign In'), findsWidgets);
+    expect(find.text('Sign Up'), findsWidgets);
+  });
+
+  testWidgets('Signed-in Book Spot prefills Generate', (tester) async {
+    final repo = await seedSignedInUser();
+    await tester.pumpWidget(buildTestApp(authRepository: repo));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    await tester.ensureVisible(find.text('Book Spot').first);
+    await tester.tap(find.text('Book Spot').first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+
+    expect(find.text('Sign in to book'), findsNothing);
     expect(find.text('Quick Ticket Maker'), findsOneWidget);
     expect(find.text('Abuja Jazz Night'), findsWidgets);
     expect(find.text('Transcorp Hilton — Ballroom'), findsOneWidget);
     expect(find.text('Capital Jazz Collective'), findsOneWidget);
+  });
+
+  testWidgets('Guest Save Ticket opens auth gate', (tester) async {
+    await tester.pumpWidget(buildTestApp());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    await tester.tap(find.text('Generate'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    await tester.ensureVisible(find.text('Save Ticket'));
+    await tester.tap(find.text('Save Ticket'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+
+    expect(find.text('Sign in to book'), findsOneWidget);
   });
 
   testWidgets('Discover card opens details sheet', (tester) async {
@@ -224,12 +278,13 @@ void main() {
     expect(find.text('Save Ticket'), findsNothing);
   });
 
-  testWidgets('Account tab opens placeholder screen', (tester) async {
+  testWidgets('Account tab shows sign-in CTA when guest', (tester) async {
     await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Account'));
     await tester.pumpAndSettle();
     expect(find.text('Your account'), findsOneWidget);
+    expect(find.text('Sign In / Sign Up'), findsOneWidget);
   });
 }

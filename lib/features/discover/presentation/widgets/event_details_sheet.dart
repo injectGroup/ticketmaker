@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../generate/presentation/bloc/generate_cubit.dart';
-import '../../../generate/presentation/pages/generate_page.dart';
+import '../../../auth/presentation/auth_gate.dart';
 import '../../domain/entities/event.dart';
 import '../theme/event_theme.dart';
 import 'event_hero_header.dart';
@@ -146,11 +143,7 @@ class EventDetailsSheet extends StatelessWidget {
                       foregroundColor: onAccent,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    onPressed: () {
-                      context.read<GenerateCubit>().prefillFromEvent(event);
-                      Navigator.of(context).pop();
-                      context.go(GeneratePage.routePath);
-                    },
+                    onPressed: () => requireAuthThenBook(context, event),
                     child: const Text('Book a Spot'),
                   ),
                 ),

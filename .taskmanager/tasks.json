@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Discover Atomic Design UI + Unsplash heroes",
-        "taskId": "task-discover-atomic-design-20260723",
-        "updatedAt": "2026-07-23T09:40:00.000Z",
+        "message": "App update: unified Auth gate for Book Spot and Save Ticket",
+        "taskId": "task-unified-auth-gate-20260723",
+        "updatedAt": "2026-07-23T10:00:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -462,5 +462,5 @@
       "updatedAt": "2026-07-23T09:40:00.000Z"
     }
   ],
-  "lastSync": "2026-07-23T09:40:00.000Z"
+  "lastSync": "2026-07-23T09:55:12.542Z"
 }
