@@ -75,6 +75,7 @@ class TicketsCubit extends Cubit<TicketsState> {
   }
 
   /// Wipes persisted tickets and their durable images; emits an empty list.
+  /// Prefs/list clear always runs even if image cleanup fails.
   Future<void> clearAllTickets() async {
     if (state.tickets.isEmpty) {
       emit(state.copyWith(tickets: const [], message: 'All tickets cleared'));
@@ -85,6 +86,10 @@ class TicketsCubit extends Cubit<TicketsState> {
         .where((p) => p.isNotEmpty);
     try {
       await _imageStore.deleteStoredImages(imagePaths);
+    } catch (_) {
+      // Best-effort image cleanup; still clear persisted tickets below.
+    }
+    try {
       await _repository.clearTickets();
       emit(
         state.copyWith(tickets: const [], message: 'All tickets cleared'),

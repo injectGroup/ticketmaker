@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Clear all saved tickets on My Tickets",
-        "taskId": "task-clear-all-tickets-20260723",
-        "updatedAt": "2026-07-23T13:50:00.000Z",
+        "message": "App update: Fix Clear all AppBar visibility on My Tickets",
+        "taskId": "task-fix-clear-all-visibility-20260723",
+        "updatedAt": "2026-07-23T14:10:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -512,7 +512,20 @@
       "status": "done",
       "createdAt": "2026-07-23T13:45:00.000Z",
       "updatedAt": "2026-07-23T13:50:00.000Z"
+    },
+    {
+      "id": "task-fix-clear-all-visibility-20260723",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Fix Clear all AppBar visibility",
+      "description": "White-on-primary Clear all TextButton.icon on My Tickets; clearAllTickets still wipes prefs if image delete fails.",
+      "details": "tickets_page.dart TextButton.icon; TicketsCubit.clearAllTickets hardened",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-23T14:07:00.000Z",
+      "updatedAt": "2026-07-23T14:10:00.000Z"
     }
   ],
-  "lastSync": "2026-07-23T13:50:00.000Z"
+  "lastSync": "2026-07-23T14:10:00.000Z"
 }

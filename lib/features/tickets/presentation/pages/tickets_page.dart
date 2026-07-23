@@ -113,10 +113,15 @@ class TicketsPage extends StatelessWidget {
             automaticallyImplyLeading: false,
             actions: [
               if (state.tickets.isNotEmpty)
-                TextButton(
+                TextButton.icon(
                   key: const Key('clear-all-tickets'),
                   onPressed: () => _confirmClearAll(context),
-                  child: const Text('Clear all'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    overlayColor: Colors.white24,
+                  ),
+                  icon: const Icon(Icons.delete_sweep_outlined),
+                  label: const Text('Clear all'),
                 ),
             ],
           ),
