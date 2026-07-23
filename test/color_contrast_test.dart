@@ -30,9 +30,29 @@ void main() {
     );
   });
 
-  test('opaque dark stop forces white even when translucent mid is light', () {
+  test('substantial translucent dark fill still forces white text', () {
     const start = Color(0x5514181B);
     const end = Color(0x55C0C0C0);
     expect(ColorContrast.onGradient(start, end), Colors.white);
+  });
+
+  test('low-alpha brand wash uses blended luminance (dark text)', () {
+    // Default Generate ticket-style wash: translucent purple → cyan.
+    const start = Color(0x354B39EF);
+    const end = Color(0x3A39D2C0);
+    expect(
+      ColorContrast.onGradient(start, end),
+      ColorContrast.onLight,
+    );
+  });
+
+  test('opaque light solid uses dark text', () {
+    const fill = Color(0xFFF1F4F8);
+    expect(ColorContrast.onGradient(fill, fill), ColorContrast.onLight);
+  });
+
+  test('opaque dark solid uses white text', () {
+    const fill = Color(0xFF14181B);
+    expect(ColorContrast.onGradient(fill, fill), ColorContrast.onDark);
   });
 }
