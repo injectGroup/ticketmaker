@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 /// Application color tokens for Quick Ticket Maker.
 abstract final class AppColors {
-  static const Color primary = Color(0xFF4B39EF);
+  static const Color primary = Color(0xFFFF3B30);
   static const Color secondary = Color(0xFF39D2C0);
   static const Color error = Color(0xFFFF5963);
   static const Color warning = Color(0xFFF9CF58);
