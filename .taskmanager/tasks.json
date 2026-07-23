@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: gen_tic isolates Generate + Tickets nav",
-        "taskId": "task-gen-tic-nav-isolation-20260723",
-        "updatedAt": "2026-07-23T13:40:00.000Z",
+        "message": "App update: Clear all saved tickets on My Tickets",
+        "taskId": "task-clear-all-tickets-20260723",
+        "updatedAt": "2026-07-23T13:50:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -499,7 +499,20 @@
       "status": "done",
       "createdAt": "2026-07-23T13:37:00.000Z",
       "updatedAt": "2026-07-23T13:40:00.000Z"
+    },
+    {
+      "id": "task-clear-all-tickets-20260723",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Clear all saved tickets",
+      "description": "Add Clear all on My Tickets with confirm dialog; wipe SharedPreferences and durable ticket images; Save Ticket still works.",
+      "details": "TicketLocalRepository.clearTickets; TicketsCubit.clearAllTickets; TicketsPage AppBar action; cubit + widget tests",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-23T13:45:00.000Z",
+      "updatedAt": "2026-07-23T13:50:00.000Z"
     }
   ],
-  "lastSync": "2026-07-23T13:40:00.000Z"
+  "lastSync": "2026-07-23T13:50:00.000Z"
 }

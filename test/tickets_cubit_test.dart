@@ -98,4 +98,29 @@ void main() {
     expect(cubit.state.tickets.single.imagePath, durable);
     expect(File(cubit.state.tickets.single.imagePath).existsSync(), isTrue);
   });
+
+  test('clearAllTickets empties list, prefs, and durable images', () async {
+    final source = File('${tempRoot.path}/photo.jpg')
+      ..writeAsBytesSync(List<int>.filled(12, 3));
+    await cubit.saveTicket(_sample(imagePath: source.path));
+    final durable = cubit.state.tickets.single.imagePath;
+    expect(File(durable).existsSync(), isTrue);
+    expect((await repository.loadTickets()), hasLength(1));
+
+    await cubit.clearAllTickets();
+
+    expect(cubit.state.tickets, isEmpty);
+    expect(cubit.state.message, 'All tickets cleared');
+    expect(await repository.loadTickets(), isEmpty);
+    expect(File(durable).existsSync(), isFalse);
+  });
+
+  test('repository clearTickets removes storage key', () async {
+    await repository.saveTickets([_sample(imagePath: '')]);
+    expect(await repository.loadTickets(), hasLength(1));
+
+    await repository.clearTickets();
+
+    expect(await repository.loadTickets(), isEmpty);
+  });
 }

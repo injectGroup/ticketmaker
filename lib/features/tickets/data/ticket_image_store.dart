@@ -112,6 +112,25 @@ class TicketImageStore {
     return _writeBytes(bytes: payload, fileName: '$ticketId$ext');
   }
 
+  /// Deletes durable image files for the given [imagePaths] when they live
+  /// under the ticket images directory.
+  Future<void> deleteStoredImages(Iterable<String> imagePaths) async {
+    final paths = imagePaths.where((p) => p.isNotEmpty).toList(growable: false);
+    if (paths.isEmpty) return;
+
+    final imagesDir = await _imagesDirectory();
+    for (final path in paths) {
+      if (!_isUnderImagesDir(path, imagesDir)) continue;
+      final file = File(path);
+      if (!file.existsSync()) continue;
+      try {
+        await file.delete();
+      } on FileSystemException {
+        // Best-effort cleanup.
+      }
+    }
+  }
+
   /// Finds an existing durable file for [ticketId] (any extension).
   Future<String?> findExistingForTicket(String ticketId) async {
     if (ticketId.isEmpty) return null;

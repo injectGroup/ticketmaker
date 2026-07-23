@@ -44,4 +44,10 @@ class TicketLocalRepository {
         .toList(growable: false);
     await prefs.setStringList(storageKey, encoded);
   }
+
+  /// Removes all persisted tickets from SharedPreferences.
+  Future<void> clearTickets() async {
+    final prefs = await _prefs();
+    await prefs.remove(storageKey);
+  }
 }

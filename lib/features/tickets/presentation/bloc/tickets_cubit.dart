@@ -74,6 +74,26 @@ class TicketsCubit extends Cubit<TicketsState> {
     }
   }
 
+  /// Wipes persisted tickets and their durable images; emits an empty list.
+  Future<void> clearAllTickets() async {
+    if (state.tickets.isEmpty) {
+      emit(state.copyWith(tickets: const [], message: 'All tickets cleared'));
+      return;
+    }
+    final imagePaths = state.tickets
+        .map((t) => t.imagePath)
+        .where((p) => p.isNotEmpty);
+    try {
+      await _imageStore.deleteStoredImages(imagePaths);
+      await _repository.clearTickets();
+      emit(
+        state.copyWith(tickets: const [], message: 'All tickets cleared'),
+      );
+    } catch (_) {
+      emit(state.copyWith(message: 'Could not clear tickets'));
+    }
+  }
+
   void clearMessage() {
     if (state.message != null) {
       emit(state.copyWith(clearMessage: true));
