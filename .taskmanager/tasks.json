@@ -460,7 +460,20 @@
       "status": "done",
       "createdAt": "2026-07-23T09:32:00.000Z",
       "updatedAt": "2026-07-23T09:40:00.000Z"
+    },
+    {
+      "id": "task-unified-auth-gate-20260723",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Unified Auth Gate for Book Spot and Save Ticket",
+      "description": "Local AuthCubit session; gate Book Spot and Save Ticket; Sign In/Up sheet with DOB and consent; Account personalization; pending action runs immediately after auth.",
+      "details": "auth_gate.dart; AuthCubit; AccountPage; legal routes; Generate save gated",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-23T09:49:00.000Z",
+      "updatedAt": "2026-07-23T10:00:00.000Z"
     }
   ],
-  "lastSync": "2026-07-23T09:55:12.542Z"
+  "lastSync": "2026-07-23T10:00:00.000Z"
 }
