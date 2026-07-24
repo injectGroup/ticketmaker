@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,13 +9,13 @@ import '../../../../presentation/atoms/app_button.dart';
 import '../../../account/presentation/pages/legal_document_page.dart';
 import '../bloc/auth_cubit.dart';
 
-enum AuthSheetMode { gate, signIn, signUp }
+enum AuthSheetMode { signIn, signUp }
 
-/// Shows the auth gate / sign-in / sign-up flow.
+/// Shows the sign-in / sign-up flow.
 /// Returns `true` if the user ends authenticated.
 Future<bool> showAuthFlow(
   BuildContext context, {
-  AuthSheetMode initialMode = AuthSheetMode.gate,
+  AuthSheetMode initialMode = AuthSheetMode.signIn,
 }) async {
   final result = await showModalBottomSheet<bool>(
     context: context,
@@ -30,7 +31,7 @@ Future<bool> showAuthFlow(
 }
 
 class AuthFlowSheet extends StatefulWidget {
-  const AuthFlowSheet({super.key, this.initialMode = AuthSheetMode.gate});
+  const AuthFlowSheet({super.key, this.initialMode = AuthSheetMode.signIn});
 
   final AuthSheetMode initialMode;
 
@@ -47,14 +48,18 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
   final _firstName = TextEditingController();
   final _lastName = TextEditingController();
   final _signUpEmail = TextEditingController();
-  final _phone = TextEditingController();
   final _signUpPassword = TextEditingController();
+  final _confirmPassword = TextEditingController();
 
-  DateTime? _dateOfBirth;
   bool _acceptedTerms = false;
-  bool _marketingOptIn = false;
   bool _obscureSignIn = true;
   bool _obscureSignUp = true;
+  bool _obscureConfirm = true;
+
+  bool get _showAppleButton =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS);
 
   @override
   void initState() {
@@ -69,23 +74,9 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
     _firstName.dispose();
     _lastName.dispose();
     _signUpEmail.dispose();
-    _phone.dispose();
     _signUpPassword.dispose();
+    _confirmPassword.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickDob() async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime(now.year - 18, now.month, now.day),
-      firstDate: DateTime(1900),
-      lastDate: now,
-      helpText: 'Date of birth',
-    );
-    if (picked != null) {
-      setState(() => _dateOfBirth = picked);
-    }
   }
 
   Future<void> _submitSignIn() async {
@@ -98,28 +89,35 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
   }
 
   Future<void> _submitSignUp() async {
-    if (!_acceptedTerms || _dateOfBirth == null) return;
+    if (!_acceptedTerms) return;
+    if (_signUpPassword.text != _confirmPassword.text) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Passwords do not match.')),
+        );
+      return;
+    }
     final ok = await context.read<AuthCubit>().signUp(
       firstName: _firstName.text,
       lastName: _lastName.text,
       email: _signUpEmail.text,
-      phone: _phone.text,
       password: _signUpPassword.text,
-      dateOfBirth: _dateOfBirth!,
-      marketingOptIn: _marketingOptIn,
     );
     if (!mounted) return;
     if (ok) Navigator.of(context).pop(true);
   }
 
-  void _forgotPassword() {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(
-          content: Text('Password reset will be available soon.'),
-        ),
-      );
+  Future<void> _socialGoogle() async {
+    final ok = await context.read<AuthCubit>().signInWithGoogle();
+    if (!mounted) return;
+    if (ok) Navigator.of(context).pop(true);
+  }
+
+  Future<void> _socialApple() async {
+    final ok = await context.read<AuthCubit>().signInWithApple();
+    if (!mounted) return;
+    if (ok) Navigator.of(context).pop(true);
   }
 
   @override
@@ -141,7 +139,7 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
         padding: EdgeInsets.only(bottom: bottom),
         child: DraggableScrollableSheet(
           expand: false,
-          initialChildSize: _mode == AuthSheetMode.signUp ? 0.92 : 0.72,
+          initialChildSize: _mode == AuthSheetMode.signUp ? 0.92 : 0.78,
           minChildSize: 0.45,
           maxChildSize: 0.96,
           builder: (context, scrollController) {
@@ -150,31 +148,38 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
               children: [
                 Text(
-                  switch (_mode) {
-                    AuthSheetMode.gate => 'Sign in to book',
-                    AuthSheetMode.signIn => 'Sign In',
-                    AuthSheetMode.signUp => 'Create account',
-                  },
+                  'Sign in to continue',
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  switch (_mode) {
-                    AuthSheetMode.gate =>
-                      'Create an account or sign in to book a spot and generate your ticket.',
-                    AuthSheetMode.signIn =>
-                      'Welcome back. Enter your email and password.',
-                    AuthSheetMode.signUp =>
-                      'Tell us a bit about yourself to get started.',
-                  },
+                  'Sign in or create an account to save your ticket.',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: AppColors.secondaryText,
                   ),
                 ),
+                const SizedBox(height: 16),
+                SegmentedButton<AuthSheetMode>(
+                  segments: const [
+                    ButtonSegment(
+                      value: AuthSheetMode.signIn,
+                      label: Text('Sign In'),
+                      icon: Icon(Icons.login),
+                    ),
+                    ButtonSegment(
+                      value: AuthSheetMode.signUp,
+                      label: Text('Sign Up'),
+                      icon: Icon(Icons.person_add_outlined),
+                    ),
+                  ],
+                  selected: {_mode},
+                  onSelectionChanged: (next) {
+                    setState(() => _mode = next.first);
+                  },
+                ),
                 const SizedBox(height: 20),
-                if (_mode == AuthSheetMode.gate) ..._gate(theme),
                 if (_mode == AuthSheetMode.signIn) ..._signIn(theme),
                 if (_mode == AuthSheetMode.signUp) ..._signUp(theme),
               ],
@@ -185,20 +190,58 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
     );
   }
 
-  List<Widget> _gate(ThemeData theme) {
+  List<Widget> _socialButtons({required bool requireTerms}) {
+    final disabledByTerms = requireTerms && !_acceptedTerms;
     return [
-      AppButton(
-        label: 'Sign In',
-        icon: Icons.login,
-        onPressed: () => setState(() => _mode = AuthSheetMode.signIn),
+      const SizedBox(height: 16),
+      Row(
+        children: [
+          const Expanded(child: Divider()),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              'Or continue with',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.secondaryText,
+              ),
+            ),
+          ),
+          const Expanded(child: Divider()),
+        ],
       ),
       const SizedBox(height: 12),
-      AppButton(
-        label: 'Sign Up',
-        icon: Icons.person_add_outlined,
-        backgroundColor: AppColors.secondary,
-        foregroundColor: AppColors.primaryText,
-        onPressed: () => setState(() => _mode = AuthSheetMode.signUp),
+      BlocBuilder<AuthCubit, AuthState>(
+        buildWhen: (p, c) => p.isSubmitting != c.isSubmitting,
+        builder: (context, state) {
+          final busy = state.isSubmitting;
+          return Column(
+            children: [
+              OutlinedButton.icon(
+                onPressed: (busy || disabledByTerms) ? null : _socialGoogle,
+                icon: const Icon(Icons.g_mobiledata, size: 28),
+                label: const Text('Continue with Google'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  foregroundColor: AppColors.primaryText,
+                  side: const BorderSide(color: AppColors.primary),
+                ),
+              ),
+              if (_showAppleButton) ...[
+                const SizedBox(height: 10),
+                OutlinedButton.icon(
+                  onPressed: (busy || disabledByTerms) ? null : _socialApple,
+                  icon: const Icon(Icons.apple, size: 22),
+                  label: const Text('Continue with Apple'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                    foregroundColor: AppColors.primaryText,
+                    side: const BorderSide(color: AppColors.primary),
+                  ),
+                ),
+              ],
+            ],
+          );
+        },
       ),
     ];
   }
@@ -230,13 +273,7 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
           ),
         ),
       ),
-      Align(
-        alignment: Alignment.centerRight,
-        child: TextButton(
-          onPressed: _forgotPassword,
-          child: const Text('Forgot Password?'),
-        ),
-      ),
+      const SizedBox(height: 16),
       BlocBuilder<AuthCubit, AuthState>(
         buildWhen: (p, c) => p.isSubmitting != c.isSubmitting,
         builder: (context, state) {
@@ -246,37 +283,21 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
           );
         },
       ),
-      const SizedBox(height: 12),
-      Text.rich(
-        TextSpan(
-          text: "Don't have an account? ",
-          style: theme.textTheme.bodyMedium,
-          children: [
-            TextSpan(
-              text: 'Sign Up',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-              recognizer: TapGestureRecognizer()
-                ..onTap = () => setState(() => _mode = AuthSheetMode.signUp),
-            ),
-          ],
-        ),
-        textAlign: TextAlign.center,
-      ),
+      ..._socialButtons(requireTerms: false),
     ];
   }
 
   List<Widget> _signUp(ThemeData theme) {
+    final passwordsMatch =
+        _signUpPassword.text == _confirmPassword.text &&
+        _confirmPassword.text.isNotEmpty;
     final canSubmit =
         _acceptedTerms &&
-        _dateOfBirth != null &&
         _firstName.text.trim().isNotEmpty &&
         _lastName.text.trim().isNotEmpty &&
         _signUpEmail.text.trim().isNotEmpty &&
-        _phone.text.trim().isNotEmpty &&
-        _signUpPassword.text.trim().length >= 6;
+        _signUpPassword.text.trim().length >= 6 &&
+        passwordsMatch;
 
     return [
       Row(
@@ -318,16 +339,6 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
       ),
       const SizedBox(height: 12),
       TextField(
-        controller: _phone,
-        keyboardType: TextInputType.phone,
-        decoration: const InputDecoration(
-          labelText: 'Mobile Phone Number',
-          border: OutlineInputBorder(),
-        ),
-        onChanged: (_) => setState(() {}),
-      ),
-      const SizedBox(height: 12),
-      TextField(
         controller: _signUpPassword,
         obscureText: _obscureSignUp,
         decoration: InputDecoration(
@@ -343,19 +354,28 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
         onChanged: (_) => setState(() {}),
       ),
       const SizedBox(height: 12),
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(
-          _dateOfBirth == null
-              ? 'Date of Birth'
-              : 'DOB: ${_dateOfBirth!.year}-${_dateOfBirth!.month.toString().padLeft(2, '0')}-${_dateOfBirth!.day.toString().padLeft(2, '0')}',
+      TextField(
+        controller: _confirmPassword,
+        obscureText: _obscureConfirm,
+        decoration: InputDecoration(
+          labelText: 'Confirm Password',
+          border: const OutlineInputBorder(),
+          errorText:
+              _confirmPassword.text.isNotEmpty &&
+                  _signUpPassword.text != _confirmPassword.text
+              ? 'Passwords do not match'
+              : null,
+          suffixIcon: IconButton(
+            onPressed: () =>
+                setState(() => _obscureConfirm = !_obscureConfirm),
+            icon: Icon(
+              _obscureConfirm
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off,
+            ),
+          ),
         ),
-        trailing: const Icon(Icons.calendar_today_outlined),
-        onTap: _pickDob,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: BorderSide(color: theme.dividerColor),
-        ),
+        onChanged: (_) => setState(() {}),
       ),
       const SizedBox(height: 8),
       CheckboxListTile(
@@ -369,7 +389,7 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
             style: theme.textTheme.bodyMedium,
             children: [
               TextSpan(
-                text: 'Terms of Service',
+                text: 'Terms & Conditions',
                 style: const TextStyle(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w600,
@@ -377,28 +397,8 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
                 recognizer: TapGestureRecognizer()
                   ..onTap = () => context.push(LegalDocumentPage.termsPath),
               ),
-              const TextSpan(text: ' & '),
-              TextSpan(
-                text: 'Privacy Policy',
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-                recognizer: TapGestureRecognizer()
-                  ..onTap = () => context.push(LegalDocumentPage.privacyPath),
-              ),
             ],
           ),
-        ),
-      ),
-      CheckboxListTile(
-        contentPadding: EdgeInsets.zero,
-        value: _marketingOptIn,
-        onChanged: (v) => setState(() => _marketingOptIn = v ?? false),
-        controlAffinity: ListTileControlAffinity.leading,
-        title: Text(
-          'Receive newsletters and early-bird discount codes',
-          style: theme.textTheme.bodyMedium,
         ),
       ),
       const SizedBox(height: 8),
@@ -406,30 +406,12 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
         buildWhen: (p, c) => p.isSubmitting != c.isSubmitting,
         builder: (context, state) {
           return AppButton(
-            label: state.isSubmitting ? 'Creating…' : 'Sign Up',
+            label: state.isSubmitting ? 'Creating…' : 'Create Account',
             onPressed: (!canSubmit || state.isSubmitting) ? null : _submitSignUp,
           );
         },
       ),
-      const SizedBox(height: 12),
-      Text.rich(
-        TextSpan(
-          text: 'Already have an account? ',
-          style: theme.textTheme.bodyMedium,
-          children: [
-            TextSpan(
-              text: 'Sign In',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-              recognizer: TapGestureRecognizer()
-                ..onTap = () => setState(() => _mode = AuthSheetMode.signIn),
-            ),
-          ],
-        ),
-        textAlign: TextAlign.center,
-      ),
+      ..._socialButtons(requireTerms: true),
     ];
   }
 }

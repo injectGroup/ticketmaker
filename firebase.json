@@ -1,0 +1,55 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "quick-ticket-maker-sandbox",
+          "appId": "1:107781542059:android:ad44b29439001b91c9e7ee",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "quick-ticket-maker-sandbox",
+          "appId": "1:107781542059:ios:3aee97098aa23948c9e7ee",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "quick-ticket-maker-sandbox",
+          "appId": "1:107781542059:ios:3aee97098aa23948c9e7ee",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "quick-ticket-maker-sandbox",
+          "configurations": {
+            "android": "1:107781542059:android:ad44b29439001b91c9e7ee",
+            "ios": "1:107781542059:ios:3aee97098aa23948c9e7ee",
+            "macos": "1:107781542059:ios:3aee97098aa23948c9e7ee",
+            "web": "1:107781542059:web:0dd1b1aa86d6f8e6c9e7ee",
+            "windows": "1:107781542059:web:8d8c50852494d2e4c9e7ee"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

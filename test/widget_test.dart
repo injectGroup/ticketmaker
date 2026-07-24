@@ -16,21 +16,17 @@ Widget buildTestApp({
 }) {
   return TicketMakerApp(
     locationCityService: location ?? FakeLocationCityService('Abuja'),
-    authRepository: authRepository,
+    authRepository: authRepository ?? FakeAuthRepository(),
   );
 }
 
 Future<AuthRepository> seedSignedInUser() async {
-  final prefs = await SharedPreferences.getInstance();
-  final repo = AuthRepository(prefs: prefs);
+  final repo = FakeAuthRepository();
   await repo.signUp(
     firstName: 'Ada',
     lastName: 'Lovelace',
     email: 'ada@example.com',
-    phone: '+2348000000000',
     password: 'secret1',
-    dateOfBirth: DateTime(1990, 1, 1),
-    marketingOptIn: false,
   );
   return repo;
 }
@@ -97,7 +93,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
 
-    expect(find.text('Sign in to book'), findsOneWidget);
+    expect(find.text('Sign in to continue'), findsOneWidget);
+    expect(find.text('Sign In'), findsWidgets);
+    expect(find.text('Sign Up'), findsWidgets);
   });
 
   testWidgets('Tapping a saved ticket opens read-only detail view', (
