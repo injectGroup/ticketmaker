@@ -63,7 +63,6 @@ Future<Uint8List?> uiImageToJpeg(
     height: image.height,
     bytes: byteData.buffer,
     bytesOffset: byteData.offsetInBytes,
-    bytesLength: byteData.lengthInBytes,
     order: img.ChannelOrder.rgba,
   );
   return Uint8List.fromList(img.encodeJpg(converted, quality: quality));
