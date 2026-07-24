@@ -80,6 +80,8 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
   }
 
   Future<void> _submitSignIn() async {
+    context.read<AuthCubit>().clearMessage();
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     final ok = await context.read<AuthCubit>().signIn(
       email: _signInEmail.text,
       password: _signInPassword.text,
@@ -90,6 +92,8 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
 
   Future<void> _submitSignUp() async {
     if (!_acceptedTerms) return;
+    context.read<AuthCubit>().clearMessage();
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     if (_signUpPassword.text != _confirmPassword.text) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
@@ -109,15 +113,26 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
   }
 
   Future<void> _socialGoogle() async {
+    context.read<AuthCubit>().clearMessage();
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     final ok = await context.read<AuthCubit>().signInWithGoogle();
     if (!mounted) return;
     if (ok) Navigator.of(context).pop(true);
   }
 
   Future<void> _socialApple() async {
+    context.read<AuthCubit>().clearMessage();
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     final ok = await context.read<AuthCubit>().signInWithApple();
     if (!mounted) return;
     if (ok) Navigator.of(context).pop(true);
+  }
+
+  void _setMode(AuthSheetMode mode) {
+    if (_mode == mode) return;
+    context.read<AuthCubit>().clearMessage();
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    setState(() => _mode = mode);
   }
 
   @override
@@ -176,7 +191,7 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
                   ],
                   selected: {_mode},
                   onSelectionChanged: (next) {
-                    setState(() => _mode = next.first);
+                    _setMode(next.first);
                   },
                 ),
                 const SizedBox(height: 20),

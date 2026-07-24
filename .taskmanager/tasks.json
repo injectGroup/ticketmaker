@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Modernize Generate ticket pass-card UI",
-        "taskId": "task-generate-ui-redesign-20260724",
-        "updatedAt": "2026-07-24T12:20:00.000Z",
+        "message": "App update: Wire Google Sign-In OAuth client IDs",
+        "taskId": "task-google-signin-config-20260724",
+        "updatedAt": "2026-07-24T12:40:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -694,7 +694,20 @@
       "status": "done",
       "createdAt": "2026-07-24T12:15:00.000Z",
       "updatedAt": "2026-07-24T12:20:00.000Z"
+    },
+    {
+      "id": "task-google-signin-config-20260724",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Wire Google Sign-In OAuth client IDs",
+      "description": "Regenerated GoogleService-Info.plist / google-services.json with OAuth clients; iOS URL scheme; initialize google_sign_in with clientId/serverClientId; clear stale auth snackbars. Debug SHA-1 documented for Firebase Console.",
+      "details": "docs/google_sign_in_setup.md; Info.plist; auth_repository; auth_flow_sheet",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-24T12:36:00.000Z",
+      "updatedAt": "2026-07-24T12:40:00.000Z"
     }
   ],
-  "lastSync": "2026-07-24T12:19:16.817Z"
+  "lastSync": "2026-07-24T12:40:00.000Z"
 }

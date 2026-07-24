@@ -56,16 +56,15 @@ class DefaultFirebaseOptions {
     projectId: 'quick-ticket-maker-sandbox',
     storageBucket: 'quick-ticket-maker-sandbox.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBJ8eqQxRHND9mMkuCWmDTAH4vBgFD2H7E',
     appId: '1:107781542059:ios:3aee97098aa23948c9e7ee',
     messagingSenderId: '107781542059',
     projectId: 'quick-ticket-maker-sandbox',
     storageBucket: 'quick-ticket-maker-sandbox.firebasestorage.app',
+    iosClientId: '107781542059-s9csu7kamfsavn0n0c30eda68ikrgma6.apps.googleusercontent.com',
     iosBundleId: 'com.injectgroup.ticketMaker',
   );
-
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyBJ8eqQxRHND9mMkuCWmDTAH4vBgFD2H7E',
     appId: '1:107781542059:ios:3aee97098aa23948c9e7ee',

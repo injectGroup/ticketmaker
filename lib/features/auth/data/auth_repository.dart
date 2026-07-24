@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
@@ -53,6 +54,15 @@ class FirebaseAuthRepository implements AuthRepository {
        _firestore = firestore ?? FirebaseFirestore.instance,
        _googleSignIn = googleSignIn ?? GoogleSignIn.instance;
 
+  /// iOS OAuth client from GoogleService-Info.plist `CLIENT_ID`.
+  static const _googleIosClientId =
+      '107781542059-s9csu7kamfsavn0n0c30eda68ikrgma6.apps.googleusercontent.com';
+
+  /// Web OAuth client from google-services.json (client_type 3) — used as
+  /// `serverClientId` so Google returns an ID token for Firebase Auth.
+  static const _googleWebClientId =
+      '107781542059-j20t5d1kggv1lkfek3s6nti1lduojoo3.apps.googleusercontent.com';
+
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
   final GoogleSignIn _googleSignIn;
@@ -64,7 +74,15 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<void> _ensureGoogleInitialized() async {
     if (_googleInitialized) return;
     try {
-      await _googleSignIn.initialize();
+      // iOS client from GoogleService-Info.plist; web client as serverClientId
+      // so Android/iOS can obtain an ID token for Firebase Auth.
+      await _googleSignIn.initialize(
+        clientId: defaultTargetPlatform == TargetPlatform.iOS ||
+                defaultTargetPlatform == TargetPlatform.macOS
+            ? _googleIosClientId
+            : null,
+        serverClientId: _googleWebClientId,
+      );
       _googleInitialized = true;
     } catch (e) {
       throw AuthException(

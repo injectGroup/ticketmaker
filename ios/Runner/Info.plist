@@ -70,5 +70,16 @@
 	<string>Select an event photo for your ticket.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Show nearby Discover events based on your city.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.107781542059-s9csu7kamfsavn0n0c30eda68ikrgma6</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
