@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -12,13 +13,33 @@ import '../../../generate/presentation/widgets/ticket_perforation.dart';
 
 /// Read-only visual of a saved ticket (mirrors Generate layout without editors).
 class SavedTicketView extends StatelessWidget {
-  const SavedTicketView({super.key, required this.ticket});
+  const SavedTicketView({
+    super.key,
+    required this.ticket,
+    this.imageBytes,
+  });
 
   final Ticket ticket;
+  final Uint8List? imageBytes;
 
   Widget _eventImage() {
     const width = 300.0;
     const height = 200.0;
+
+    final bytes = imageBytes;
+    if (bytes != null && bytes.isNotEmpty) {
+      return Image.memory(
+        bytes,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
+          width: width,
+          height: height,
+          broken: true,
+        ),
+      );
+    }
 
     final path = ticket.imagePath;
     if (path.isEmpty) {

@@ -58,11 +58,17 @@ class TicketsCubit extends Cubit<TicketsState> {
     final saved = ticket.copyWith(id: id);
     final updated = [saved, ...state.tickets];
 
+    final nextBytes = Map<String, Uint8List>.from(state.imageBytesById);
+    if (imageBytes != null && imageBytes.isNotEmpty) {
+      nextBytes[id] = imageBytes;
+    }
+
     try {
       await _repository.saveTickets(updated);
       emit(
         state.copyWith(
           tickets: updated,
+          imageBytesById: nextBytes,
           message: 'Ticket saved',
         ),
       );
@@ -86,7 +92,7 @@ class TicketsCubit extends Cubit<TicketsState> {
       debugPrint('Ticket Firestore upsert failed: $e\n$st');
     }
 
-    Uint8List? payload = imageBytes;
+    Uint8List? payload = imageBytes ?? state.imageBytesById[ticket.id];
     if ((payload == null || payload.isEmpty) &&
         ticket.imagePath.isNotEmpty &&
         !kIsWeb &&
@@ -101,7 +107,10 @@ class TicketsCubit extends Cubit<TicketsState> {
       }
     }
 
-    if (payload == null || payload.isEmpty) return;
+    if (payload == null || payload.isEmpty) {
+      debugPrint('No ticket image bytes to upload for ${ticket.id}');
+      return;
+    }
 
     try {
       final jpeg = await compressImageToJpeg(payload);

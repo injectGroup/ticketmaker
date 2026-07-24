@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Fast ticket save with JPEG compress and background Storage upload",
-        "taskId": "task-fast-save-jpeg-storage-20260724",
-        "updatedAt": "2026-07-24T16:20:00.000Z",
+        "message": "App update: Web photo session cache + Share via XFile.fromData",
+        "taskId": "task-web-photo-share-fix-20260724",
+        "updatedAt": "2026-07-24T17:45:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -798,7 +798,20 @@
       "status": "done",
       "createdAt": "2026-07-24T16:15:00.000Z",
       "updatedAt": "2026-07-24T16:20:00.000Z"
+    },
+    {
+      "id": "task-web-photo-share-fix-20260724",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Fix web photo preview and Share",
+      "description": "Harden ImagePicker bytes + SnackBar; session-cache imageBytes in TicketsCubit for SavedTicketView MemoryImage; Share via XFile.fromData with Preparing share feedback; no dart:io File share path on web.",
+      "details": "ticket_details_section; ticket_customize_toolbar; tickets_cubit/state; saved_ticket_view; ticket_share_helper; ticket_detail_page; saved_ticket_card; flutter build web --pwa-strategy=none; firebase deploy --only hosting",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-24T17:35:00.000Z",
+      "updatedAt": "2026-07-24T17:45:00.000Z"
     }
   ],
-  "lastSync": "2026-07-24T16:20:00.000Z"
+  "lastSync": "2026-07-24T17:45:00.000Z"
 }

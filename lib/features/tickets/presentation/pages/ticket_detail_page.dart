@@ -22,11 +22,14 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
   final GlobalKey _ticketBoundaryKey = GlobalKey();
 
   Future<void> _share(BuildContext buttonContext, Ticket ticket) async {
+    final bytes =
+        context.read<TicketsCubit>().state.imageBytesFor(ticket.id);
     await TicketShareHelper.share(
       context,
       ticket,
       boundaryKey: _ticketBoundaryKey,
       sharePositionOrigin: TicketShareHelper.shareOriginFrom(buttonContext),
+      imageBytes: bytes,
     );
   }
 
@@ -41,6 +44,8 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
             break;
           }
         }
+        final imageBytes =
+            ticket == null ? null : state.imageBytesFor(ticket.id);
 
         return Scaffold(
           backgroundColor: AppColors.primaryBackground,
@@ -91,7 +96,10 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
               : SingleChildScrollView(
                   child: RepaintBoundary(
                     key: _ticketBoundaryKey,
-                    child: SavedTicketView(ticket: ticket),
+                    child: SavedTicketView(
+                      ticket: ticket,
+                      imageBytes: imageBytes,
+                    ),
                   ),
                 ),
         );

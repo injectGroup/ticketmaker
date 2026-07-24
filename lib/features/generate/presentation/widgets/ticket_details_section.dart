@@ -34,28 +34,52 @@ class TicketDetailsSection extends StatelessWidget {
   final Uint8List? imageBytes;
 
   Future<void> _pickGalleryImage(BuildContext context) async {
-    final file = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (file == null || !context.mounted) return;
+    try {
+      final file = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        requestFullMetadata: false,
+      );
+      if (file == null || !context.mounted) return;
 
-    // Always read bytes so Flutter Web can render via Image.memory.
-    final bytes = await file.readAsBytes();
-    if (bytes.isEmpty || !context.mounted) return;
-
-    var nextPath = file.path;
-    if (!kIsWeb) {
-      final store = imageStore ?? TicketImageStore();
-      try {
-        final durablePath = await store.import(
-          sourcePath: file.path,
-          bytes: bytes,
-        );
-        if (durablePath.isNotEmpty) nextPath = durablePath;
-      } catch (_) {
-        // Keep picker path; bytes still preview correctly.
+      // Always read bytes so Flutter Web can render via Image.memory.
+      final bytes = await file.readAsBytes();
+      if (!context.mounted) return;
+      if (bytes.isEmpty) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(content: Text('Could not read image')),
+          );
+        return;
       }
+
+      // Set preview bytes first so the UI updates immediately.
+      context.read<GenerateCubit>().setPickedImage(path: file.path, bytes: bytes);
+
+      if (!kIsWeb) {
+        final store = imageStore ?? TicketImageStore();
+        try {
+          final durablePath = await store.import(
+            sourcePath: file.path,
+            bytes: bytes,
+          );
+          if (durablePath.isNotEmpty && context.mounted) {
+            context
+                .read<GenerateCubit>()
+                .setPickedImage(path: durablePath, bytes: bytes);
+          }
+        } catch (_) {
+          // Bytes already set for preview.
+        }
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text('Could not read image: $e')),
+        );
     }
-    if (!context.mounted) return;
-    context.read<GenerateCubit>().setPickedImage(path: nextPath, bytes: bytes);
   }
 
   Future<void> _pickDateTime(BuildContext context) async {

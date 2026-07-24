@@ -1,17 +1,16 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../generate/domain/entities/ticket.dart';
 import '../presentation/widgets/saved_ticket_view.dart';
 import 'ticket_image_codec.dart';
 
-/// Captures a ticket as PNG and opens the native share sheet with image + caption.
+/// Captures a ticket image and opens the native / web share sheet.
 class TicketShareHelper {
   TicketShareHelper._();
 
@@ -30,8 +29,7 @@ class TicketShareHelper {
     return Rect.fromLTWH(size.width / 2 - 1, size.height / 2 - 1, 2, 2);
   }
 
-  /// Encodes [boundaryKey]'s [RepaintBoundary] to JPEG bytes (faster / smaller
-  /// than PNG for share + upload).
+  /// Encodes [boundaryKey]'s [RepaintBoundary] to JPEG bytes.
   static Future<List<int>?> captureJpegBytes(
     GlobalKey boundaryKey, {
     double pixelRatio = 1.5,
@@ -74,57 +72,86 @@ class TicketShareHelper {
     }
   }
 
-  /// Shares [ticket] as a PNG (plus caption). Falls back to text-only on failure.
+  /// Shares [ticket] as a JPEG (plus caption). Uses in-memory [XFile.fromData]
+  /// so Flutter Web does not depend on dart:io temp files.
   static Future<void> share(
     BuildContext context,
     Ticket ticket, {
     GlobalKey? boundaryKey,
     Rect? sharePositionOrigin,
+    Uint8List? imageBytes,
   }) async {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    messenger
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Preparing share…'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
     final origin = sharePositionOrigin ?? shareOriginFrom(context);
-    List<int>? imageBytes;
+    List<int>? bytes;
 
-    if (boundaryKey != null) {
-      imageBytes = await captureJpegBytes(boundaryKey);
-    }
-    if (!context.mounted) return;
-    if (imageBytes == null || imageBytes.isEmpty) {
-      final png = await _captureViaOverlay(context, ticket);
-      if (png != null && png.isNotEmpty) {
-        imageBytes = await compressImageToJpeg(Uint8List.fromList(png));
+    try {
+      if (boundaryKey != null) {
+        bytes = await captureJpegBytes(boundaryKey);
       }
-    }
+      if (!context.mounted) return;
+      if (bytes == null || bytes.isEmpty) {
+        final png = await _captureViaOverlay(
+          context,
+          ticket,
+          imageBytes: imageBytes,
+        );
+        if (png != null && png.isNotEmpty) {
+          bytes = await compressImageToJpeg(Uint8List.fromList(png));
+        }
+      }
 
-    if (imageBytes != null && imageBytes.isNotEmpty) {
-      try {
-        final dir = await getTemporaryDirectory();
-        final file = File('${dir.path}/share_ticket_${ticket.id}.jpg');
-        await file.writeAsBytes(imageBytes, flush: true);
+      if (!context.mounted) return;
+
+      if (bytes != null && bytes.isNotEmpty) {
+        final file = XFile.fromData(
+          Uint8List.fromList(bytes),
+          mimeType: 'image/jpeg',
+          name: 'ticket_${ticket.id}.jpg',
+        );
         // ignore: deprecated_member_use
         await Share.shareXFiles(
-          [XFile(file.path, mimeType: 'image/jpeg')],
+          [file],
           text: ticket.toShareText(),
           subject: _subject,
           sharePositionOrigin: origin,
         );
+        messenger?.hideCurrentSnackBar();
         return;
-      } catch (_) {
-        // Fall through to text-only share.
       }
-    }
 
-    // ignore: deprecated_member_use
-    await Share.share(
-      ticket.toShareText(),
-      subject: _subject,
-      sharePositionOrigin: origin,
-    );
+      // ignore: deprecated_member_use
+      await Share.share(
+        ticket.toShareText(),
+        subject: _subject,
+        sharePositionOrigin: origin,
+      );
+      messenger?.hideCurrentSnackBar();
+    } catch (e, st) {
+      debugPrint('Share failed: $e\n$st');
+      if (!context.mounted) return;
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text('Could not share ticket: $e')),
+        );
+    }
   }
 
   static Future<List<int>?> _captureViaOverlay(
     BuildContext context,
-    Ticket ticket,
-  ) async {
+    Ticket ticket, {
+    Uint8List? imageBytes,
+  }) async {
     final overlay = Overlay.maybeOf(context);
     if (overlay == null) return null;
 
@@ -149,7 +176,10 @@ class TicketShareHelper {
                   color: Colors.transparent,
                   child: RepaintBoundary(
                     key: boundaryKey,
-                    child: SavedTicketView(ticket: ticket),
+                    child: SavedTicketView(
+                      ticket: ticket,
+                      imageBytes: imageBytes,
+                    ),
                   ),
                 ),
               ),
@@ -164,10 +194,13 @@ class TicketShareHelper {
       await WidgetsBinding.instance.endOfFrame;
       final captureContext = boundaryKey.currentContext;
       if (captureContext != null && captureContext.mounted) {
-        await _precacheTicketImages(captureContext, ticket);
+        await _precacheTicketImages(
+          captureContext,
+          ticket,
+          imageBytes: imageBytes,
+        );
       }
       await WidgetsBinding.instance.endOfFrame;
-      // Allow QR / network-free paints to settle.
       await Future<void>.delayed(const Duration(milliseconds: 80));
       return await capturePngBytes(boundaryKey);
     } finally {
@@ -177,14 +210,22 @@ class TicketShareHelper {
 
   static Future<void> _precacheTicketImages(
     BuildContext context,
-    Ticket ticket,
-  ) async {
+    Ticket ticket, {
+    Uint8List? imageBytes,
+  }) async {
     if (!context.mounted) return;
 
-    final path = ticket.imagePath;
-    if (path.isNotEmpty && File(path).existsSync()) {
+    if (imageBytes != null && imageBytes.isNotEmpty) {
       try {
-        await precacheImage(FileImage(File(path)), context);
+        await precacheImage(MemoryImage(imageBytes), context);
+      } catch (_) {}
+      return;
+    }
+
+    final path = ticket.imagePath;
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      try {
+        await precacheImage(NetworkImage(path), context);
       } catch (_) {}
     }
   }
