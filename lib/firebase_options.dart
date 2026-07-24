@@ -71,6 +71,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '107781542059',
     projectId: 'quick-ticket-maker-sandbox',
     storageBucket: 'quick-ticket-maker-sandbox.firebasestorage.app',
+    iosClientId: '107781542059-s9csu7kamfsavn0n0c30eda68ikrgma6.apps.googleusercontent.com',
     iosBundleId: 'com.injectgroup.ticketMaker',
   );
 
