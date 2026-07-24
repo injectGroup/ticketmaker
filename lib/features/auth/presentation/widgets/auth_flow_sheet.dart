@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -80,36 +81,57 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
   }
 
   Future<void> _submitSignIn() async {
+    debugPrint('--- SIGN IN BUTTON TAPPED ---');
+    final email = _signInEmail.text;
+    final password = _signInPassword.text;
+    debugPrint('email=$email password=$password');
     context.read<AuthCubit>().clearMessage();
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    final ok = await context.read<AuthCubit>().signIn(
-      email: _signInEmail.text,
-      password: _signInPassword.text,
-    );
-    if (!mounted) return;
-    if (ok) Navigator.of(context).pop(true);
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      await context.read<AuthCubit>().restoreSession();
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } on FirebaseAuthException catch (e) {
+      debugPrint('FIREBASE AUTH ERROR: ${e.code} - ${e.message}');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text('${e.code}: ${e.message}')));
+    }
   }
 
   Future<void> _submitSignUp() async {
-    if (!_acceptedTerms) return;
+    debugPrint('--- SIGN UP BUTTON TAPPED ---');
+    final email = _signUpEmail.text;
+    final password = _signUpPassword.text;
+    debugPrint('email=$email password=$password');
     context.read<AuthCubit>().clearMessage();
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    if (_signUpPassword.text != _confirmPassword.text) {
+    try {
+      final credential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final displayName =
+          '${_firstName.text.trim()} ${_lastName.text.trim()}'.trim();
+      if (displayName.isNotEmpty) {
+        await credential.user?.updateDisplayName(displayName);
+      }
+      await context.read<AuthCubit>().restoreSession();
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } on FirebaseAuthException catch (e) {
+      debugPrint('FIREBASE AUTH ERROR: ${e.code} - ${e.message}');
+      if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(content: Text('Passwords do not match.')),
-        );
-      return;
+        ..showSnackBar(SnackBar(content: Text('${e.code}: ${e.message}')));
     }
-    final ok = await context.read<AuthCubit>().signUp(
-      firstName: _firstName.text,
-      lastName: _lastName.text,
-      email: _signUpEmail.text,
-      password: _signUpPassword.text,
-    );
-    if (!mounted) return;
-    if (ok) Navigator.of(context).pop(true);
   }
 
   Future<void> _socialGoogle() async {
@@ -303,17 +325,6 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
   }
 
   List<Widget> _signUp(ThemeData theme) {
-    final passwordsMatch =
-        _signUpPassword.text == _confirmPassword.text &&
-        _confirmPassword.text.isNotEmpty;
-    final canSubmit =
-        _acceptedTerms &&
-        _firstName.text.trim().isNotEmpty &&
-        _lastName.text.trim().isNotEmpty &&
-        _signUpEmail.text.trim().isNotEmpty &&
-        _signUpPassword.text.trim().length >= 6 &&
-        passwordsMatch;
-
     return [
       Row(
         children: [
@@ -325,7 +336,6 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
                 labelText: 'First Name',
                 border: OutlineInputBorder(),
               ),
-              onChanged: (_) => setState(() {}),
             ),
           ),
           const SizedBox(width: 12),
@@ -337,7 +347,6 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
                 labelText: 'Last Name',
                 border: OutlineInputBorder(),
               ),
-              onChanged: (_) => setState(() {}),
             ),
           ),
         ],
@@ -350,7 +359,6 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
           labelText: 'Email Address',
           border: OutlineInputBorder(),
         ),
-        onChanged: (_) => setState(() {}),
       ),
       const SizedBox(height: 12),
       TextField(
@@ -366,7 +374,6 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
             ),
           ),
         ),
-        onChanged: (_) => setState(() {}),
       ),
       const SizedBox(height: 12),
       TextField(
@@ -375,11 +382,6 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
         decoration: InputDecoration(
           labelText: 'Confirm Password',
           border: const OutlineInputBorder(),
-          errorText:
-              _confirmPassword.text.isNotEmpty &&
-                  _signUpPassword.text != _confirmPassword.text
-              ? 'Passwords do not match'
-              : null,
           suffixIcon: IconButton(
             onPressed: () =>
                 setState(() => _obscureConfirm = !_obscureConfirm),
@@ -390,7 +392,6 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
             ),
           ),
         ),
-        onChanged: (_) => setState(() {}),
       ),
       const SizedBox(height: 8),
       CheckboxListTile(
@@ -422,7 +423,7 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
         builder: (context, state) {
           return AppButton(
             label: state.isSubmitting ? 'Creating…' : 'Create Account',
-            onPressed: (!canSubmit || state.isSubmitting) ? null : _submitSignUp,
+            onPressed: state.isSubmitting ? null : _submitSignUp,
           );
         },
       ),

@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Surface Firebase Auth code/message in Sign In/Up SnackBars",
-        "taskId": "task-debug-firebase-auth-errors-20260724",
-        "updatedAt": "2026-07-24T15:10:00.000Z",
+        "message": "App update: Debug Sign In/Up taps and call Firebase without local pre-validation",
+        "taskId": "task-auth-button-debug-firebase-direct-20260724",
+        "updatedAt": "2026-07-24T15:30:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -746,7 +746,20 @@
       "status": "done",
       "createdAt": "2026-07-24T15:05:00.000Z",
       "updatedAt": "2026-07-24T15:10:00.000Z"
+    },
+    {
+      "id": "task-auth-button-debug-firebase-direct-20260724",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Debug Sign In/Up taps; call Firebase without local pre-validation",
+      "description": "Auth dialog buttons debugPrint tap + email/password, call FirebaseAuth directly (no local gate), surface FIREBASE AUTH ERROR code/message; rebuilt with --pwa-strategy=none and redeployed Hosting.",
+      "details": "auth_flow_sheet.dart; auth_repository.dart; flutter build web --pwa-strategy=none; firebase deploy --only hosting",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-24T15:25:00.000Z",
+      "updatedAt": "2026-07-24T15:30:00.000Z"
     }
   ],
-  "lastSync": "2026-07-24T15:10:00.000Z"
+  "lastSync": "2026-07-24T15:30:00.000Z"
 }

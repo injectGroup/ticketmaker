@@ -104,18 +104,10 @@ class FirebaseAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async {
-    final normalized = email.trim().toLowerCase();
-    final trimmedPassword = password.trim();
-    if (normalized.isEmpty || !normalized.contains('@')) {
-      throw AuthException('Enter a valid email address.');
-    }
-    if (trimmedPassword.isEmpty) {
-      throw AuthException('Enter your password.');
-    }
     try {
       final credential = await _auth.signInWithEmailAndPassword(
-        email: normalized,
-        password: trimmedPassword,
+        email: email,
+        password: password,
       );
       final user = credential.user;
       if (user == null) {
@@ -125,7 +117,7 @@ class FirebaseAuthRepository implements AuthRepository {
     } on AuthException {
       rethrow;
     } on FirebaseAuthException catch (e) {
-      debugPrint('FirebaseAuthException code=${e.code} message=${e.message}');
+      debugPrint('FIREBASE AUTH ERROR: ${e.code} - ${e.message}');
       throw AuthException('${e.code}: ${e.message}');
     } catch (_) {
       throw AuthException('Could not sign in. Try again.');
@@ -139,26 +131,12 @@ class FirebaseAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async {
-    final normalized = email.trim().toLowerCase();
-    final trimmedPassword = password.trim();
     final first = firstName.trim();
     final last = lastName.trim();
-    if (first.isEmpty || last.isEmpty) {
-      throw AuthException('Enter your first and last name.');
-    }
-    if (normalized.isEmpty || !normalized.contains('@')) {
-      throw AuthException('Enter a valid email address.');
-    }
-    if (trimmedPassword.isEmpty) {
-      throw AuthException('Enter your password.');
-    }
-    if (trimmedPassword.length < 6) {
-      throw AuthException('Password must be at least 6 characters.');
-    }
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
-        email: normalized,
-        password: trimmedPassword,
+        email: email,
+        password: password,
       );
       final firebaseUser = credential.user;
       if (firebaseUser == null) {
@@ -166,7 +144,7 @@ class FirebaseAuthRepository implements AuthRepository {
       }
       final appUser = AppUser(
         id: firebaseUser.uid,
-        email: normalized,
+        email: email.trim().toLowerCase(),
         firstName: first,
         lastName: last,
       );
@@ -180,7 +158,7 @@ class FirebaseAuthRepository implements AuthRepository {
     } on AuthException {
       rethrow;
     } on FirebaseAuthException catch (e) {
-      debugPrint('FirebaseAuthException code=${e.code} message=${e.message}');
+      debugPrint('FIREBASE AUTH ERROR: ${e.code} - ${e.message}');
       throw AuthException('${e.code}: ${e.message}');
     } catch (_) {
       throw AuthException('Could not create account. Try again.');
