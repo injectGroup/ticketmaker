@@ -65,7 +65,10 @@ class _GenerateViewState extends State<_GenerateView> {
     setState(() => _isSaving = true);
     try {
       await requireAuthThenSaveTicket(context);
-      // Keep current edits; navigation to Tickets is handled in auth_gate.
+      // Bracket underlines reset for the next ticket (cubit already defaulted).
+      if (mounted) {
+        setState(() => _ticketSession++);
+      }
     } on FirebaseException catch (e) {
       debugPrint('Failed to save ticket (FirebaseException): $e');
       if (!mounted) return;

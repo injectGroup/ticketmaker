@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Web photo session cache + Share via XFile.fromData",
-        "taskId": "task-web-photo-share-fix-20260724",
-        "updatedAt": "2026-07-24T17:45:00.000Z",
+        "message": "App update: Web Share downloads JPEG; Generate resets after Save",
+        "taskId": "task-web-share-download-reset-generate-20260724",
+        "updatedAt": "2026-07-24T18:00:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -811,7 +811,20 @@
       "status": "done",
       "createdAt": "2026-07-24T17:35:00.000Z",
       "updatedAt": "2026-07-24T17:45:00.000Z"
+    },
+    {
+      "id": "task-web-share-download-reset-generate-20260724",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Fix web Share download + reset Generate after Save",
+      "description": "Web Share uses Blob download (avoids LateInitializationError); native uses SharePlus; GenerateCubit.resetToDefault + _ticketSession bump after successful Save.",
+      "details": "ticket_share_helper; ticket_share_download_web/stub; auth_gate; generate_page; pubspec web dep",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-24T17:55:00.000Z",
+      "updatedAt": "2026-07-24T18:00:00.000Z"
     }
   ],
-  "lastSync": "2026-07-24T17:45:00.000Z"
+  "lastSync": "2026-07-24T18:00:00.000Z"
 }

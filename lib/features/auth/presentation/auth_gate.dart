@@ -97,7 +97,8 @@ Future<void> _executePending(
                 );
               },
             );
-        // Keep the user's current Generate edits; show the saved list.
+        // Reset Generate to defaults for the next ticket, then show the list.
+        generateCubit.resetToDefault();
         if (!context.mounted) return;
         context.go(TicketsPage.routePath);
       } catch (e, st) {

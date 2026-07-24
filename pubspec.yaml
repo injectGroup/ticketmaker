@@ -29,6 +29,7 @@ dependencies:
   crypto: ^3.0.7
   image: ^4.8.0
   firebase_storage: ^13.4.5
+  web: ^1.1.1
 
 dev_dependencies:
   flutter_test:

@@ -9,6 +9,8 @@ import 'package:share_plus/share_plus.dart';
 import '../../generate/domain/entities/ticket.dart';
 import '../presentation/widgets/saved_ticket_view.dart';
 import 'ticket_image_codec.dart';
+import 'ticket_share_download_stub.dart'
+    if (dart.library.js_interop) 'ticket_share_download_web.dart';
 
 /// Captures a ticket image and opens the native / web share sheet.
 class TicketShareHelper {
@@ -72,8 +74,10 @@ class TicketShareHelper {
     }
   }
 
-  /// Shares [ticket] as a JPEG (plus caption). Uses in-memory [XFile.fromData]
-  /// so Flutter Web does not depend on dart:io temp files.
+  /// Shares [ticket] as a JPEG (plus caption).
+  ///
+  /// On Flutter Web, downloads the JPEG via Blob (desktop browsers lack a
+  /// reliable Web Share sheet for files). On native, uses [SharePlus].
   static Future<void> share(
     BuildContext context,
     Ticket ticket, {
@@ -92,6 +96,7 @@ class TicketShareHelper {
       );
 
     final origin = sharePositionOrigin ?? shareOriginFrom(context);
+    final fileName = 'ticket_${ticket.id}.jpg';
     List<int>? bytes;
 
     try {
@@ -113,28 +118,66 @@ class TicketShareHelper {
       if (!context.mounted) return;
 
       if (bytes != null && bytes.isNotEmpty) {
-        final file = XFile.fromData(
-          Uint8List.fromList(bytes),
-          mimeType: 'image/jpeg',
-          name: 'ticket_${ticket.id}.jpg',
-        );
-        // ignore: deprecated_member_use
-        await Share.shareXFiles(
-          [file],
+        final jpeg = Uint8List.fromList(bytes);
+
+        if (kIsWeb) {
+          try {
+            downloadBytesAsFile(jpeg, fileName);
+            messenger
+              ?..hideCurrentSnackBar()
+              ..showSnackBar(
+                const SnackBar(content: Text('Ticket image downloaded')),
+              );
+            return;
+          } catch (e, st) {
+            debugPrint('Web download failed, trying SharePlus: $e\n$st');
+          }
+        }
+
+        try {
+          await SharePlus.instance.share(
+            ShareParams(
+              files: [
+                XFile.fromData(
+                  jpeg,
+                  mimeType: 'image/jpeg',
+                  name: fileName,
+                ),
+              ],
+              fileNameOverrides: [fileName],
+              text: ticket.toShareText(),
+              subject: _subject,
+              sharePositionOrigin: origin,
+              downloadFallbackEnabled: true,
+            ),
+          );
+          if (!context.mounted) return;
+          messenger?.hideCurrentSnackBar();
+          return;
+        } catch (e, st) {
+          debugPrint('SharePlus failed: $e\n$st');
+          if (kIsWeb) {
+            downloadBytesAsFile(jpeg, fileName);
+            if (!context.mounted) return;
+            messenger
+              ?..hideCurrentSnackBar()
+              ..showSnackBar(
+                const SnackBar(content: Text('Ticket image downloaded')),
+              );
+            return;
+          }
+          rethrow;
+        }
+      }
+
+      await SharePlus.instance.share(
+        ShareParams(
           text: ticket.toShareText(),
           subject: _subject,
           sharePositionOrigin: origin,
-        );
-        messenger?.hideCurrentSnackBar();
-        return;
-      }
-
-      // ignore: deprecated_member_use
-      await Share.share(
-        ticket.toShareText(),
-        subject: _subject,
-        sharePositionOrigin: origin,
+        ),
       );
+      if (!context.mounted) return;
       messenger?.hideCurrentSnackBar();
     } catch (e, st) {
       debugPrint('Share failed: $e\n$st');
