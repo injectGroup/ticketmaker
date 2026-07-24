@@ -616,7 +616,20 @@
       "status": "done",
       "createdAt": "2026-07-24T09:14:00.000Z",
       "updatedAt": "2026-07-24T09:14:00.000Z"
+    },
+    {
+      "id": "task-ios-min-15-firebase-20260724",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Raise iOS deployment target to 15.0 for Firebase",
+      "description": "Bump IPHONEOS_DEPLOYMENT_TARGET from 13.0 to 15.0 so firebase-core SPM builds on simulator.",
+      "details": "ios/Runner.xcodeproj/project.pbxproj",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-24T10:08:00.000Z",
+      "updatedAt": "2026-07-24T10:09:00.000Z"
     }
   ],
-  "lastSync": "2026-07-24T09:16:42.914Z"
+  "lastSync": "2026-07-24T10:09:00.000Z"
 }
