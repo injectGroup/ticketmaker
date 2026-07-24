@@ -125,7 +125,8 @@ class FirebaseAuthRepository implements AuthRepository {
     } on AuthException {
       rethrow;
     } on FirebaseAuthException catch (e) {
-      throw AuthException(_mapFirebaseAuthError(e));
+      debugPrint('FirebaseAuthException code=${e.code} message=${e.message}');
+      throw AuthException('${e.code}: ${e.message}');
     } catch (_) {
       throw AuthException('Could not sign in. Try again.');
     }
@@ -179,7 +180,8 @@ class FirebaseAuthRepository implements AuthRepository {
     } on AuthException {
       rethrow;
     } on FirebaseAuthException catch (e) {
-      throw AuthException(_mapFirebaseAuthError(e));
+      debugPrint('FirebaseAuthException code=${e.code} message=${e.message}');
+      throw AuthException('${e.code}: ${e.message}');
     } catch (_) {
       throw AuthException('Could not create account. Try again.');
     }
