@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -19,20 +17,23 @@ class TicketCustomizeToolbar extends StatelessWidget {
     final file = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (file == null || !context.mounted) return;
 
+    // Always read bytes so Flutter Web can render via MemoryImage.
+    final bytes = await file.readAsBytes();
+    if (bytes.isEmpty || !context.mounted) return;
+
     final store = imageStore ?? TicketImageStore();
-    Uint8List? bytes;
+    String durablePath = '';
     try {
-      bytes = await file.readAsBytes();
+      durablePath = await store.import(
+        sourcePath: file.path,
+        bytes: bytes,
+      );
     } catch (_) {
-      bytes = null;
+      durablePath = '';
     }
-    final durablePath = await store.import(
-      sourcePath: file.path,
-      bytes: bytes,
-    );
     if (!context.mounted) return;
     final nextPath = durablePath.isNotEmpty ? durablePath : file.path;
-    context.read<GenerateCubit>().setImagePath(nextPath);
+    context.read<GenerateCubit>().setPickedImage(path: nextPath, bytes: bytes);
   }
 
   @override

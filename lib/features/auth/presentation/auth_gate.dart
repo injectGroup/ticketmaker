@@ -10,6 +10,7 @@ import '../../discover/domain/entities/event.dart';
 import '../../generate/presentation/bloc/generate_cubit.dart';
 import '../../seating/presentation/pages/interactive_seating_page.dart';
 import '../../tickets/presentation/bloc/tickets_cubit.dart';
+import '../../tickets/presentation/pages/tickets_page.dart';
 import '../domain/pending_auth_action.dart';
 import 'bloc/auth_cubit.dart';
 import 'widgets/auth_flow_sheet.dart';
@@ -93,8 +94,9 @@ Future<void> _executePending(
                 );
               },
             );
+        // Keep the user's current Generate edits; show the saved list.
         if (!context.mounted) return;
-        generateCubit.resetToDefault();
+        context.go(TicketsPage.routePath);
       } catch (e, st) {
         debugPrint('Failed to save ticket: $e\n$st');
         rethrow;

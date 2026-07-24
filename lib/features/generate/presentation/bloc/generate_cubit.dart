@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
@@ -202,8 +203,23 @@ class GenerateCubit extends Cubit<GenerateState> {
   }
 
   void setImagePath(String path) {
-    if (path == state.ticket.imagePath) return;
-    emit(state.copyWith(ticket: state.ticket.copyWith(imagePath: path)));
+    if (path == state.ticket.imagePath && state.imageBytes == null) return;
+    emit(
+      state.copyWith(
+        ticket: state.ticket.copyWith(imagePath: path),
+        clearImageBytes: true,
+      ),
+    );
+  }
+
+  /// Sets the gallery path and optional bytes (required for Flutter Web preview).
+  void setPickedImage({required String path, required Uint8List bytes}) {
+    emit(
+      state.copyWith(
+        ticket: state.ticket.copyWith(imagePath: path),
+        imageBytes: bytes,
+      ),
+    );
   }
 
   void setEventDateTime(DateTime eventAt) {

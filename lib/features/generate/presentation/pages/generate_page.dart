@@ -60,22 +60,12 @@ class _GenerateViewState extends State<_GenerateView> {
     super.dispose();
   }
 
-  void _syncControllersFromTicket() {
-    final ticket = context.read<GenerateCubit>().state.ticket;
-    _headerLabelController.text = ticket.headerLabel;
-    _titleController.text = ticket.title;
-    _subtitleController.text = ticket.subtitle;
-    _venueController.text = ticket.venue;
-  }
-
   Future<void> _saveTicket() async {
     if (_isSaving) return;
     setState(() => _isSaving = true);
     try {
       await requireAuthThenSaveTicket(context);
-      if (!mounted) return;
-      _syncControllersFromTicket();
-      _ticketSession++;
+      // Keep current edits; navigation to Tickets is handled in auth_gate.
     } on FirebaseException catch (e) {
       debugPrint('Failed to save ticket (FirebaseException): $e');
       if (!mounted) return;
@@ -151,7 +141,8 @@ class _GenerateViewState extends State<_GenerateView> {
           child: SafeArea(
             child: BlocBuilder<GenerateCubit, GenerateState>(
               buildWhen: (previous, current) =>
-                  previous.ticket != current.ticket,
+                  previous.ticket != current.ticket ||
+                  previous.imageBytes != current.imageBytes,
               builder: (context, state) {
                 final ticket = state.ticket;
                 final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
@@ -195,6 +186,7 @@ class _GenerateViewState extends State<_GenerateView> {
                                   subtitleController: _subtitleController,
                                   venueController: _venueController,
                                   bracketResetToken: _ticketSession,
+                                  imageBytes: state.imageBytes,
                                 ),
                               ],
                             ),

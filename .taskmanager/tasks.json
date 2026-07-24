@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Harden Save Ticket with timeout and error SnackBars",
-        "taskId": "task-save-ticket-timeout-errors-20260724",
-        "updatedAt": "2026-07-24T15:55:00.000Z",
+        "message": "App update: Web MemoryImage photo preview; keep Generate edits after Save",
+        "taskId": "task-web-photo-keep-edits-after-save-20260724",
+        "updatedAt": "2026-07-24T16:05:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -772,7 +772,20 @@
       "status": "done",
       "createdAt": "2026-07-24T15:50:00.000Z",
       "updatedAt": "2026-07-24T15:55:00.000Z"
+    },
+    {
+      "id": "task-web-photo-keep-edits-after-save-20260724",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Web photo MemoryImage + keep Generate edits after Save",
+      "description": "Gallery picks always readAsBytes and preview via MemoryImage; Save Ticket no longer resets to Circu Du Freak — navigates to Tickets instead.",
+      "details": "ticket_details_section; ticket_customize_toolbar; generate_cubit/state; auth_gate; generate_page",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-24T16:00:00.000Z",
+      "updatedAt": "2026-07-24T16:05:00.000Z"
     }
   ],
-  "lastSync": "2026-07-24T15:55:00.000Z"
+  "lastSync": "2026-07-24T16:05:00.000Z"
 }

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -21,6 +22,7 @@ class TicketDetailsSection extends StatelessWidget {
     required this.venueController,
     this.bracketResetToken,
     this.imageStore,
+    this.imageBytes,
   });
 
   final Ticket ticket;
@@ -29,27 +31,30 @@ class TicketDetailsSection extends StatelessWidget {
   final TextEditingController venueController;
   final Object? bracketResetToken;
   final TicketImageStore? imageStore;
+  final Uint8List? imageBytes;
 
   Future<void> _pickGalleryImage(BuildContext context) async {
     final file = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (file == null || !context.mounted) return;
 
-    final store = imageStore ?? TicketImageStore();
-    Uint8List? bytes;
-    try {
-      bytes = await file.readAsBytes();
-    } catch (_) {
-      bytes = null;
-    }
+    // Always read bytes so Flutter Web can render via MemoryImage.
+    final bytes = await file.readAsBytes();
+    if (bytes.isEmpty || !context.mounted) return;
 
-    final durablePath = await store.import(
-      sourcePath: file.path,
-      bytes: bytes,
-    );
+    final store = imageStore ?? TicketImageStore();
+    String durablePath = '';
+    try {
+      durablePath = await store.import(
+        sourcePath: file.path,
+        bytes: bytes,
+      );
+    } catch (_) {
+      durablePath = '';
+    }
     if (!context.mounted) return;
 
     final nextPath = durablePath.isNotEmpty ? durablePath : file.path;
-    context.read<GenerateCubit>().setImagePath(nextPath);
+    context.read<GenerateCubit>().setPickedImage(path: nextPath, bytes: bytes);
   }
 
   Future<void> _pickDateTime(BuildContext context) async {
@@ -75,25 +80,41 @@ class TicketDetailsSection extends StatelessWidget {
     );
   }
 
-  Widget _eventImage({required bool hasFile}) {
+  Widget _eventImage() {
     const width = 300.0;
     const height = 188.0;
+    final bytes = imageBytes;
+    final path = ticket.imagePath;
 
-    if (!hasFile) {
-      return const TicketPhotoPlaceholder(width: width, height: height);
-    }
-
-    return Image.file(
-      File(ticket.imagePath),
-      width: width,
-      height: height,
-      fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
+    if (bytes != null && bytes.isNotEmpty) {
+      return Image.memory(
+        bytes,
         width: width,
         height: height,
-        broken: true,
-      ),
-    );
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
+          width: width,
+          height: height,
+          broken: true,
+        ),
+      );
+    }
+
+    if (!kIsWeb && path.isNotEmpty && File(path).existsSync()) {
+      return Image.file(
+        File(path),
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
+          width: width,
+          height: height,
+          broken: true,
+        ),
+      );
+    }
+
+    return const TicketPhotoPlaceholder(width: width, height: height);
   }
 
   @override
@@ -105,7 +126,8 @@ class TicketDetailsSection extends StatelessWidget {
     );
     final cubit = context.read<GenerateCubit>();
     final path = ticket.imagePath;
-    final hasFile = path.isNotEmpty && File(path).existsSync();
+    final hasImage = (imageBytes != null && imageBytes!.isNotEmpty) ||
+        (!kIsWeb && path.isNotEmpty && File(path).existsSync());
 
     return Container(
       width: double.infinity,
@@ -148,9 +170,9 @@ class TicketDetailsSection extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: _eventImage(hasFile: hasFile),
+                    child: _eventImage(),
                   ),
-                  if (hasFile)
+                  if (hasImage)
                     Positioned(
                       right: 10,
                       bottom: 10,
