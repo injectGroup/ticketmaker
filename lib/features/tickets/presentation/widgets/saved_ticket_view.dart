@@ -6,6 +6,7 @@ import '../../../../core/utils/color_contrast.dart';
 import '../../../../core/widgets/ticket_photo_placeholder.dart';
 import '../../../generate/domain/entities/ticket.dart';
 import '../../../generate/presentation/widgets/generate_qr_code.dart';
+import '../../../generate/presentation/widgets/ticket_code_badge.dart';
 import '../../../generate/presentation/widgets/ticket_perforation.dart';
 
 /// Read-only visual of a saved ticket (mirrors Generate layout without editors).
@@ -81,9 +82,10 @@ class SavedTicketView extends StatelessWidget {
                 isSquare: ticket.isSquare,
               ),
               const SizedBox(height: 20),
-              Text(
-                '[ ${ticket.code} ]',
-                style: theme.textTheme.bodyMedium?.copyWith(color: onTop),
+              TicketCodeBadge(
+                code: ticket.code,
+                foreground: onTop,
+                background: onTop.withValues(alpha: 0.14),
               ),
               const SizedBox(height: 16),
             ],
@@ -114,7 +116,7 @@ class SavedTicketView extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(16),
                 child: _eventImage(),
               ),
               Padding(

@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/auth_gate.dart';
 import '../../../tickets/presentation/bloc/tickets_cubit.dart';
 import '../bloc/generate_cubit.dart';
+import '../widgets/ticket_customize_toolbar.dart';
 import '../widgets/ticket_details_section.dart';
 import '../widgets/ticket_header_section.dart';
 import '../widgets/ticket_perforation.dart';
@@ -35,7 +36,7 @@ class _GenerateViewState extends State<_GenerateView> {
   late final TextEditingController _venueController;
   bool _isSaving = false;
 
-  /// Bumped after Save Ticket so bracket hints return for the next ticket.
+  /// Bumped after Save Ticket so field hint underlines return for the next ticket.
   int _ticketSession = 0;
 
   @override
@@ -134,61 +135,82 @@ class _GenerateViewState extends State<_GenerateView> {
             ),
           ],
           child: SafeArea(
-            child: ColoredBox(
-              color: AppColors.secondaryBackground,
-              child: BlocBuilder<GenerateCubit, GenerateState>(
-                buildWhen: (previous, current) =>
-                    previous.ticket != current.ticket,
-                builder: (context, state) {
-                  final ticket = state.ticket;
-                  final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
-                  return SingleChildScrollView(
-                    padding: EdgeInsets.only(bottom: bottomInset + 24),
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    child: Column(
-                      children: [
-                        TicketHeaderSection(
-                          ticket: ticket,
-                          headerLabelController: _headerLabelController,
-                          bracketResetToken: _ticketSession,
+            child: BlocBuilder<GenerateCubit, GenerateState>(
+              buildWhen: (previous, current) =>
+                  previous.ticket != current.ticket,
+              builder: (context, state) {
+                final ticket = state.ticket;
+                final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+                return SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(16, 12, 16, bottomInset + 28),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  child: Column(
+                    children: [
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.12),
+                              blurRadius: 28,
+                              offset: const Offset(0, 14),
+                            ),
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.08),
+                              blurRadius: 18,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        const TicketPerforation(),
-                        TicketDetailsSection(
-                          ticket: ticket,
-                          titleController: _titleController,
-                          subtitleController: _subtitleController,
-                          venueController: _venueController,
-                          bracketResetToken: _ticketSession,
-                        ),
-                        const SizedBox(height: 24),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: FilledButton.icon(
-                              onPressed: _isSaving ? null : _saveTicket,
-                              icon: _isSaving
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Icon(Icons.save_outlined),
-                              label: Text(
-                                _isSaving ? 'Saving…' : 'Save Ticket',
-                              ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: ColoredBox(
+                            color: AppColors.secondaryBackground,
+                            child: Column(
+                              children: [
+                                TicketHeaderSection(
+                                  ticket: ticket,
+                                  headerLabelController: _headerLabelController,
+                                  bracketResetToken: _ticketSession,
+                                ),
+                                const TicketPerforation(),
+                                TicketDetailsSection(
+                                  ticket: ticket,
+                                  titleController: _titleController,
+                                  subtitleController: _subtitleController,
+                                  venueController: _venueController,
+                                  bracketResetToken: _ticketSession,
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                      ),
+                      const SizedBox(height: 18),
+                      const TicketCustomizeToolbar(),
+                      const SizedBox(height: 22),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: _isSaving ? null : _saveTicket,
+                          icon: _isSaving
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.save_outlined),
+                          label: Text(_isSaving ? 'Saving…' : 'Save Ticket'),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
         ),

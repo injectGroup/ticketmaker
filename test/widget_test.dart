@@ -48,7 +48,8 @@ void main() {
 
     expect(find.text('Quick Ticket Maker'), findsOneWidget);
     expect(find.text('Circu Du Freak'), findsOneWidget);
-    expect(find.text('Generate Qr Code'), findsOneWidget);
+    expect(find.text('Color'), findsOneWidget);
+    expect(find.text('Shape'), findsOneWidget);
     expect(find.text('Save Ticket'), findsOneWidget);
 
     expect(find.text('Generate'), findsWidgets);
@@ -68,7 +69,7 @@ void main() {
     expect(find.text('National Stadium, Abuja'), findsOneWidget);
     expect(find.byIcon(Icons.threed_rotation), findsNothing);
     expect(find.byIcon(Icons.place_outlined), findsOneWidget);
-    expect(find.text('Generate Qr Code'), findsOneWidget);
+    expect(find.text('Color'), findsOneWidget);
     expect(find.text('Save Ticket'), findsOneWidget);
   });
 
@@ -138,7 +139,7 @@ void main() {
     expect(find.text('VIP Pass'), findsOneWidget);
     expect(find.text('Detail View Concert Tagline'), findsOneWidget);
     expect(find.text('National Stadium Abuja'), findsOneWidget);
-    expect(find.text('[ 9999-8888-777 ]'), findsOneWidget);
+    expect(find.text('9999-8888-777'), findsOneWidget);
     expect(find.text('Generate Qr Code'), findsNothing);
     expect(find.text('Save Ticket'), findsNothing);
   });

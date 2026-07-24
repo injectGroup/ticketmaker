@@ -5,14 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/color_contrast.dart';
 import '../../../../core/widgets/ticket_photo_placeholder.dart';
 import '../../../tickets/data/ticket_image_store.dart';
 import '../../domain/entities/ticket.dart';
 import '../bloc/generate_cubit.dart';
 import 'bracketed_ticket_field.dart';
-import 'top_bg_color_customizer_sheet.dart';
 
 class TicketDetailsSection extends StatelessWidget {
   const TicketDetailsSection({
@@ -50,8 +48,6 @@ class TicketDetailsSection extends StatelessWidget {
     );
     if (!context.mounted) return;
 
-    // Prefer durable path; only keep temp path if import failed but bytes/path
-    // may still work for this session.
     final nextPath = durablePath.isNotEmpty ? durablePath : file.path;
     context.read<GenerateCubit>().setImagePath(nextPath);
   }
@@ -79,18 +75,16 @@ class TicketDetailsSection extends StatelessWidget {
     );
   }
 
-  Widget _eventImage() {
+  Widget _eventImage({required bool hasFile}) {
     const width = 300.0;
-    const height = 200.0;
+    const height = 188.0;
 
-    final path = ticket.imagePath;
-    final hasFile = path.isNotEmpty && File(path).existsSync();
     if (!hasFile) {
       return const TicketPhotoPlaceholder(width: width, height: height);
     }
 
     return Image.file(
-      File(path),
+      File(ticket.imagePath),
       width: width,
       height: height,
       fit: BoxFit.cover,
@@ -105,12 +99,13 @@ class TicketDetailsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Bottom half shares Task 2.3 top background colors.
     final onGradient = ColorContrast.onGradient(
       ticket.topGradientStart,
       ticket.topGradientEnd,
     );
     final cubit = context.read<GenerateCubit>();
+    final path = ticket.imagePath;
+    final hasFile = path.isNotEmpty && File(path).existsSync();
 
     return Container(
       width: double.infinity,
@@ -123,9 +118,9 @@ class TicketDetailsSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const SizedBox(height: 30),
+          const SizedBox(height: 24),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 28),
             child: BracketedTicketField(
               controller: titleController,
               resetToken: bracketResetToken,
@@ -134,36 +129,67 @@ class TicketDetailsSection extends StatelessWidget {
               maxLines: 3,
               style: theme.textTheme.headlineLarge?.copyWith(
                 color: onGradient,
+                fontWeight: FontWeight.w700,
+                height: 1.15,
               ),
               cursorColor: onGradient,
+              hintText: 'Event title',
               onChanged: cubit.updateTitle,
             ),
           ),
-          const SizedBox(height: 16),
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: _eventImage(),
-              ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: IconButton.outlined(
-                  onPressed: () => _pickGalleryImage(context),
-                  style: IconButton.styleFrom(
-                    foregroundColor: AppColors.primaryText,
-                    side: const BorderSide(color: AppColors.primary),
-                    backgroundColor: AppColors.secondaryBackground,
+          const SizedBox(height: 18),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _pickGalleryImage(context),
+              borderRadius: BorderRadius.circular(16),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: _eventImage(hasFile: hasFile),
                   ),
-                  icon: const Icon(Icons.insert_photo),
-                ),
+                  if (hasFile)
+                    Positioned(
+                      right: 10,
+                      bottom: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.55),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.photo_camera_outlined,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              'Change',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
-            ],
+            ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(30, 30, 30, 16),
+            padding: const EdgeInsets.fromLTRB(28, 22, 28, 12),
             child: BracketedTicketField(
               controller: subtitleController,
               resetToken: bracketResetToken,
@@ -172,45 +198,46 @@ class TicketDetailsSection extends StatelessWidget {
               maxLines: 4,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: onGradient,
+                height: 1.35,
               ),
               cursorColor: onGradient,
+              hintText: 'Subtitle',
               onChanged: cubit.updateSubtitle,
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(left: 30, right: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 28),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: () => _pickDateTime(context),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Row(
                     children: [
-                      Icon(Icons.date_range_sharp, color: onGradient, size: 24),
-                      const SizedBox(width: 16),
+                      Icon(Icons.calendar_today_outlined,
+                          color: onGradient, size: 20),
+                      const SizedBox(width: 12),
                       Flexible(
                         child: Text(
-                          '[ ${ticket.dateLabel} ]',
+                          ticket.dateLabel,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: onGradient,
+                            fontWeight: FontWeight.w600,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 16),
-                      Icon(
-                        Icons.access_time_rounded,
-                        color: onGradient,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
+                      Icon(Icons.schedule_rounded, color: onGradient, size: 20),
+                      const SizedBox(width: 10),
                       Flexible(
                         child: Text(
-                          '[ ${ticket.timeLabel} ]',
+                          ticket.timeLabel,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: onGradient,
+                            fontWeight: FontWeight.w600,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -222,41 +249,20 @@ class TicketDetailsSection extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(30, 8, 30, 0),
+            padding: const EdgeInsets.fromLTRB(28, 4, 28, 28),
             child: BracketedTicketField(
               controller: venueController,
               resetToken: bracketResetToken,
               minLines: 1,
               maxLines: 3,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: onGradient,
-              ),
+              style: theme.textTheme.bodyMedium?.copyWith(color: onGradient),
               cursorColor: onGradient,
+              hintText: 'Venue',
               onChanged: cubit.updateVenue,
               leading: Icon(
                 Icons.place_outlined,
                 color: onGradient,
-                size: 24,
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 24, 20, 24),
-              child: Column(
-                children: [
-                  IconButton.outlined(
-                    onPressed: () => TopBgColorCustomizerSheet.show(context),
-                    style: IconButton.styleFrom(
-                      foregroundColor: AppColors.primaryText,
-                      side: const BorderSide(color: AppColors.primary),
-                      backgroundColor: AppColors.secondaryBackground,
-                    ),
-                    icon: const Icon(Icons.color_lens),
-                  ),
-                  Text('Bg color', style: theme.textTheme.bodySmall),
-                ],
+                size: 22,
               ),
             ),
           ),

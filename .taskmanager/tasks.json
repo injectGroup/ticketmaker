@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Faster signup — non-blocking profile sync",
-        "taskId": "task-fast-signup-profile-20260724",
-        "updatedAt": "2026-07-24T11:52:00.000Z",
+        "message": "App update: Modernize Generate ticket pass-card UI",
+        "taskId": "task-generate-ui-redesign-20260724",
+        "updatedAt": "2026-07-24T12:20:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -681,7 +681,20 @@
       "status": "done",
       "createdAt": "2026-07-24T11:52:00.000Z",
       "updatedAt": "2026-07-24T11:52:00.000Z"
+    },
+    {
+      "id": "task-generate-ui-redesign-20260724",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Modernize Generate ticket pass-card UI",
+      "description": "Elevated pass card, refined perforation, no brackets, copyable code badge, floating customize toolbar, modern photo slot; rose/slate default gradients.",
+      "details": "generate_page; ticket_header/details; perforation; toolbar; code badge; photo placeholder; tests",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-24T12:15:00.000Z",
+      "updatedAt": "2026-07-24T12:20:00.000Z"
     }
   ],
-  "lastSync": "2026-07-24T11:53:55.534Z"
+  "lastSync": "2026-07-24T12:19:16.817Z"
 }
