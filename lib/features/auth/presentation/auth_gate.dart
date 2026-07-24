@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -78,8 +81,23 @@ Future<void> _executePending(
       context.go(InteractiveSeatingPage.routePath, extra: event);
     case PendingSaveTicketAction():
       final generateCubit = context.read<GenerateCubit>();
-      await context.read<TicketsCubit>().saveTicket(generateCubit.state.ticket);
-      if (!context.mounted) return;
-      generateCubit.resetToDefault();
+      try {
+        await context
+            .read<TicketsCubit>()
+            .saveTicket(generateCubit.state.ticket)
+            .timeout(
+              const Duration(seconds: 10),
+              onTimeout: () {
+                throw TimeoutException(
+                  'Save timed out after 10 seconds',
+                );
+              },
+            );
+        if (!context.mounted) return;
+        generateCubit.resetToDefault();
+      } catch (e, st) {
+        debugPrint('Failed to save ticket: $e\n$st');
+        rethrow;
+      }
   }
 }

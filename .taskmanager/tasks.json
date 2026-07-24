@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Debug Sign In/Up taps and call Firebase without local pre-validation",
-        "taskId": "task-auth-button-debug-firebase-direct-20260724",
-        "updatedAt": "2026-07-24T15:30:00.000Z",
+        "message": "App update: Harden Save Ticket with timeout and error SnackBars",
+        "taskId": "task-save-ticket-timeout-errors-20260724",
+        "updatedAt": "2026-07-24T15:55:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -759,7 +759,20 @@
       "status": "done",
       "createdAt": "2026-07-24T15:25:00.000Z",
       "updatedAt": "2026-07-24T15:30:00.000Z"
+    },
+    {
+      "id": "task-save-ticket-timeout-errors-20260724",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Harden Save Ticket with 10s timeout and error SnackBars",
+      "description": "Save Ticket catches Firebase/general errors, debugPrints them, shows Failed to save SnackBar, 10s timeout on persist, always clears isSaving in finally; rebuilt with --pwa-strategy=none and redeployed.",
+      "details": "generate_page.dart; auth_gate.dart; tickets_cubit.dart",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-24T15:50:00.000Z",
+      "updatedAt": "2026-07-24T15:55:00.000Z"
     }
   ],
-  "lastSync": "2026-07-24T15:30:00.000Z"
+  "lastSync": "2026-07-24T15:55:00.000Z"
 }

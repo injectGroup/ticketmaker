@@ -1,3 +1,5 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -74,6 +76,18 @@ class _GenerateViewState extends State<_GenerateView> {
       if (!mounted) return;
       _syncControllersFromTicket();
       _ticketSession++;
+    } on FirebaseException catch (e) {
+      debugPrint('Failed to save ticket (FirebaseException): $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text('Failed to save: $e')));
+    } catch (e) {
+      debugPrint('Failed to save ticket: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text('Failed to save: $e')));
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);

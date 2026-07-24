@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../generate/domain/entities/ticket.dart';
@@ -45,14 +46,19 @@ class TicketsCubit extends Cubit<TicketsState> {
     var photoWarning = false;
 
     if (imagePath.isNotEmpty) {
-      final durable = await _imageStore.persistForTicket(
-        sourcePath: imagePath,
-        ticketId: id,
-      );
-      if (durable.isNotEmpty) {
-        imagePath = durable;
-      } else {
-        // Never wipe imagePath on a failed persist.
+      try {
+        final durable = await _imageStore.persistForTicket(
+          sourcePath: imagePath,
+          ticketId: id,
+        );
+        if (durable.isNotEmpty) {
+          imagePath = durable;
+        } else {
+          // Never wipe imagePath on a failed persist.
+          photoWarning = true;
+        }
+      } catch (e, st) {
+        debugPrint('Ticket image persist/upload failed: $e\n$st');
         photoWarning = true;
       }
     }
@@ -69,8 +75,10 @@ class TicketsCubit extends Cubit<TicketsState> {
               : 'Ticket saved',
         ),
       );
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('Ticket save failed: $e\n$st');
       emit(state.copyWith(message: 'Could not save ticket'));
+      rethrow;
     }
   }
 
