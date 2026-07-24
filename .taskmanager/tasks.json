@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Fix web Create Account Auth errors on Hosting",
-        "taskId": "task-fix-web-email-signup-20260724",
-        "updatedAt": "2026-07-24T13:05:00.000Z",
+        "message": "App update: Verified web firebase_options and redeployed Hosting",
+        "taskId": "task-verify-web-firebase-options-20260724",
+        "updatedAt": "2026-07-24T14:25:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -720,7 +720,20 @@
       "status": "done",
       "createdAt": "2026-07-24T12:58:00.000Z",
       "updatedAt": "2026-07-24T13:05:00.000Z"
+    },
+    {
+      "id": "task-verify-web-firebase-options-20260724",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Verify web firebase_options and redeploy Hosting",
+      "description": "Confirmed DefaultFirebaseOptions.web already matches Console credentials; main.dart uses currentPlatform; rebuilt and redeployed Hosting.",
+      "details": "lib/firebase_options.dart; lib/main.dart; flutter build web; firebase deploy --only hosting",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-24T14:20:00.000Z",
+      "updatedAt": "2026-07-24T14:25:00.000Z"
     }
   ],
-  "lastSync": "2026-07-24T13:02:13.343Z"
+  "lastSync": "2026-07-24T14:25:00.000Z"
 }
