@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Web Share downloads JPEG; Generate resets after Save",
-        "taskId": "task-web-share-download-reset-generate-20260724",
-        "updatedAt": "2026-07-24T18:00:00.000Z",
+        "message": "App update: Web share via XFile.fromData + Blob fallback",
+        "taskId": "task-web-share-xfile-late-init-fix-20260724",
+        "updatedAt": "2026-07-24T18:10:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }

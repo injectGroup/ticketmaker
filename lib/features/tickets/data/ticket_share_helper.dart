@@ -17,6 +17,7 @@ class TicketShareHelper {
   TicketShareHelper._();
 
   static const String _subject = 'My Custom Ticket Design';
+  static const String _webFileName = 'ticket.jpg';
 
   /// Share-sheet anchor rect for iOS/iPadOS popovers.
   static Rect shareOriginFrom(BuildContext context) {
@@ -76,8 +77,9 @@ class TicketShareHelper {
 
   /// Shares [ticket] as a JPEG (plus caption).
   ///
-  /// On Flutter Web, downloads the JPEG via Blob (desktop browsers lack a
-  /// reliable Web Share sheet for files). On native, uses [SharePlus].
+  /// Web: JPEG [Uint8List] → [XFile.fromData] → [Share.shareXFiles]. Falls
+  /// back to Blob download if the Web Share API / share_plus throws
+  /// (e.g. LateInitializationError on desktop Chrome).
   static Future<void> share(
     BuildContext context,
     Ticket ticket, {
@@ -96,86 +98,47 @@ class TicketShareHelper {
       );
 
     final origin = sharePositionOrigin ?? shareOriginFrom(context);
-    final fileName = 'ticket_${ticket.id}.jpg';
-    List<int>? bytes;
+    Uint8List? jpegBytes;
 
     try {
       if (boundaryKey != null) {
-        bytes = await captureJpegBytes(boundaryKey);
+        final captured = await captureJpegBytes(boundaryKey);
+        if (captured != null && captured.isNotEmpty) {
+          jpegBytes = Uint8List.fromList(captured);
+        }
       }
       if (!context.mounted) return;
-      if (bytes == null || bytes.isEmpty) {
+
+      if (jpegBytes == null || jpegBytes.isEmpty) {
         final png = await _captureViaOverlay(
           context,
           ticket,
           imageBytes: imageBytes,
         );
         if (png != null && png.isNotEmpty) {
-          bytes = await compressImageToJpeg(Uint8List.fromList(png));
+          jpegBytes = await compressImageToJpeg(Uint8List.fromList(png));
         }
       }
 
       if (!context.mounted) return;
 
-      if (bytes != null && bytes.isNotEmpty) {
-        final jpeg = Uint8List.fromList(bytes);
-
-        if (kIsWeb) {
-          try {
-            downloadBytesAsFile(jpeg, fileName);
-            messenger
-              ?..hideCurrentSnackBar()
-              ..showSnackBar(
-                const SnackBar(content: Text('Ticket image downloaded')),
-              );
-            return;
-          } catch (e, st) {
-            debugPrint('Web download failed, trying SharePlus: $e\n$st');
-          }
-        }
-
-        try {
-          await SharePlus.instance.share(
-            ShareParams(
-              files: [
-                XFile.fromData(
-                  jpeg,
-                  mimeType: 'image/jpeg',
-                  name: fileName,
-                ),
-              ],
-              fileNameOverrides: [fileName],
-              text: ticket.toShareText(),
-              subject: _subject,
-              sharePositionOrigin: origin,
-              downloadFallbackEnabled: true,
-            ),
-          );
-          if (!context.mounted) return;
-          messenger?.hideCurrentSnackBar();
-          return;
-        } catch (e, st) {
-          debugPrint('SharePlus failed: $e\n$st');
-          if (kIsWeb) {
-            downloadBytesAsFile(jpeg, fileName);
-            if (!context.mounted) return;
-            messenger
-              ?..hideCurrentSnackBar()
-              ..showSnackBar(
-                const SnackBar(content: Text('Ticket image downloaded')),
-              );
-            return;
-          }
-          rethrow;
-        }
+      if (jpegBytes != null && jpegBytes.isNotEmpty) {
+        await _shareJpegBytes(
+          context,
+          ticket,
+          jpegBytes: jpegBytes,
+          origin: origin,
+          messenger: messenger,
+        );
+        return;
       }
 
-      await SharePlus.instance.share(
-        ShareParams(
-          text: ticket.toShareText(),
-          subject: _subject,
-          sharePositionOrigin: origin,
-        ),
+      // Text-only fallback when capture produced no image.
+      // ignore: deprecated_member_use
+      await Share.share(
+        ticket.toShareText(),
+        subject: _subject,
+        sharePositionOrigin: origin,
       );
       if (!context.mounted) return;
       messenger?.hideCurrentSnackBar();
@@ -190,6 +153,64 @@ class TicketShareHelper {
     }
   }
 
+  /// Shares prepared JPEG bytes. Never touches uninitialized late fields.
+  static Future<void> _shareJpegBytes(
+    BuildContext context,
+    Ticket ticket, {
+    required Uint8List jpegBytes,
+    required Rect origin,
+    required ScaffoldMessengerState? messenger,
+  }) async {
+    final fileName = kIsWeb ? _webFileName : 'ticket_${ticket.id}.jpg';
+
+    // Build XFile only from in-memory bytes — never read .path on web.
+    final xFile = XFile.fromData(
+      jpegBytes,
+      mimeType: 'image/jpeg',
+      name: fileName,
+    );
+
+    if (kIsWeb) {
+      try {
+        // ignore: deprecated_member_use
+        await Share.shareXFiles(
+          [xFile],
+          text: ticket.toShareText(),
+          subject: _subject,
+          sharePositionOrigin: origin,
+          fileNameOverrides: [fileName],
+        );
+        if (!context.mounted) return;
+        messenger?.hideCurrentSnackBar();
+        return;
+      } catch (e, st) {
+        // Desktop Chrome often throws LateInitializationError / NotAllowedError.
+        debugPrint('Share.shareXFiles failed on web, downloading: $e\n$st');
+        downloadBytesAsFile(jpegBytes, fileName);
+        if (!context.mounted) return;
+        messenger
+          ?..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(content: Text('Ticket image downloaded')),
+          );
+        return;
+      }
+    }
+
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [xFile],
+        fileNameOverrides: [fileName],
+        text: ticket.toShareText(),
+        subject: _subject,
+        sharePositionOrigin: origin,
+        downloadFallbackEnabled: true,
+      ),
+    );
+    if (!context.mounted) return;
+    messenger?.hideCurrentSnackBar();
+  }
+
   static Future<List<int>?> _captureViaOverlay(
     BuildContext context,
     Ticket ticket, {
@@ -200,8 +221,9 @@ class TicketShareHelper {
 
     final boundaryKey = GlobalKey();
     final width = MediaQuery.sizeOf(context).width.clamp(280.0, 420.0);
-    late OverlayEntry entry;
 
+    // Nullable instead of `late` so we never read an uninitialized field.
+    OverlayEntry? entry;
     entry = OverlayEntry(
       builder: (context) {
         return IgnorePointer(
