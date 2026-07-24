@@ -655,7 +655,20 @@
       "status": "done",
       "createdAt": "2026-07-24T11:27:00.000Z",
       "updatedAt": "2026-07-24T11:30:00.000Z"
+    },
+    {
+      "id": "task-selective-ticket-delete-20260724",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Selective ticket delete and swipe-to-delete",
+      "description": "Multi-select mode with checkboxes, Select All, Delete Selected confirmation; swipe Dismissible with Undo snackbar; Clear all retained.",
+      "details": "tickets_page.dart; saved_ticket_card.dart; tickets_cubit deleteTickets/restoreTickets; tests",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-24T11:40:00.000Z",
+      "updatedAt": "2026-07-24T11:45:00.000Z"
     }
   ],
-  "lastSync": "2026-07-24T11:42:59.184Z"
+  "lastSync": "2026-07-24T11:43:25.529Z"
 }
