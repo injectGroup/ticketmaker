@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Center-align ticket subtitle",
-        "taskId": "task-center-align-subtitle-20260723",
-        "updatedAt": "2026-07-23T14:58:00.000Z",
+        "message": "App update: Initialize Firebase in main.dart",
+        "taskId": "task-main-firebase-init-20260724",
+        "updatedAt": "2026-07-24T09:14:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -603,7 +603,20 @@
       "status": "done",
       "createdAt": "2026-07-23T14:56:00.000Z",
       "updatedAt": "2026-07-23T14:58:00.000Z"
+    },
+    {
+      "id": "task-main-firebase-init-20260724",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Update main.dart with Firebase init",
+      "description": "Replace lib/main.dart with Firebase.initializeApp + DefaultFirebaseOptions before runApp; remove duplicate main() block.",
+      "details": "lib/main.dart",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-24T09:14:00.000Z",
+      "updatedAt": "2026-07-24T09:14:00.000Z"
     }
   ],
-  "lastSync": "2026-07-23T14:58:00.000Z"
+  "lastSync": "2026-07-24T09:16:42.914Z"
 }
