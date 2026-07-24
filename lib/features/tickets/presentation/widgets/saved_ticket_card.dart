@@ -8,9 +8,20 @@ import '../pages/tickets_page.dart';
 
 /// List card for a persisted ticket, with a native share action.
 class SavedTicketCard extends StatelessWidget {
-  const SavedTicketCard({super.key, required this.ticket});
+  const SavedTicketCard({
+    super.key,
+    required this.ticket,
+    this.selecting = false,
+    this.selected = false,
+    this.onLongPress,
+    this.onSelectionToggle,
+  });
 
   final Ticket ticket;
+  final bool selecting;
+  final bool selected;
+  final VoidCallback? onLongPress;
+  final VoidCallback? onSelectionToggle;
 
   Future<void> _share(BuildContext buttonContext) async {
     await TicketShareHelper.share(
@@ -25,17 +36,29 @@ class SavedTicketCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Material(
-      color: AppColors.secondaryBackground,
+      color: selected
+          ? AppColors.primary.withValues(alpha: 0.08)
+          : AppColors.secondaryBackground,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => context.push(
-          '${TicketsPage.routePath}/${Uri.encodeComponent(ticket.id)}',
-        ),
+        onTap: selecting
+            ? onSelectionToggle
+            : () => context.push(
+                '${TicketsPage.routePath}/${Uri.encodeComponent(ticket.id)}',
+              ),
+        onLongPress: selecting ? null : onLongPress,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
+              if (selecting) ...[
+                Checkbox(
+                  value: selected,
+                  onChanged: (_) => onSelectionToggle?.call(),
+                ),
+                const SizedBox(width: 4),
+              ],
               Container(
                 width: 48,
                 height: 48,
@@ -77,16 +100,17 @@ class SavedTicketCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Builder(
-                builder: (buttonContext) {
-                  return IconButton(
-                    tooltip: 'Share',
-                    onPressed: () => _share(buttonContext),
-                    icon: const Icon(Icons.share_outlined),
-                    color: AppColors.primary,
-                  );
-                },
-              ),
+              if (!selecting)
+                Builder(
+                  builder: (buttonContext) {
+                    return IconButton(
+                      tooltip: 'Share',
+                      onPressed: () => _share(buttonContext),
+                      icon: const Icon(Icons.share_outlined),
+                      color: AppColors.primary,
+                    );
+                  },
+                ),
             ],
           ),
         ),

@@ -116,6 +116,38 @@ void main() {
     expect(File(durable).existsSync(), isFalse);
   });
 
+  test('deleteTickets removes selected tickets and can soft-delete images', () async {
+    final source = File('${tempRoot.path}/photo.jpg')
+      ..writeAsBytesSync(List<int>.filled(8, 4));
+    await cubit.saveTicket(_sample(imagePath: source.path));
+    await cubit.saveTicket(
+      _sample(imagePath: '').copyWith(title: 'Second'),
+    );
+    expect(cubit.state.tickets, hasLength(2));
+
+    final keepId = cubit.state.tickets.first.id;
+    final removeId = cubit.state.tickets.last.id;
+    final removePath = cubit.state.tickets.last.imagePath;
+
+    final removed = await cubit.deleteTickets(
+      [removeId],
+      deleteImages: false,
+      message: null,
+    );
+
+    expect(removed, hasLength(1));
+    expect(removed.single.id, removeId);
+    expect(cubit.state.tickets.map((t) => t.id), [keepId]);
+    expect(await repository.loadTickets(), hasLength(1));
+    if (removePath.isNotEmpty) {
+      expect(File(removePath).existsSync(), isTrue);
+    }
+
+    await cubit.restoreTickets(removed, atIndex: 1);
+    expect(cubit.state.tickets, hasLength(2));
+    expect(cubit.state.tickets[1].id, removeId);
+  });
+
   test('repository clearTickets removes storage key', () async {
     await repository.saveTickets([_sample(imagePath: '')]);
     expect(await repository.loadTickets(), hasLength(1));

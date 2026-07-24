@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Firebase auth guard before Save Ticket",
-        "taskId": "task-firebase-auth-save-guard-20260724",
-        "updatedAt": "2026-07-24T11:30:00.000Z",
+        "message": "App update: Selective ticket delete and swipe-to-delete",
+        "taskId": "task-selective-ticket-delete-20260724",
+        "updatedAt": "2026-07-24T11:45:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -657,5 +657,5 @@
       "updatedAt": "2026-07-24T11:30:00.000Z"
     }
   ],
-  "lastSync": "2026-07-24T11:32:42.700Z"
+  "lastSync": "2026-07-24T11:42:59.184Z"
 }

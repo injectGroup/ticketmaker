@@ -99,6 +99,95 @@ class TicketsCubit extends Cubit<TicketsState> {
     }
   }
 
+  /// Removes tickets by [ids]. Returns the removed tickets (for undo).
+  /// When [deleteImages] is false, durable photos are left on disk.
+  Future<List<Ticket>> deleteTickets(
+    Iterable<String> ids, {
+    bool deleteImages = true,
+    String? message,
+  }) async {
+    final idSet = ids.toSet();
+    if (idSet.isEmpty) return const [];
+
+    final removed = state.tickets
+        .where((ticket) => idSet.contains(ticket.id))
+        .toList(growable: false);
+    if (removed.isEmpty) return const [];
+
+    final updated = state.tickets
+        .where((ticket) => !idSet.contains(ticket.id))
+        .toList(growable: false);
+
+    if (deleteImages) {
+      final imagePaths = removed
+          .map((t) => t.imagePath)
+          .where((p) => p.isNotEmpty);
+      try {
+        await _imageStore.deleteStoredImages(imagePaths);
+      } catch (_) {
+        // Best-effort image cleanup; still update persisted list below.
+      }
+    }
+
+    try {
+      await _repository.saveTickets(updated);
+      emit(
+        state.copyWith(
+          tickets: updated,
+          message: message,
+          clearMessage: message == null,
+        ),
+      );
+      return removed;
+    } catch (_) {
+      emit(state.copyWith(message: 'Could not delete tickets'));
+      return const [];
+    }
+  }
+
+  /// Re-inserts [tickets] into the list (e.g. snackbar undo after swipe delete).
+  Future<void> restoreTickets(
+    List<Ticket> tickets, {
+    int? atIndex,
+  }) async {
+    if (tickets.isEmpty) return;
+    final existingIds = state.tickets.map((t) => t.id).toSet();
+    final toRestore =
+        tickets.where((t) => !existingIds.contains(t.id)).toList();
+    if (toRestore.isEmpty) return;
+
+    final updated = [...state.tickets];
+    final index = (atIndex == null)
+        ? 0
+        : atIndex.clamp(0, updated.length);
+    updated.insertAll(index, toRestore);
+
+    try {
+      await _repository.saveTickets(updated);
+      emit(
+        state.copyWith(
+          tickets: updated,
+          message: toRestore.length == 1 ? 'Ticket restored' : 'Tickets restored',
+        ),
+      );
+    } catch (_) {
+      emit(state.copyWith(message: 'Could not restore tickets'));
+    }
+  }
+
+  /// Deletes durable images for tickets previously soft-removed (after undo window).
+  Future<void> discardTicketImages(Iterable<Ticket> tickets) async {
+    final imagePaths = tickets
+        .map((t) => t.imagePath)
+        .where((p) => p.isNotEmpty);
+    if (imagePaths.isEmpty) return;
+    try {
+      await _imageStore.deleteStoredImages(imagePaths);
+    } catch (_) {
+      // Best-effort cleanup.
+    }
+  }
+
   void clearMessage() {
     if (state.message != null) {
       emit(state.copyWith(clearMessage: true));
