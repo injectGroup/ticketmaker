@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Initialize Firebase in main.dart",
-        "taskId": "task-main-firebase-init-20260724",
-        "updatedAt": "2026-07-24T09:14:00.000Z",
+        "message": "App update: Change brand color to #e0405b",
+        "taskId": "task-brand-color-e0405b-20260724",
+        "updatedAt": "2026-07-24T10:54:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -629,7 +629,20 @@
       "status": "done",
       "createdAt": "2026-07-24T10:08:00.000Z",
       "updatedAt": "2026-07-24T10:09:00.000Z"
+    },
+    {
+      "id": "task-brand-color-e0405b-20260724",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Change primary brand color to #e0405b",
+      "description": "Update AppColors.primary to #e0405b; theme AppBar/buttons/nav and Accents cascade. Left secondary/error/warning and ticket art gradients unchanged.",
+      "details": "lib/core/theme/app_theme.dart",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-24T10:54:00.000Z",
+      "updatedAt": "2026-07-24T10:54:00.000Z"
     }
   ],
-  "lastSync": "2026-07-24T10:09:00.000Z"
+  "lastSync": "2026-07-24T10:55:08.209Z"
 }
