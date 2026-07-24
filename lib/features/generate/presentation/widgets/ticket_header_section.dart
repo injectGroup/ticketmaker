@@ -7,6 +7,7 @@ import '../bloc/generate_cubit.dart';
 import 'bracketed_ticket_field.dart';
 import 'generate_qr_code.dart';
 import 'ticket_code_badge.dart';
+import 'ticket_customize_toolbar.dart';
 
 class TicketHeaderSection extends StatelessWidget {
   const TicketHeaderSection({
@@ -83,7 +84,12 @@ class TicketHeaderSection extends StatelessWidget {
               isSquare: ticket.isSquare,
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: TicketCustomizeToolbar(),
+          ),
+          const SizedBox(height: 14),
           TicketCodeBadge(
             code: ticket.code,
             foreground: onTop,

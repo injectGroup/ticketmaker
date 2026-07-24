@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Web share via XFile.fromData + Blob fallback",
-        "taskId": "task-web-share-xfile-late-init-fix-20260724",
-        "updatedAt": "2026-07-24T18:10:00.000Z",
+        "message": "App update: Customize toolbar moved between QR and code chip",
+        "taskId": "task-move-customize-toolbar-header-20260724",
+        "updatedAt": "2026-07-24T19:05:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -824,7 +824,33 @@
       "status": "done",
       "createdAt": "2026-07-24T17:55:00.000Z",
       "updatedAt": "2026-07-24T18:00:00.000Z"
+    },
+    {
+      "id": "task-web-share-xfile-late-init-fix-20260724",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Fix LateInitializationError on web Share via XFile.fromData",
+      "description": "Replace late OverlayEntry with nullable; web shares JPEG Uint8List via XFile.fromData + Share.shareXFiles; Blob download if share_plus throws.",
+      "details": "ticket_share_helper.dart; flutter build web --pwa-strategy=none; firebase deploy --only hosting",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-24T18:05:00.000Z",
+      "updatedAt": "2026-07-24T18:10:00.000Z"
+    },
+    {
+      "id": "task-move-customize-toolbar-header-20260724",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Move customize toolbar between QR and code chip",
+      "description": "Embed Color/Shape/Bg/Code toolbar in ticket header; remove Photo from toolbar (photo via event image Change).",
+      "details": "ticket_header_section; ticket_customize_toolbar; generate_page",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-24T19:00:00.000Z",
+      "updatedAt": "2026-07-24T19:05:00.000Z"
     }
   ],
-  "lastSync": "2026-07-24T18:00:00.000Z"
+  "lastSync": "2026-07-24T19:05:00.000Z"
 }

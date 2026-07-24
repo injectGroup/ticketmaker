@@ -7,7 +7,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/auth_gate.dart';
 import '../../../tickets/presentation/bloc/tickets_cubit.dart';
 import '../bloc/generate_cubit.dart';
-import '../widgets/ticket_customize_toolbar.dart';
 import '../widgets/ticket_details_section.dart';
 import '../widgets/ticket_header_section.dart';
 import '../widgets/ticket_perforation.dart';
@@ -196,8 +195,6 @@ class _GenerateViewState extends State<_GenerateView> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 18),
-                      const TicketCustomizeToolbar(),
                       const SizedBox(height: 22),
                       SizedBox(
                         width: double.infinity,

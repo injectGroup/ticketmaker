@@ -1,66 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter/foundation.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../tickets/data/ticket_image_store.dart';
 import '../bloc/generate_cubit.dart';
 import 'top_bg_color_customizer_sheet.dart';
 
-/// Floating customize bar for QR color/shape, background, photo, and code refresh.
+/// Floating customize bar for QR color/shape, background, and code refresh.
 class TicketCustomizeToolbar extends StatelessWidget {
-  const TicketCustomizeToolbar({super.key, this.imageStore});
-
-  final TicketImageStore? imageStore;
-
-  Future<void> _pickPhoto(BuildContext context) async {
-    try {
-      final file = await ImagePicker().pickImage(
-        source: ImageSource.gallery,
-        requestFullMetadata: false,
-      );
-      if (file == null || !context.mounted) return;
-
-      // Always read bytes so Flutter Web can render via Image.memory.
-      final bytes = await file.readAsBytes();
-      if (!context.mounted) return;
-      if (bytes.isEmpty) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(content: Text('Could not read image')),
-          );
-        return;
-      }
-
-      context.read<GenerateCubit>().setPickedImage(path: file.path, bytes: bytes);
-
-      if (!kIsWeb) {
-        final store = imageStore ?? TicketImageStore();
-        try {
-          final durablePath = await store.import(
-            sourcePath: file.path,
-            bytes: bytes,
-          );
-          if (durablePath.isNotEmpty && context.mounted) {
-            context
-                .read<GenerateCubit>()
-                .setPickedImage(path: durablePath, bytes: bytes);
-          }
-        } catch (_) {
-          // Bytes already set for preview.
-        }
-      }
-    } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(content: Text('Could not read image: $e')),
-        );
-    }
-  }
+  const TicketCustomizeToolbar({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +19,7 @@ class TicketCustomizeToolbar extends StatelessWidget {
       color: AppColors.secondaryBackground,
       borderRadius: BorderRadius.circular(28),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -90,11 +37,6 @@ class TicketCustomizeToolbar extends StatelessWidget {
               icon: Icons.gradient_rounded,
               label: 'Bg',
               onTap: () => TopBgColorCustomizerSheet.show(context),
-            ),
-            _Tool(
-              icon: Icons.add_photo_alternate_outlined,
-              label: 'Photo',
-              onTap: () => _pickPhoto(context),
             ),
             _Tool(
               icon: Icons.qr_code_2_rounded,
@@ -137,7 +79,7 @@ class _ToolState extends State<_Tool> {
         scale: _pressed ? 0.92 : 1,
         duration: const Duration(milliseconds: 120),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
