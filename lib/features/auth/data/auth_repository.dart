@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -139,14 +140,18 @@ class FirebaseAuthRepository implements AuthRepository {
       if (firebaseUser == null) {
         throw AuthException('Could not create account. Try again.');
       }
-      await firebaseUser.updateDisplayName('$first $last'.trim());
       final appUser = AppUser(
         id: firebaseUser.uid,
         email: normalized,
         firstName: first,
         lastName: last,
       );
-      await _upsertUserDoc(appUser, isNew: true);
+      // Don't block Save Ticket / sheet dismiss on profile sync.
+      final displayName = '$first $last'.trim();
+      unawaited(
+        firebaseUser.updateDisplayName(displayName).catchError((_) {}),
+      );
+      _persistUserInBackground(appUser, isNew: true);
       return appUser;
     } on AuthException {
       rethrow;
@@ -294,7 +299,10 @@ class FirebaseAuthRepository implements AuthRepository {
           : parsed.$1,
       lastName: lastNameHint?.isNotEmpty == true ? lastNameHint! : parsed.$2,
     );
-    await _upsertUserDoc(appUser, isNew: isNewUser || existing == null);
+    _persistUserInBackground(
+      appUser,
+      isNew: isNewUser || existing == null,
+    );
     return appUser;
   }
 
@@ -308,7 +316,7 @@ class FirebaseAuthRepository implements AuthRepository {
       firstName: parsed.$1,
       lastName: parsed.$2,
     );
-    await _upsertUserDoc(appUser, isNew: true);
+    _persistUserInBackground(appUser, isNew: true);
     return appUser;
   }
 
@@ -322,6 +330,10 @@ class FirebaseAuthRepository implements AuthRepository {
     } catch (_) {
       return null;
     }
+  }
+
+  void _persistUserInBackground(AppUser user, {required bool isNew}) {
+    unawaited(_upsertUserDoc(user, isNew: isNew).catchError((_) {}));
   }
 
   Future<void> _upsertUserDoc(AppUser user, {required bool isNew}) async {

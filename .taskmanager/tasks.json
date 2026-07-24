@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Selective ticket delete and swipe-to-delete",
-        "taskId": "task-selective-ticket-delete-20260724",
-        "updatedAt": "2026-07-24T11:45:00.000Z",
+        "message": "App update: Faster signup — non-blocking profile sync",
+        "taskId": "task-fast-signup-profile-20260724",
+        "updatedAt": "2026-07-24T11:52:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -668,7 +668,20 @@
       "status": "done",
       "createdAt": "2026-07-24T11:40:00.000Z",
       "updatedAt": "2026-07-24T11:45:00.000Z"
+    },
+    {
+      "id": "task-fast-signup-profile-20260724",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Faster signup with non-blocking profile sync",
+      "description": "Do not await updateDisplayName or Firestore users write before returning from signUp; persist profile in background so Save Ticket can proceed after Auth only.",
+      "details": "lib/features/auth/data/auth_repository.dart",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-24T11:52:00.000Z",
+      "updatedAt": "2026-07-24T11:52:00.000Z"
     }
   ],
-  "lastSync": "2026-07-24T11:43:25.529Z"
+  "lastSync": "2026-07-24T11:53:55.534Z"
 }
