@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../generate/domain/entities/ticket.dart';
 import '../presentation/widgets/saved_ticket_view.dart';
+import 'ticket_image_codec.dart';
 
 /// Captures a ticket as PNG and opens the native share sheet with image + caption.
 class TicketShareHelper {
@@ -28,10 +30,33 @@ class TicketShareHelper {
     return Rect.fromLTWH(size.width / 2 - 1, size.height / 2 - 1, 2, 2);
   }
 
+  /// Encodes [boundaryKey]'s [RepaintBoundary] to JPEG bytes (faster / smaller
+  /// than PNG for share + upload).
+  static Future<List<int>?> captureJpegBytes(
+    GlobalKey boundaryKey, {
+    double pixelRatio = 1.5,
+    int quality = 72,
+  }) async {
+    final boundary =
+        boundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null) return null;
+    if (boundary.debugNeedsPaint) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    try {
+      final image = await boundary.toImage(pixelRatio: pixelRatio);
+      final jpeg = await uiImageToJpeg(image, quality: quality);
+      image.dispose();
+      return jpeg;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Encodes [boundaryKey]'s [RepaintBoundary] to PNG bytes.
   static Future<List<int>?> capturePngBytes(
     GlobalKey boundaryKey, {
-    double pixelRatio = 3,
+    double pixelRatio = 2,
   }) async {
     final boundary =
         boundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
@@ -57,22 +82,27 @@ class TicketShareHelper {
     Rect? sharePositionOrigin,
   }) async {
     final origin = sharePositionOrigin ?? shareOriginFrom(context);
-    List<int>? pngBytes;
+    List<int>? imageBytes;
 
     if (boundaryKey != null) {
-      pngBytes = await capturePngBytes(boundaryKey);
+      imageBytes = await captureJpegBytes(boundaryKey);
     }
     if (!context.mounted) return;
-    pngBytes ??= await _captureViaOverlay(context, ticket);
+    if (imageBytes == null || imageBytes.isEmpty) {
+      final png = await _captureViaOverlay(context, ticket);
+      if (png != null && png.isNotEmpty) {
+        imageBytes = await compressImageToJpeg(Uint8List.fromList(png));
+      }
+    }
 
-    if (pngBytes != null && pngBytes.isNotEmpty) {
+    if (imageBytes != null && imageBytes.isNotEmpty) {
       try {
         final dir = await getTemporaryDirectory();
-        final file = File('${dir.path}/share_ticket_${ticket.id}.png');
-        await file.writeAsBytes(pngBytes, flush: true);
+        final file = File('${dir.path}/share_ticket_${ticket.id}.jpg');
+        await file.writeAsBytes(imageBytes, flush: true);
         // ignore: deprecated_member_use
         await Share.shareXFiles(
-          [XFile(file.path, mimeType: 'image/png')],
+          [XFile(file.path, mimeType: 'image/jpeg')],
           text: ticket.toShareText(),
           subject: _subject,
           sharePositionOrigin: origin,

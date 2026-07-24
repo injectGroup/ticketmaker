@@ -61,10 +61,7 @@ void main() {
 
     final saved = cubit.state.tickets.single;
     expect(saved.imagePath, missing);
-    expect(
-      cubit.state.message,
-      'Ticket saved, but photo could not be stored',
-    );
+    expect(cubit.state.message, 'Ticket saved');
   });
 
   test('saveTicket stores durable path when file exists', () async {
@@ -72,18 +69,22 @@ void main() {
       ..writeAsBytesSync(List<int>.filled(20, 1));
 
     await cubit.saveTicket(_sample(imagePath: source.path));
+    expect(cubit.state.message, 'Ticket saved');
+
+    // Image compress + local persist runs in the background.
+    await Future<void>.delayed(const Duration(milliseconds: 1500));
 
     final saved = cubit.state.tickets.single;
     expect(saved.imagePath, isNotEmpty);
     expect(File(saved.imagePath).existsSync(), isTrue);
     expect(saved.imagePath.contains('ticket_images'), isTrue);
-    expect(cubit.state.message, 'Ticket saved');
   });
 
   test('loadTickets repairs missing path from durable file by id', () async {
     final source = File('${tempRoot.path}/photo.jpg')
       ..writeAsBytesSync(List<int>.filled(10, 2));
     await cubit.saveTicket(_sample(imagePath: source.path));
+    await Future<void>.delayed(const Duration(milliseconds: 1500));
     final id = cubit.state.tickets.single.id;
     final durable = cubit.state.tickets.single.imagePath;
 
@@ -104,6 +105,7 @@ void main() {
     final source = File('${tempRoot.path}/photo.jpg')
       ..writeAsBytesSync(List<int>.filled(12, 3));
     await cubit.saveTicket(_sample(imagePath: source.path));
+    await Future<void>.delayed(const Duration(milliseconds: 1500));
     final durable = cubit.state.tickets.single.imagePath;
     expect(File(durable).existsSync(), isTrue);
     expect((await repository.loadTickets()), hasLength(1));
@@ -120,6 +122,7 @@ void main() {
     final source = File('${tempRoot.path}/photo.jpg')
       ..writeAsBytesSync(List<int>.filled(8, 4));
     await cubit.saveTicket(_sample(imagePath: source.path));
+    await Future<void>.delayed(const Duration(milliseconds: 1500));
     await cubit.saveTicket(
       _sample(imagePath: '').copyWith(title: 'Second'),
     );

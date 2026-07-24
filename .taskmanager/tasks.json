@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Web MemoryImage photo preview; keep Generate edits after Save",
-        "taskId": "task-web-photo-keep-edits-after-save-20260724",
-        "updatedAt": "2026-07-24T16:05:00.000Z",
+        "message": "App update: Fast ticket save with JPEG compress and background Storage upload",
+        "taskId": "task-fast-save-jpeg-storage-20260724",
+        "updatedAt": "2026-07-24T16:20:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -785,7 +785,20 @@
       "status": "done",
       "createdAt": "2026-07-24T16:00:00.000Z",
       "updatedAt": "2026-07-24T16:05:00.000Z"
+    },
+    {
+      "id": "task-fast-save-jpeg-storage-20260724",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Fast ticket save: JPEG compress + background Storage upload",
+      "description": "Web picks use readAsBytes + Image.memory; save writes local/Firestore immediately; JPEG compress + Firebase Storage upload run in background; skip web File I/O that caused long hangs.",
+      "details": "ticket_image_codec; ticket_cloud_sync; tickets_cubit; ticket_image_store; share helper JPEG; auth_gate passes imageBytes",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-24T16:15:00.000Z",
+      "updatedAt": "2026-07-24T16:20:00.000Z"
     }
   ],
-  "lastSync": "2026-07-24T16:05:00.000Z"
+  "lastSync": "2026-07-24T16:20:00.000Z"
 }

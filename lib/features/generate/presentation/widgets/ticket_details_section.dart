@@ -37,23 +37,24 @@ class TicketDetailsSection extends StatelessWidget {
     final file = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (file == null || !context.mounted) return;
 
-    // Always read bytes so Flutter Web can render via MemoryImage.
+    // Always read bytes so Flutter Web can render via Image.memory.
     final bytes = await file.readAsBytes();
     if (bytes.isEmpty || !context.mounted) return;
 
-    final store = imageStore ?? TicketImageStore();
-    String durablePath = '';
-    try {
-      durablePath = await store.import(
-        sourcePath: file.path,
-        bytes: bytes,
-      );
-    } catch (_) {
-      durablePath = '';
+    var nextPath = file.path;
+    if (!kIsWeb) {
+      final store = imageStore ?? TicketImageStore();
+      try {
+        final durablePath = await store.import(
+          sourcePath: file.path,
+          bytes: bytes,
+        );
+        if (durablePath.isNotEmpty) nextPath = durablePath;
+      } catch (_) {
+        // Keep picker path; bytes still preview correctly.
+      }
     }
     if (!context.mounted) return;
-
-    final nextPath = durablePath.isNotEmpty ? durablePath : file.path;
     context.read<GenerateCubit>().setPickedImage(path: nextPath, bytes: bytes);
   }
 

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/color_contrast.dart';
@@ -20,7 +21,29 @@ class SavedTicketView extends StatelessWidget {
     const height = 200.0;
 
     final path = ticket.imagePath;
-    final hasFile = path.isNotEmpty && File(path).existsSync();
+    if (path.isEmpty) {
+      return const TicketPhotoPlaceholder(width: width, height: height);
+    }
+
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return Image.network(
+        path,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
+          width: width,
+          height: height,
+          broken: true,
+        ),
+      );
+    }
+
+    if (kIsWeb) {
+      return const TicketPhotoPlaceholder(width: width, height: height);
+    }
+
+    final hasFile = File(path).existsSync();
     if (!hasFile) {
       return const TicketPhotoPlaceholder(width: width, height: height);
     }

@@ -85,7 +85,10 @@ Future<void> _executePending(
       try {
         await context
             .read<TicketsCubit>()
-            .saveTicket(generateCubit.state.ticket)
+            .saveTicket(
+              generateCubit.state.ticket,
+              imageBytes: generateCubit.state.imageBytes,
+            )
             .timeout(
               const Duration(seconds: 10),
               onTimeout: () {

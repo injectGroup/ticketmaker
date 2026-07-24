@@ -1,11 +1,16 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// Copies ticket images into a durable app-documents folder.
+///
+/// On web, local file I/O is skipped (returns empty) — use in-memory bytes /
+/// Firebase Storage instead.
 class TicketImageStore {
-  TicketImageStore({this._overrideImagesDirectory});
+  TicketImageStore({Directory? overrideImagesDirectory})
+    : _overrideImagesDirectory = overrideImagesDirectory;
 
   static const String folderName = 'ticket_images';
 
@@ -54,7 +59,7 @@ class TicketImageStore {
   }
 
   Future<Uint8List?> _readBytes(String sourcePath) async {
-    if (sourcePath.isEmpty) return null;
+    if (sourcePath.isEmpty || kIsWeb) return null;
     final source = File(sourcePath);
     if (!source.existsSync()) return null;
     try {
@@ -70,6 +75,7 @@ class TicketImageStore {
     String sourcePath = '',
     Uint8List? bytes,
   }) async {
+    if (kIsWeb) return '';
     final payload = bytes ?? await _readBytes(sourcePath);
     if (payload == null || payload.isEmpty) return '';
 
@@ -94,7 +100,7 @@ class TicketImageStore {
     String sourcePath = '',
     Uint8List? bytes,
   }) async {
-    if (ticketId.isEmpty) return '';
+    if (kIsWeb || ticketId.isEmpty) return '';
     final payload = bytes ?? await _readBytes(sourcePath);
     if (payload == null || payload.isEmpty) return '';
 
@@ -115,6 +121,7 @@ class TicketImageStore {
   /// Deletes durable image files for the given [imagePaths] when they live
   /// under the ticket images directory.
   Future<void> deleteStoredImages(Iterable<String> imagePaths) async {
+    if (kIsWeb) return;
     final paths = imagePaths.where((p) => p.isNotEmpty).toList(growable: false);
     if (paths.isEmpty) return;
 
@@ -133,7 +140,7 @@ class TicketImageStore {
 
   /// Finds an existing durable file for [ticketId] (any extension).
   Future<String?> findExistingForTicket(String ticketId) async {
-    if (ticketId.isEmpty) return null;
+    if (kIsWeb || ticketId.isEmpty) return null;
     final imagesDir = await _imagesDirectory();
     if (!imagesDir.existsSync()) return null;
 

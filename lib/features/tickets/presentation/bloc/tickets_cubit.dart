@@ -1,22 +1,31 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../generate/domain/entities/ticket.dart';
+import '../../data/ticket_cloud_sync.dart';
+import '../../data/ticket_image_codec.dart';
 import '../../data/ticket_image_store.dart';
 import '../../data/ticket_local_repository.dart';
 
 part 'tickets_state.dart';
 
 class TicketsCubit extends Cubit<TicketsState> {
-  TicketsCubit(this._repository, {TicketImageStore? imageStore})
-    : _imageStore = imageStore ?? TicketImageStore(),
-      super(const TicketsState());
+  TicketsCubit(
+    this._repository, {
+    TicketImageStore? imageStore,
+    TicketCloudSync? cloudSync,
+  }) : _imageStore = imageStore ?? TicketImageStore(),
+       _cloudSync = cloudSync ?? TicketCloudSync(),
+       super(const TicketsState());
 
   final TicketLocalRepository _repository;
   final TicketImageStore _imageStore;
+  final TicketCloudSync _cloudSync;
 
   Future<void> loadTickets() async {
     emit(state.copyWith(isLoading: true, clearMessage: true));
@@ -39,46 +48,97 @@ class TicketsCubit extends Cubit<TicketsState> {
     }
   }
 
-  /// Serializes [ticket] to JSON via the repository and refreshes list state.
-  Future<void> saveTicket(Ticket ticket) async {
+  /// Saves ticket metadata immediately, then compresses/uploads the image in
+  /// the background so the UI is not blocked.
+  Future<void> saveTicket(
+    Ticket ticket, {
+    Uint8List? imageBytes,
+  }) async {
     final id = 'ticket-${DateTime.now().millisecondsSinceEpoch}';
-    var imagePath = ticket.imagePath;
-    var photoWarning = false;
-
-    if (imagePath.isNotEmpty) {
-      try {
-        final durable = await _imageStore.persistForTicket(
-          sourcePath: imagePath,
-          ticketId: id,
-        );
-        if (durable.isNotEmpty) {
-          imagePath = durable;
-        } else {
-          // Never wipe imagePath on a failed persist.
-          photoWarning = true;
-        }
-      } catch (e, st) {
-        debugPrint('Ticket image persist/upload failed: $e\n$st');
-        photoWarning = true;
-      }
-    }
-
-    final saved = ticket.copyWith(id: id, imagePath: imagePath);
+    final saved = ticket.copyWith(id: id);
     final updated = [saved, ...state.tickets];
+
     try {
       await _repository.saveTickets(updated);
       emit(
         state.copyWith(
           tickets: updated,
-          message: photoWarning
-              ? 'Ticket saved, but photo could not be stored'
-              : 'Ticket saved',
+          message: 'Ticket saved',
         ),
       );
     } catch (e, st) {
       debugPrint('Ticket save failed: $e\n$st');
       emit(state.copyWith(message: 'Could not save ticket'));
       rethrow;
+    }
+
+    // Firestore doc + JPEG compress + Storage upload (non-blocking).
+    unawaited(_persistImageAndCloudInBackground(saved, imageBytes));
+  }
+
+  Future<void> _persistImageAndCloudInBackground(
+    Ticket ticket,
+    Uint8List? imageBytes,
+  ) async {
+    try {
+      await _cloudSync.upsertTicketDocument(ticket);
+    } catch (e, st) {
+      debugPrint('Ticket Firestore upsert failed: $e\n$st');
+    }
+
+    Uint8List? payload = imageBytes;
+    if ((payload == null || payload.isEmpty) &&
+        ticket.imagePath.isNotEmpty &&
+        !kIsWeb &&
+        !ticket.imagePath.startsWith('http')) {
+      try {
+        final file = File(ticket.imagePath);
+        if (file.existsSync()) {
+          payload = await file.readAsBytes();
+        }
+      } catch (e, st) {
+        debugPrint('Could not read ticket image for upload: $e\n$st');
+      }
+    }
+
+    if (payload == null || payload.isEmpty) return;
+
+    try {
+      final jpeg = await compressImageToJpeg(payload);
+      if (!kIsWeb) {
+        final durable = await _imageStore.persistForTicket(
+          ticketId: ticket.id,
+          sourcePath: 'ticket.jpg',
+          bytes: jpeg,
+        );
+        if (durable.isNotEmpty) {
+          await _patchLocalImagePath(ticket.id, durable);
+        }
+      }
+
+      final url = await _cloudSync.uploadTicketImageJpeg(
+        ticketId: ticket.id,
+        jpegBytes: jpeg,
+      );
+      if (url != null && url.isNotEmpty) {
+        await _patchLocalImagePath(ticket.id, url);
+      }
+    } catch (e, st) {
+      debugPrint('Ticket image compress/upload failed: $e\n$st');
+    }
+  }
+
+  Future<void> _patchLocalImagePath(String ticketId, String imagePath) async {
+    final index = state.tickets.indexWhere((t) => t.id == ticketId);
+    if (index < 0) return;
+    final patched = state.tickets[index].copyWith(imagePath: imagePath);
+    final next = [...state.tickets];
+    next[index] = patched;
+    try {
+      await _repository.saveTickets(next);
+      emit(state.copyWith(tickets: next));
+    } catch (e, st) {
+      debugPrint('Could not patch local imagePath: $e\n$st');
     }
   }
 
@@ -203,10 +263,11 @@ class TicketsCubit extends Cubit<TicketsState> {
   }
 
   Future<List<Ticket>> _repairMissingImagePaths(List<Ticket> tickets) async {
+    if (kIsWeb) return tickets;
     final result = <Ticket>[];
     for (final ticket in tickets) {
       final path = ticket.imagePath;
-      if (path.isEmpty) {
+      if (path.isEmpty || path.startsWith('http')) {
         result.add(ticket);
         continue;
       }
