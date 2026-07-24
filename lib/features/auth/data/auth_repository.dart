@@ -105,16 +105,17 @@ class FirebaseAuthRepository implements AuthRepository {
     required String password,
   }) async {
     final normalized = email.trim().toLowerCase();
+    final trimmedPassword = password.trim();
     if (normalized.isEmpty || !normalized.contains('@')) {
       throw AuthException('Enter a valid email address.');
     }
-    if (password.isEmpty) {
+    if (trimmedPassword.isEmpty) {
       throw AuthException('Enter your password.');
     }
     try {
       final credential = await _auth.signInWithEmailAndPassword(
         email: normalized,
-        password: password,
+        password: trimmedPassword,
       );
       final user = credential.user;
       if (user == null) {
@@ -138,6 +139,7 @@ class FirebaseAuthRepository implements AuthRepository {
     required String password,
   }) async {
     final normalized = email.trim().toLowerCase();
+    final trimmedPassword = password.trim();
     final first = firstName.trim();
     final last = lastName.trim();
     if (first.isEmpty || last.isEmpty) {
@@ -146,13 +148,16 @@ class FirebaseAuthRepository implements AuthRepository {
     if (normalized.isEmpty || !normalized.contains('@')) {
       throw AuthException('Enter a valid email address.');
     }
-    if (password.trim().length < 6) {
+    if (trimmedPassword.isEmpty) {
+      throw AuthException('Enter your password.');
+    }
+    if (trimmedPassword.length < 6) {
       throw AuthException('Password must be at least 6 characters.');
     }
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: normalized,
-        password: password,
+        password: trimmedPassword,
       );
       final firebaseUser = credential.user;
       if (firebaseUser == null) {
@@ -407,10 +412,16 @@ class FirebaseAuthRepository implements AuthRepository {
         return 'Network error. Check your connection and try again.';
       case 'operation-not-allowed':
         return 'This sign-in method is not enabled in Firebase Console.';
+      case 'channel-error':
+        // FlutterFire surfaces the pigeon method name here; never show that.
+        return 'Could not reach Firebase Auth. Enable Email/Password in '
+            'Firebase Console and confirm this domain is authorized.';
       default:
-        return e.message?.isNotEmpty == true
-            ? e.message!
-            : 'Authentication failed. Try again.';
+        final message = e.message?.trim() ?? '';
+        if (message.isEmpty || message.contains('FirebaseAuthHostApi')) {
+          return 'Authentication failed. Try again.';
+        }
+        return message;
     }
   }
 }
