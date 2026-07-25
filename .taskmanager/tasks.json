@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: strip Flutter SW registration + redeploy to bust cached Share",
-        "taskId": "task-bust-share-sw-cache-20260725",
-        "updatedAt": "2026-07-25T20:50:00.000Z",
+        "message": "App update: fix prepare ticket image Share on web with bytes + blob fallback",
+        "taskId": "task-fix-prepare-ticket-image-share-20260725",
+        "updatedAt": "2026-07-25T20:55:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -915,7 +915,20 @@
       "status": "done",
       "createdAt": "2026-07-25T20:41:00.000Z",
       "updatedAt": "2026-07-25T20:50:00.000Z"
+    },
+    {
+      "id": "task-fix-prepare-ticket-image-share-20260725",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Fix Could not prepare ticket image to share on web",
+      "description": "Prefer TicketsCubit imageBytes for list Share; harden offscreen RepaintBoundary; web Share.shareXFiles with blob download fallback.",
+      "details": "ticket_share_helper.dart; flutter build web --pwa-strategy=none; firebase deploy --only hosting",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-25T20:46:00.000Z",
+      "updatedAt": "2026-07-25T20:55:00.000Z"
     }
   ],
-  "lastSync": "2026-07-25T20:50:00.000Z"
+  "lastSync": "2026-07-25T20:55:00.000Z"
 }
