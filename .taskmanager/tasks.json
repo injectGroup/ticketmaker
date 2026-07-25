@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Web Share downloads ticket.jpg (no share_plus)",
-        "taskId": "task-web-share-download-first-20260725",
-        "updatedAt": "2026-07-25T20:30:00.000Z",
+        "message": "App update: Share LateInitializationError fix + Hosting no-cache shell",
+        "taskId": "task-share-late-init-cache-bust-20260725",
+        "updatedAt": "2026-07-25T20:45:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -889,7 +889,20 @@
       "status": "done",
       "createdAt": "2026-07-25T20:27:00.000Z",
       "updatedAt": "2026-07-25T20:30:00.000Z"
+    },
+    {
+      "id": "task-share-late-init-cache-bust-20260725",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Harden Share init + Hosting no-cache to clear LateInitializationError",
+      "description": "Safe share text/file name defaults; web Blob download only; firebase.json Cache-Control no-cache on shell JS/HTML so browsers stop serving old share_plus bundle.",
+      "details": "ticket_share_helper; ticket.toShareText; firebase.json headers; flutter build web --pwa-strategy=none; firebase deploy --only hosting",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-25T20:36:00.000Z",
+      "updatedAt": "2026-07-25T20:45:00.000Z"
     }
   ],
-  "lastSync": "2026-07-25T20:30:00.000Z"
+  "lastSync": "2026-07-25T20:45:00.000Z"
 }
