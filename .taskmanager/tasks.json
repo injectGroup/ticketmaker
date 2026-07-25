@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Share LateInitializationError fix + Hosting no-cache shell",
-        "taskId": "task-share-late-init-cache-bust-20260725",
-        "updatedAt": "2026-07-25T20:45:00.000Z",
+        "message": "App update: strip Flutter SW registration + redeploy to bust cached Share",
+        "taskId": "task-bust-share-sw-cache-20260725",
+        "updatedAt": "2026-07-25T20:50:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -902,7 +902,20 @@
       "status": "done",
       "createdAt": "2026-07-25T20:36:00.000Z",
       "updatedAt": "2026-07-25T20:45:00.000Z"
+    },
+    {
+      "id": "task-bust-share-sw-cache-20260725",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Strip Flutter SW registration and redeploy to bust Share cache",
+      "description": "Post-build patch strips serviceWorkerSettings from flutter_bootstrap.js; Hosting no-cache headers on shell; rebuild and redeploy so Share shows Ticket image downloaded instead of cached LateInitializationError.",
+      "details": "scripts/patch_web_bootstrap.sh; firebase.json headers; flutter build web --pwa-strategy=none; firebase deploy --only hosting",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-25T20:41:00.000Z",
+      "updatedAt": "2026-07-25T20:50:00.000Z"
     }
   ],
-  "lastSync": "2026-07-25T20:45:00.000Z"
+  "lastSync": "2026-07-25T20:50:00.000Z"
 }
