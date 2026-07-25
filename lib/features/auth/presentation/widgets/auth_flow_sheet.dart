@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -81,57 +80,63 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
   }
 
   Future<void> _submitSignIn() async {
-    debugPrint('--- SIGN IN BUTTON TAPPED ---');
-    final email = _signInEmail.text;
-    final password = _signInPassword.text;
-    debugPrint('email=$email password=$password');
+    FocusManager.instance.primaryFocus?.unfocus();
+    final email = _signInEmail.text.trim();
+    final password = _signInPassword.text.trim();
+    debugPrint(
+      '--- SIGN IN BUTTON TAPPED --- emailLen=${email.length} '
+      'passwordEmpty=${password.isEmpty}',
+    );
     context.read<AuthCubit>().clearMessage();
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      await context.read<AuthCubit>().restoreSession();
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
-    } on FirebaseAuthException catch (e) {
-      debugPrint('FIREBASE AUTH ERROR: ${e.code} - ${e.message}');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text('${e.code}: ${e.message}')));
-    }
+
+    final ok = await context.read<AuthCubit>().signIn(
+          email: email,
+          password: password,
+        );
+    if (!mounted) return;
+    if (ok) Navigator.of(context).pop(true);
   }
 
   Future<void> _submitSignUp() async {
-    debugPrint('--- SIGN UP BUTTON TAPPED ---');
-    final email = _signUpEmail.text;
-    final password = _signUpPassword.text;
-    debugPrint('email=$email password=$password');
+    FocusManager.instance.primaryFocus?.unfocus();
+    final firstName = _firstName.text.trim();
+    final lastName = _lastName.text.trim();
+    final email = _signUpEmail.text.trim();
+    final password = _signUpPassword.text.trim();
+    final confirm = _confirmPassword.text.trim();
+    debugPrint(
+      '--- SIGN UP BUTTON TAPPED --- emailLen=${email.length} '
+      'passwordEmpty=${password.isEmpty}',
+    );
     context.read<AuthCubit>().clearMessage();
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    try {
-      final credential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      final displayName =
-          '${_firstName.text.trim()} ${_lastName.text.trim()}'.trim();
-      if (displayName.isNotEmpty) {
-        await credential.user?.updateDisplayName(displayName);
-      }
-      await context.read<AuthCubit>().restoreSession();
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
-    } on FirebaseAuthException catch (e) {
-      debugPrint('FIREBASE AUTH ERROR: ${e.code} - ${e.message}');
-      if (!mounted) return;
+
+    if (!_acceptedTerms) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text('${e.code}: ${e.message}')));
+        ..showSnackBar(
+          const SnackBar(content: Text('Please accept the Terms & Conditions.')),
+        );
+      return;
     }
+    if (password != confirm) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Passwords do not match.')),
+        );
+      return;
+    }
+
+    final ok = await context.read<AuthCubit>().signUp(
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          password: password,
+        );
+    if (!mounted) return;
+    if (ok) Navigator.of(context).pop(true);
   }
 
   Future<void> _socialGoogle() async {

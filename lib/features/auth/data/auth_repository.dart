@@ -104,10 +104,15 @@ class FirebaseAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async {
+    final trimmedEmail = email.trim();
+    final trimmedPassword = password.trim();
+    if (trimmedEmail.isEmpty || trimmedPassword.isEmpty) {
+      throw AuthException('Enter your email and password.');
+    }
     try {
       final credential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
+        email: trimmedEmail,
+        password: trimmedPassword,
       );
       final user = credential.user;
       if (user == null) {
@@ -118,9 +123,10 @@ class FirebaseAuthRepository implements AuthRepository {
       rethrow;
     } on FirebaseAuthException catch (e) {
       debugPrint('FIREBASE AUTH ERROR: ${e.code} - ${e.message}');
-      throw AuthException('${e.code}: ${e.message}');
-    } catch (_) {
-      throw AuthException('Could not sign in. Try again.');
+      throw AuthException(_mapFirebaseAuthError(e));
+    } catch (e, st) {
+      debugPrint('AUTH SIGN-IN ERROR: $e\n$st');
+      throw AuthException(_mapGenericAuthError(e, fallback: 'Could not sign in. Try again.'));
     }
   }
 
@@ -133,10 +139,15 @@ class FirebaseAuthRepository implements AuthRepository {
   }) async {
     final first = firstName.trim();
     final last = lastName.trim();
+    final trimmedEmail = email.trim();
+    final trimmedPassword = password.trim();
+    if (trimmedEmail.isEmpty || trimmedPassword.isEmpty) {
+      throw AuthException('Enter your email and password.');
+    }
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
+        email: trimmedEmail,
+        password: trimmedPassword,
       );
       final firebaseUser = credential.user;
       if (firebaseUser == null) {
@@ -144,7 +155,7 @@ class FirebaseAuthRepository implements AuthRepository {
       }
       final appUser = AppUser(
         id: firebaseUser.uid,
-        email: email.trim().toLowerCase(),
+        email: trimmedEmail.toLowerCase(),
         firstName: first,
         lastName: last,
       );
@@ -159,9 +170,12 @@ class FirebaseAuthRepository implements AuthRepository {
       rethrow;
     } on FirebaseAuthException catch (e) {
       debugPrint('FIREBASE AUTH ERROR: ${e.code} - ${e.message}');
-      throw AuthException('${e.code}: ${e.message}');
-    } catch (_) {
-      throw AuthException('Could not create account. Try again.');
+      throw AuthException(_mapFirebaseAuthError(e));
+    } catch (e, st) {
+      debugPrint('AUTH SIGN-UP ERROR: $e\n$st');
+      throw AuthException(
+        _mapGenericAuthError(e, fallback: 'Could not create account. Try again.'),
+      );
     }
   }
 
@@ -403,6 +417,20 @@ class FirebaseAuthRepository implements AuthRepository {
         }
         return message;
     }
+  }
+
+  /// Maps non-Firebase failures that still carry FlutterFire pigeon strings.
+  static String _mapGenericAuthError(
+    Object error, {
+    required String fallback,
+  }) {
+    final text = error.toString();
+    if (text.contains('channel-error') ||
+        text.contains('FirebaseAuthHostApi')) {
+      return 'Could not reach Firebase Auth. Enable Email/Password in '
+          'Firebase Console and confirm this domain is authorized.';
+    }
+    return fallback;
   }
 }
 

@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Customize toolbar moved between QR and code chip",
-        "taskId": "task-move-customize-toolbar-header-20260724",
-        "updatedAt": "2026-07-24T19:05:00.000Z",
+        "message": "App update: Fix web Sign In channel-error with AuthCubit + mapped errors",
+        "taskId": "task-fix-web-signin-channel-error-20260725",
+        "updatedAt": "2026-07-25T20:10:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -850,7 +850,20 @@
       "status": "done",
       "createdAt": "2026-07-24T19:00:00.000Z",
       "updatedAt": "2026-07-24T19:05:00.000Z"
+    },
+    {
+      "id": "task-fix-web-signin-channel-error-20260725",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Fix web Sign In channel-error",
+      "description": "Trim/validate credentials before Firebase; route Sign In/Up through AuthCubit; map channel-error to human text; rebuild and redeploy Hosting.",
+      "details": "auth_repository.dart; auth_flow_sheet.dart; flutter build web --pwa-strategy=none; firebase deploy --only hosting",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-25T20:04:00.000Z",
+      "updatedAt": "2026-07-25T20:10:00.000Z"
     }
   ],
-  "lastSync": "2026-07-24T19:05:00.000Z"
+  "lastSync": "2026-07-25T20:10:00.000Z"
 }
