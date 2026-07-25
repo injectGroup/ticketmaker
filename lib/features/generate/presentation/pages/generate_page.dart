@@ -145,7 +145,18 @@ class _GenerateViewState extends State<_GenerateView> {
             ),
           ],
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Sticky design controls — stays under AppBar while ticket scrolls.
+              Material(
+                color: AppColors.primaryBackground,
+                elevation: 1,
+                shadowColor: Colors.black12,
+                child: const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 12, 16, 12),
+                  child: TicketCustomizeToolbar(),
+                ),
+              ),
               Expanded(
                 child: BlocBuilder<GenerateCubit, GenerateState>(
                   buildWhen: (previous, current) =>
@@ -154,12 +165,11 @@ class _GenerateViewState extends State<_GenerateView> {
                   builder: (context, state) {
                     final ticket = state.ticket;
                     return SingleChildScrollView(
-                      // Edge-to-edge off-white canvas — no outer white frame.
                       padding: EdgeInsets.fromLTRB(
                         12,
+                        4,
                         12,
-                        12,
-                        keyboardInset > 0 ? keyboardInset + 16 : 20,
+                        keyboardInset > 0 ? keyboardInset + 24 : 28,
                       ),
                       keyboardDismissBehavior:
                           ScrollViewKeyboardDismissBehavior.onDrag,
@@ -221,39 +231,32 @@ class _GenerateViewState extends State<_GenerateView> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 18),
-                          const TicketCustomizeToolbar(),
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.icon(
+                              onPressed: _isSaving ? null : _saveTicket,
+                              icon: _isSaving
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.save_outlined),
+                              label: Text(
+                                _isSaving ? 'Saving…' : 'Save Ticket',
+                              ),
+                            ),
+                          ),
+                          // Generous space above shell bottom NavigationBar.
+                          const SizedBox(height: 20),
                         ],
                       ),
                     );
                   },
-                ),
-              ),
-              // Anchored above the shell bottom NavigationBar.
-              Material(
-                color: AppColors.primaryBackground,
-                child: SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: _isSaving ? null : _saveTicket,
-                        icon: _isSaving
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.save_outlined),
-                        label: Text(_isSaving ? 'Saving…' : 'Save Ticket'),
-                      ),
-                    ),
-                  ),
                 ),
               ),
             ],

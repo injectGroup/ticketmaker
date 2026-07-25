@@ -5,8 +5,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../bloc/generate_cubit.dart';
 import 'top_bg_color_customizer_sheet.dart';
 
-/// Floating customize bar for QR color/shape, background, and code refresh.
-/// Sits below the ticket card (not inside the gradient stub).
+/// Floating design-control pill (Color, Shape, Bg, Code).
+/// Anchored under the Generate AppBar so it stays visible while the ticket scrolls.
 class TicketCustomizeToolbar extends StatelessWidget {
   const TicketCustomizeToolbar({super.key});
 
@@ -15,12 +15,19 @@ class TicketCustomizeToolbar extends StatelessWidget {
     final cubit = context.read<GenerateCubit>();
 
     return Material(
-      elevation: 8,
-      shadowColor: Colors.black26,
+      elevation: 10,
+      shadowColor: Colors.black.withValues(alpha: 0.22),
       color: AppColors.secondaryBackground,
-      borderRadius: BorderRadius.circular(28),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(28),
+        side: BorderSide(
+          color: AppColors.primary.withValues(alpha: 0.18),
+          width: 1.2,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -80,18 +87,19 @@ class _ToolState extends State<_Tool> {
         scale: _pressed ? 0.92 : 1,
         duration: const Duration(milliseconds: 120),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(widget.icon, color: AppColors.primary, size: 22),
-              const SizedBox(height: 4),
+              Icon(widget.icon, color: AppColors.primary, size: 24),
+              const SizedBox(height: 5),
               Text(
                 widget.label,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.secondaryText,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 11,
+                  color: AppColors.primaryText,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  letterSpacing: 0.2,
                 ),
               ),
             ],

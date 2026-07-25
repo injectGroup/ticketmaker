@@ -5,7 +5,7 @@
     {
       "id": "S48ODI73lfsZJSn8Kke2",
       "name": "ticketmaker",
-      "description": "Quick Ticket Maker — generate styled event tickets with customizable QR codes.",
+      "description": "Quick Ticket Maker \u2014 generate styled event tickets with customizable QR codes.",
       "ownerEmail": "abdulkadirhaldu@gmail.com",
       "proposedOwnerEmail": "abdulkadirhaldu@gmail.com",
       "ownershipStatus": "needs_owner_claim",
@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Generate UI overhaul — unified card, floating toolbar, pinned Save",
-        "taskId": "task-generate-ui-overhaul-20260725",
-        "updatedAt": "2026-07-25T21:55:00.000Z",
+        "message": "App update: sticky top design toolbar on Generate",
+        "taskId": "task-generate-toolbar-top-20260725",
+        "updatedAt": "2026-07-25T22:10:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -180,7 +180,7 @@
       "projectId": "S48ODI73lfsZJSn8Kke2",
       "epicId": null,
       "title": "Task 2.4 Bottom-Half Enhancements",
-      "description": "Branch feature/bottom-half-upgrades from main (FF Task 2.3). image_picker gallery → Ticket.imagePath + Image.file with asset fallback; date then time pickers; bottom BoxDecoration uses shared topGradient colors; cubit syncs both halves.",
+      "description": "Branch feature/bottom-half-upgrades from main (FF Task 2.3). image_picker gallery \u2192 Ticket.imagePath + Image.file with asset fallback; date then time pickers; bottom BoxDecoration uses shared topGradient colors; cubit syncs both halves.",
       "details": "Also added placeholder asset, iOS/macOS photo usage strings and macOS photo entitlements.",
       "operationalPhase": "COMPLETE",
       "priority": "high",
@@ -285,7 +285,7 @@
       "epicId": null,
       "title": "Live-update bg color preview from hex input",
       "description": "Hex typing updates the solid/gradient display bar and ticket background as soon as #RRGGBB is valid; Apply still dismisses the sheet.",
-      "details": "top_bg_color_customizer_sheet.dart — local preview + live cubit apply on valid parse.",
+      "details": "top_bg_color_customizer_sheet.dart \u2014 local preview + live cubit apply on valid parse.",
       "operationalPhase": "COMPLETE",
       "priority": "medium",
       "status": "done",
@@ -479,7 +479,7 @@
       "projectId": "S48ODI73lfsZJSn8Kke2",
       "epicId": null,
       "title": "Interactive Seating Map",
-      "description": "Auth-gated Book Spot → seating map (rows A–C, seats 1–10) → Proceed to Checkout prefills Generate with selected seats.",
+      "description": "Auth-gated Book Spot \u2192 seating map (rows A\u2013C, seats 1\u201310) \u2192 Proceed to Checkout prefills Generate with selected seats.",
       "details": "InteractiveSeatingCubit; seating layout factory; /seating route; sticky summary drawer; cubit + widget tests",
       "operationalPhase": "COMPLETE",
       "priority": "high",
@@ -570,7 +570,7 @@
       "projectId": "S48ODI73lfsZJSn8Kke2",
       "epicId": null,
       "title": "Fix ColorContrast for low-alpha background washes",
-      "description": "Prefer alpha-blended luminance for ticket text; opaque-dark→white only when stop alpha ≥ 0.30 (graduation-style fills).",
+      "description": "Prefer alpha-blended luminance for ticket text; opaque-dark\u2192white only when stop alpha \u2265 0.30 (graduation-style fills).",
       "details": "color_contrast.dart; color_contrast_test.dart",
       "operationalPhase": "COMPLETE",
       "priority": "high",
@@ -778,7 +778,7 @@
       "projectId": "S48ODI73lfsZJSn8Kke2",
       "epicId": null,
       "title": "Web photo MemoryImage + keep Generate edits after Save",
-      "description": "Gallery picks always readAsBytes and preview via MemoryImage; Save Ticket no longer resets to Circu Du Freak — navigates to Tickets instead.",
+      "description": "Gallery picks always readAsBytes and preview via MemoryImage; Save Ticket no longer resets to Circu Du Freak \u2014 navigates to Tickets instead.",
       "details": "ticket_details_section; ticket_customize_toolbar; generate_cubit/state; auth_gate; generate_page",
       "operationalPhase": "COMPLETE",
       "priority": "high",
@@ -954,7 +954,20 @@
       "status": "done",
       "createdAt": "2026-07-25T21:50:00.000Z",
       "updatedAt": "2026-07-25T21:55:00.000Z"
+    },
+    {
+      "id": "task-generate-toolbar-top-20260725",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Sticky top design toolbar on Generate screen",
+      "description": "Move Color/Shape/Bg/Code pill under AppBar (sticky); Save Ticket beneath ticket card with bottom padding; higher-contrast toolbar styling.",
+      "details": "generate_page; ticket_customize_toolbar",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-25T22:10:00.000Z",
+      "updatedAt": "2026-07-25T22:10:00.000Z"
     }
   ],
-  "lastSync": "2026-07-25T21:55:00.000Z"
+  "lastSync": "2026-07-25T22:10:00.000Z"
 }
