@@ -13,13 +13,19 @@ class TicketCloudSync {
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
     FirebaseStorage? storage,
-  }) : _auth = auth ?? FirebaseAuth.instance,
-       _firestore = firestore ?? FirebaseFirestore.instance,
-       _storage = storage ?? FirebaseStorage.instance;
+  }) : _authOverride = auth,
+       _firestoreOverride = firestore,
+       _storageOverride = storage;
 
-  final FirebaseAuth _auth;
-  final FirebaseFirestore _firestore;
-  final FirebaseStorage _storage;
+  final FirebaseAuth? _authOverride;
+  final FirebaseFirestore? _firestoreOverride;
+  final FirebaseStorage? _storageOverride;
+
+  // Lazy so constructing TicketsCubit in tests does not require Firebase init.
+  FirebaseAuth get _auth => _authOverride ?? FirebaseAuth.instance;
+  FirebaseFirestore get _firestore =>
+      _firestoreOverride ?? FirebaseFirestore.instance;
+  FirebaseStorage get _storage => _storageOverride ?? FirebaseStorage.instance;
 
   String? get _uid => _auth.currentUser?.uid;
 

@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../discover/domain/entities/event.dart';
 import '../../data/ticket_category_palettes.dart';
 import '../../domain/entities/ticket.dart';
 
@@ -284,38 +283,6 @@ class GenerateCubit extends Cubit<GenerateState> {
       state.copyWith(
         selectedCategory: category,
         ticket: ticket.copyWith(
-          eyeColor: palette.eyeColor,
-          dataModuleColor: palette.dataModuleColor,
-          topGradientStart: palette.backgroundStart,
-          topGradientEnd: palette.backgroundEnd,
-          bottomGradientStart: palette.backgroundStart,
-          bottomGradientEnd: palette.backgroundEnd,
-        ),
-      ),
-    );
-  }
-
-  /// Prefills the editor from a Discover [event] (Book a Spot / seating).
-  ///
-  /// When [seatSummary] is set (e.g. `B4, C2`), it is appended to the
-  /// venue and header so checkout reflects selected seats.
-  void prefillFromEvent(Event event, {String? seatSummary}) {
-    final palette = TicketCategoryPalettes.forCategory(event.category);
-    final imagePath = event.hasAssetImage ? event.imageUrl! : '';
-    final seats = seatSummary?.trim();
-    final hasSeats = seats != null && seats.isNotEmpty;
-    emit(
-      GenerateState(
-        selectedCategory: event.category,
-        ticket: state.ticket.copyWith(
-          headerLabel: hasSeats ? '${event.host} · $seats' : event.host,
-          title: event.title,
-          subtitle: 'Vision & Sound Experience',
-          venue: hasSeats ? '${event.venue} · Seats $seats' : event.venue,
-          eventAt: event.eventAt,
-          dateLabel: formatDateLabel(event.eventAt),
-          timeLabel: formatTimeLabel(event.eventAt),
-          imagePath: imagePath,
           eyeColor: palette.eyeColor,
           dataModuleColor: palette.dataModuleColor,
           topGradientStart: palette.backgroundStart,

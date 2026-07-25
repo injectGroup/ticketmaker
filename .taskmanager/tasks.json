@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: fix prepare ticket image Share on web with bytes + blob fallback",
-        "taskId": "task-fix-prepare-ticket-image-share-20260725",
-        "updatedAt": "2026-07-25T20:55:00.000Z",
+        "message": "App update: Generate + Tickets only shell (removed Discover/Account/seating)",
+        "taskId": "task-gen-and-tickets-only-20260725",
+        "updatedAt": "2026-07-25T21:30:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -928,7 +928,20 @@
       "status": "done",
       "createdAt": "2026-07-25T20:46:00.000Z",
       "updatedAt": "2026-07-25T20:55:00.000Z"
+    },
+    {
+      "id": "task-gen-and-tickets-only-20260725",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Keep only Generate and Tickets in app shell",
+      "description": "Remove Account route, Discover/Seating features, and DiscoverCubit; shell bottom nav remains Generate + Tickets with Terms/Privacy for auth.",
+      "details": "app_router; app.dart; auth_gate; pending_auth_action; delete discover/seating/presentation; core/widgets/app_button",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-25T21:22:00.000Z",
+      "updatedAt": "2026-07-25T21:30:00.000Z"
     }
   ],
-  "lastSync": "2026-07-25T20:55:00.000Z"
+  "lastSync": "2026-07-25T21:30:00.000Z"
 }

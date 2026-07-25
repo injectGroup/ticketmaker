@@ -1,41 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/account/presentation/pages/account_page.dart';
 import '../../features/account/presentation/pages/legal_document_page.dart';
 import '../../features/generate/presentation/pages/generate_page.dart';
 import '../../features/tickets/presentation/pages/ticket_detail_page.dart';
 import '../../features/tickets/presentation/pages/tickets_page.dart';
 import '../theme/app_theme.dart';
 
+/// App routes: Generate + Tickets shell only (plus legal docs for auth).
 final GoRouter appRouter = GoRouter(
   initialLocation: GeneratePage.routePath,
   routes: [
     GoRoute(
-      path: AccountPage.routePath,
-      name: AccountPage.routeName,
-      builder: (context, state) {
-        final personalize = state.uri.queryParameters['personalize'] == '1';
-        return AccountPage(personalize: personalize);
-      },
-      routes: [
-        GoRoute(
-          path: 'terms',
-          name: LegalDocumentPage.termsName,
-          builder: (context, state) => const LegalDocumentPage(
-            title: 'Terms of Service',
-            body: LegalDocumentPage.termsBody,
-          ),
-        ),
-        GoRoute(
-          path: 'privacy',
-          name: LegalDocumentPage.privacyName,
-          builder: (context, state) => const LegalDocumentPage(
-            title: 'Privacy Policy',
-            body: LegalDocumentPage.privacyBody,
-          ),
-        ),
-      ],
+      path: LegalDocumentPage.termsPath,
+      name: LegalDocumentPage.termsName,
+      builder: (context, state) => const LegalDocumentPage(
+        title: 'Terms of Service',
+        body: LegalDocumentPage.termsBody,
+      ),
+    ),
+    GoRoute(
+      path: LegalDocumentPage.privacyPath,
+      name: LegalDocumentPage.privacyName,
+      builder: (context, state) => const LegalDocumentPage(
+        title: 'Privacy Policy',
+        body: LegalDocumentPage.privacyBody,
+      ),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
@@ -74,6 +64,7 @@ final GoRouter appRouter = GoRouter(
   ],
 );
 
+/// Bottom nav shell with Generate and Tickets only.
 class HomeShell extends StatelessWidget {
   const HomeShell({super.key, required this.navigationShell});
 

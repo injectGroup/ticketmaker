@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../../presentation/atoms/app_button.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../account/presentation/pages/legal_document_page.dart';
 import '../bloc/auth_cubit.dart';
 

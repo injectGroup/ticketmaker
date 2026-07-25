@@ -6,16 +6,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ticket_maker/app.dart';
 import 'package:ticket_maker/core/router/app_router.dart';
 import 'package:ticket_maker/features/auth/data/auth_repository.dart';
-import 'package:ticket_maker/features/discover/domain/location_city_service.dart';
 import 'package:ticket_maker/features/generate/presentation/pages/generate_page.dart';
 import 'package:ticket_maker/features/tickets/data/ticket_local_repository.dart';
 
 Widget buildTestApp({
-  LocationCityService? location,
   AuthRepository? authRepository,
 }) {
   return TicketMakerApp(
-    locationCityService: location ?? FakeLocationCityService('Abuja'),
     authRepository: authRepository ?? FakeAuthRepository(),
   );
 }

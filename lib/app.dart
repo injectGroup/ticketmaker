@@ -5,8 +5,6 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/presentation/bloc/auth_cubit.dart';
-import 'features/discover/domain/location_city_service.dart';
-import 'features/discover/presentation/bloc/discover_cubit.dart';
 import 'features/generate/presentation/bloc/generate_cubit.dart';
 import 'features/tickets/data/ticket_local_repository.dart';
 import 'features/tickets/presentation/bloc/tickets_cubit.dart';
@@ -15,15 +13,11 @@ class TicketMakerApp extends StatelessWidget {
   const TicketMakerApp({
     super.key,
     this.ticketsRepository,
-    this.locationCityService,
     this.authRepository,
   });
 
   /// Optional override for tests.
   final TicketLocalRepository? ticketsRepository;
-
-  /// Optional override for tests (defaults to geolocator-backed service).
-  final LocationCityService? locationCityService;
 
   /// Optional override for tests.
   final AuthRepository? authRepository;
@@ -41,10 +35,6 @@ class TicketMakerApp extends StatelessWidget {
                 ..loadTickets(),
         ),
         BlocProvider(create: (_) => GenerateCubit()),
-        BlocProvider(
-          create: (_) =>
-              DiscoverCubit(locationCityService: locationCityService),
-        ),
       ],
       child: MaterialApp.router(
         title: 'Quick Ticket Maker',
