@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Fix web Sign In channel-error with AuthCubit + mapped errors",
-        "taskId": "task-fix-web-signin-channel-error-20260725",
-        "updatedAt": "2026-07-25T20:10:00.000Z",
+        "message": "App update: Harden web Share LateInitializationError → ticket.jpg download",
+        "taskId": "task-web-share-late-init-download-20260725",
+        "updatedAt": "2026-07-25T20:20:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -863,7 +863,20 @@
       "status": "done",
       "createdAt": "2026-07-25T20:04:00.000Z",
       "updatedAt": "2026-07-25T20:10:00.000Z"
+    },
+    {
+      "id": "task-web-share-late-init-download-20260725",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Harden web Share LateInitializationError with ticket.jpg download",
+      "description": "Capture JPEG to Uint8List; XFile.fromData + Share.shareXFiles; catch Error/Exception and Blob-download ticket.jpg; never show LateInitializationError SnackBar.",
+      "details": "ticket_share_helper.dart; flutter build web --pwa-strategy=none; firebase deploy --only hosting",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-25T20:15:00.000Z",
+      "updatedAt": "2026-07-25T20:20:00.000Z"
     }
   ],
-  "lastSync": "2026-07-25T20:10:00.000Z"
+  "lastSync": "2026-07-25T20:20:00.000Z"
 }

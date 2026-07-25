@@ -32,8 +32,8 @@ class TicketShareHelper {
     return Rect.fromLTWH(size.width / 2 - 1, size.height / 2 - 1, 2, 2);
   }
 
-  /// Encodes [boundaryKey]'s [RepaintBoundary] to JPEG bytes.
-  static Future<List<int>?> captureJpegBytes(
+  /// Encodes [boundaryKey]'s [RepaintBoundary] to JPEG bytes in memory.
+  static Future<Uint8List?> captureJpegBytes(
     GlobalKey boundaryKey, {
     double pixelRatio = 1.5,
     int quality = 72,
@@ -48,14 +48,15 @@ class TicketShareHelper {
       final image = await boundary.toImage(pixelRatio: pixelRatio);
       final jpeg = await uiImageToJpeg(image, quality: quality);
       image.dispose();
+      if (jpeg == null || jpeg.isEmpty) return null;
       return jpeg;
     } catch (_) {
       return null;
     }
   }
 
-  /// Encodes [boundaryKey]'s [RepaintBoundary] to PNG bytes.
-  static Future<List<int>?> capturePngBytes(
+  /// Encodes [boundaryKey]'s [RepaintBoundary] to PNG bytes in memory.
+  static Future<Uint8List?> capturePngBytes(
     GlobalKey boundaryKey, {
     double pixelRatio = 2,
   }) async {
@@ -69,7 +70,9 @@ class TicketShareHelper {
       final image = await boundary.toImage(pixelRatio: pixelRatio);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       image.dispose();
-      return byteData?.buffer.asUint8List();
+      final bytes = byteData?.buffer.asUint8List();
+      if (bytes == null || bytes.isEmpty) return null;
+      return bytes;
     } catch (_) {
       return null;
     }
@@ -77,9 +80,9 @@ class TicketShareHelper {
 
   /// Shares [ticket] as a JPEG (plus caption).
   ///
-  /// Web: JPEG [Uint8List] → [XFile.fromData] → [Share.shareXFiles]. Falls
-  /// back to Blob download if the Web Share API / share_plus throws
-  /// (e.g. LateInitializationError on desktop Chrome).
+  /// Capture → in-memory [Uint8List] → [XFile.fromData] → [Share.shareXFiles].
+  /// On web, any failure (including [LateInitializationError]) falls back to
+  /// a direct browser download of `ticket.jpg`.
   static Future<void> share(
     BuildContext context,
     Ticket ticket, {
@@ -102,10 +105,7 @@ class TicketShareHelper {
 
     try {
       if (boundaryKey != null) {
-        final captured = await captureJpegBytes(boundaryKey);
-        if (captured != null && captured.isNotEmpty) {
-          jpegBytes = Uint8List.fromList(captured);
-        }
+        jpegBytes = await captureJpegBytes(boundaryKey);
       }
       if (!context.mounted) return;
 
@@ -116,7 +116,7 @@ class TicketShareHelper {
           imageBytes: imageBytes,
         );
         if (png != null && png.isNotEmpty) {
-          jpegBytes = await compressImageToJpeg(Uint8List.fromList(png));
+          jpegBytes = await compressImageToJpeg(png);
         }
       }
 
@@ -144,16 +144,31 @@ class TicketShareHelper {
       messenger?.hideCurrentSnackBar();
     } catch (e, st) {
       debugPrint('Share failed: $e\n$st');
+      // Last-resort web download if we already have bytes.
+      if (kIsWeb && jpegBytes != null && jpegBytes.isNotEmpty) {
+        try {
+          downloadBytesAsFile(jpegBytes, _webFileName);
+          if (!context.mounted) return;
+          messenger
+            ?..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(content: Text('Ticket image downloaded')),
+            );
+          return;
+        } catch (downloadError, downloadSt) {
+          debugPrint('Web download fallback failed: $downloadError\n$downloadSt');
+        }
+      }
       if (!context.mounted) return;
       messenger
         ?..hideCurrentSnackBar()
         ..showSnackBar(
-          SnackBar(content: Text('Could not share ticket: $e')),
+          SnackBar(content: Text(_userFacingShareError(e))),
         );
     }
   }
 
-  /// Shares prepared JPEG bytes. Never touches uninitialized late fields.
+  /// Shares prepared JPEG bytes. Never accesses uninitialized late fields.
   static Future<void> _shareJpegBytes(
     BuildContext context,
     Ticket ticket, {
@@ -163,15 +178,15 @@ class TicketShareHelper {
   }) async {
     final fileName = kIsWeb ? _webFileName : 'ticket_${ticket.id}.jpg';
 
-    // Build XFile only from in-memory bytes — never read .path on web.
-    final xFile = XFile.fromData(
-      jpegBytes,
-      mimeType: 'image/jpeg',
-      name: fileName,
-    );
-
     if (kIsWeb) {
       try {
+        // Create XFile only inside the try so LateInitializationError still
+        // falls through to Blob download.
+        final xFile = XFile.fromData(
+          jpegBytes,
+          mimeType: 'image/jpeg',
+          name: fileName,
+        );
         // ignore: deprecated_member_use
         await Share.shareXFiles(
           [xFile],
@@ -184,7 +199,7 @@ class TicketShareHelper {
         messenger?.hideCurrentSnackBar();
         return;
       } catch (e, st) {
-        // Desktop Chrome often throws LateInitializationError / NotAllowedError.
+        // Catches Exception and Error (LateInitializationError is an Error).
         debugPrint('Share.shareXFiles failed on web, downloading: $e\n$st');
         downloadBytesAsFile(jpegBytes, fileName);
         if (!context.mounted) return;
@@ -197,6 +212,11 @@ class TicketShareHelper {
       }
     }
 
+    final xFile = XFile.fromData(
+      jpegBytes,
+      mimeType: 'image/jpeg',
+      name: fileName,
+    );
     await SharePlus.instance.share(
       ShareParams(
         files: [xFile],
@@ -211,7 +231,17 @@ class TicketShareHelper {
     messenger?.hideCurrentSnackBar();
   }
 
-  static Future<List<int>?> _captureViaOverlay(
+  static String _userFacingShareError(Object error) {
+    final text = error.toString();
+    if (text.contains('LateInitializationError') ||
+        text.contains('channel-error') ||
+        text.contains('NotAllowedError')) {
+      return 'Could not share ticket. Try again or use Download.';
+    }
+    return 'Could not share ticket: $error';
+  }
+
+  static Future<Uint8List?> _captureViaOverlay(
     BuildContext context,
     Ticket ticket, {
     Uint8List? imageBytes,
@@ -222,7 +252,7 @@ class TicketShareHelper {
     final boundaryKey = GlobalKey();
     final width = MediaQuery.sizeOf(context).width.clamp(280.0, 420.0);
 
-    // Nullable instead of `late` so we never read an uninitialized field.
+    // Nullable — never use `late` so we cannot read an uninitialized field.
     OverlayEntry? entry;
     entry = OverlayEntry(
       builder: (context) {
