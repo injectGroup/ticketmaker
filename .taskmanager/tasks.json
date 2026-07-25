@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Harden web Share LateInitializationError → ticket.jpg download",
-        "taskId": "task-web-share-late-init-download-20260725",
-        "updatedAt": "2026-07-25T20:20:00.000Z",
+        "message": "App update: Web Share downloads ticket.jpg (no share_plus)",
+        "taskId": "task-web-share-download-first-20260725",
+        "updatedAt": "2026-07-25T20:30:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -876,7 +876,20 @@
       "status": "done",
       "createdAt": "2026-07-25T20:15:00.000Z",
       "updatedAt": "2026-07-25T20:20:00.000Z"
+    },
+    {
+      "id": "task-web-share-download-first-20260725",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Web Share download-first without share_plus",
+      "description": "On Flutter Web skip share_plus entirely; capture JPEG and Blob-download ticket.jpg with success SnackBar to eliminate LateInitializationError.",
+      "details": "ticket_share_helper.dart; flutter build web --pwa-strategy=none; firebase deploy --only hosting",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-25T20:27:00.000Z",
+      "updatedAt": "2026-07-25T20:30:00.000Z"
     }
   ],
-  "lastSync": "2026-07-25T20:20:00.000Z"
+  "lastSync": "2026-07-25T20:30:00.000Z"
 }
