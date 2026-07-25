@@ -1,5 +1,4 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -7,6 +6,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/auth_gate.dart';
 import '../../../tickets/presentation/bloc/tickets_cubit.dart';
 import '../bloc/generate_cubit.dart';
+import '../widgets/ticket_customize_toolbar.dart';
 import '../widgets/ticket_details_section.dart';
 import '../widgets/ticket_header_section.dart';
 import '../widgets/ticket_perforation.dart';
@@ -89,6 +89,8 @@ class _GenerateViewState extends State<_GenerateView> {
 
   @override
   Widget build(BuildContext context) {
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
@@ -96,6 +98,8 @@ class _GenerateViewState extends State<_GenerateView> {
         appBar: AppBar(
           title: const Text('Quick Ticket Maker'),
           automaticallyImplyLeading: false,
+          elevation: 0,
+          backgroundColor: AppColors.primary,
         ),
         body: MultiBlocListener(
           listeners: [
@@ -140,84 +144,119 @@ class _GenerateViewState extends State<_GenerateView> {
               },
             ),
           ],
-          child: SafeArea(
-            child: BlocBuilder<GenerateCubit, GenerateState>(
-              buildWhen: (previous, current) =>
-                  previous.ticket != current.ticket ||
-                  previous.imageBytes != current.imageBytes,
-              builder: (context, state) {
-                final ticket = state.ticket;
-                final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
-                return SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(16, 12, 16, bottomInset + 28),
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  child: Column(
-                    children: [
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 28,
-                              offset: const Offset(0, 14),
-                            ),
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.08),
-                              blurRadius: 18,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: ColoredBox(
-                            color: AppColors.secondaryBackground,
-                            child: Column(
-                              children: [
-                                TicketHeaderSection(
-                                  ticket: ticket,
-                                  headerLabelController: _headerLabelController,
-                                  bracketResetToken: _ticketSession,
+          child: Column(
+            children: [
+              Expanded(
+                child: BlocBuilder<GenerateCubit, GenerateState>(
+                  buildWhen: (previous, current) =>
+                      previous.ticket != current.ticket ||
+                      previous.imageBytes != current.imageBytes,
+                  builder: (context, state) {
+                    final ticket = state.ticket;
+                    return SingleChildScrollView(
+                      // Edge-to-edge off-white canvas — no outer white frame.
+                      padding: EdgeInsets.fromLTRB(
+                        12,
+                        12,
+                        12,
+                        keyboardInset > 0 ? keyboardInset + 16 : 20,
+                      ),
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      child: Column(
+                        children: [
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.12),
+                                  blurRadius: 28,
+                                  offset: const Offset(0, 14),
                                 ),
-                                const TicketPerforation(),
-                                TicketDetailsSection(
-                                  ticket: ticket,
-                                  titleController: _titleController,
-                                  subtitleController: _subtitleController,
-                                  venueController: _venueController,
-                                  bracketResetToken: _ticketSession,
-                                  imageBytes: state.imageBytes,
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.08,
+                                  ),
+                                  blurRadius: 18,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                             ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 22),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: _isSaving ? null : _saveTicket,
-                          icon: _isSaving
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(24),
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      ticket.topGradientStart,
+                                      ticket.topGradientEnd,
+                                    ],
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
                                   ),
-                                )
-                              : const Icon(Icons.save_outlined),
-                          label: Text(_isSaving ? 'Saving…' : 'Save Ticket'),
-                        ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    TicketHeaderSection(
+                                      ticket: ticket,
+                                      headerLabelController:
+                                          _headerLabelController,
+                                      bracketResetToken: _ticketSession,
+                                    ),
+                                    const TicketPerforation(
+                                      notchColor: AppColors.primaryBackground,
+                                      dashColor: Colors.white70,
+                                    ),
+                                    TicketDetailsSection(
+                                      ticket: ticket,
+                                      titleController: _titleController,
+                                      subtitleController: _subtitleController,
+                                      venueController: _venueController,
+                                      bracketResetToken: _ticketSession,
+                                      imageBytes: state.imageBytes,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          const TicketCustomizeToolbar(),
+                        ],
                       ),
-                    ],
+                    );
+                  },
+                ),
+              ),
+              // Anchored above the shell bottom NavigationBar.
+              Material(
+                color: AppColors.primaryBackground,
+                child: SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: _isSaving ? null : _saveTicket,
+                        icon: _isSaving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.save_outlined),
+                        label: Text(_isSaving ? 'Saving…' : 'Save Ticket'),
+                      ),
+                    ),
                   ),
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

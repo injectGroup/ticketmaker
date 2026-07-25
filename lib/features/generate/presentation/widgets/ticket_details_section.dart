@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../../core/utils/color_contrast.dart';
 import '../../../../core/widgets/ticket_photo_placeholder.dart';
 import '../../../tickets/data/ticket_image_store.dart';
 import '../../domain/entities/ticket.dart';
@@ -32,6 +31,8 @@ class TicketDetailsSection extends StatelessWidget {
   final Object? bracketResetToken;
   final TicketImageStore? imageStore;
   final Uint8List? imageBytes;
+
+  static const Color _onCard = Colors.white;
 
   Future<void> _pickGalleryImage(BuildContext context) async {
     try {
@@ -145,176 +146,177 @@ class TicketDetailsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final onGradient = ColorContrast.onGradient(
-      ticket.topGradientStart,
-      ticket.topGradientEnd,
-    );
     final cubit = context.read<GenerateCubit>();
     final path = ticket.imagePath;
     final hasImage = (imageBytes != null && imageBytes!.isNotEmpty) ||
         (!kIsWeb && path.isNotEmpty && File(path).existsSync());
 
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [ticket.topGradientStart, ticket.topGradientEnd],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: BracketedTicketField(
-              controller: titleController,
-              resetToken: bracketResetToken,
-              textAlign: TextAlign.center,
-              minLines: 1,
-              maxLines: 3,
-              style: theme.textTheme.headlineLarge?.copyWith(
-                color: onGradient,
-                fontWeight: FontWeight.w700,
-                height: 1.15,
-              ),
-              cursorColor: onGradient,
-              hintText: 'Event title',
-              onChanged: cubit.updateTitle,
+    return Column(
+      children: [
+        const SizedBox(height: 20),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: BracketedTicketField(
+            controller: titleController,
+            resetToken: bracketResetToken,
+            textAlign: TextAlign.center,
+            minLines: 1,
+            maxLines: 3,
+            style: theme.textTheme.headlineLarge?.copyWith(
+              color: _onCard,
+              fontWeight: FontWeight.w700,
+              fontSize: 28,
+              height: 1.2,
             ),
+            cursorColor: _onCard,
+            hintText: 'Event title',
+            onChanged: cubit.updateTitle,
           ),
-          const SizedBox(height: 18),
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => _pickGalleryImage(context),
-              borderRadius: BorderRadius.circular(16),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: _eventImage(),
-                  ),
-                  if (hasImage)
-                    Positioned(
-                      right: 10,
-                      bottom: 10,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.55),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.photo_camera_outlined,
-                              size: 14,
+        ),
+        const SizedBox(height: 18),
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _pickGalleryImage(context),
+            borderRadius: BorderRadius.circular(16),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: _eventImage(),
+                ),
+                if (hasImage)
+                  Positioned(
+                    right: 10,
+                    bottom: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.55),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.photo_camera_outlined,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                          SizedBox(width: 6),
+                          Text(
+                            'Change',
+                            style: TextStyle(
                               color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
                             ),
-                            SizedBox(width: 6),
-                            Text(
-                              'Change',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                ],
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(28, 22, 28, 12),
-            child: BracketedTicketField(
-              controller: subtitleController,
-              resetToken: bracketResetToken,
-              textAlign: TextAlign.center,
-              minLines: 1,
-              maxLines: 4,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: onGradient,
-                height: 1.35,
-              ),
-              cursorColor: onGradient,
-              hintText: 'Subtitle',
-              onChanged: cubit.updateSubtitle,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => _pickDateTime(context),
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: Row(
-                    children: [
-                      Icon(Icons.calendar_today_outlined,
-                          color: onGradient, size: 20),
-                      const SizedBox(width: 12),
-                      Flexible(
-                        child: Text(
-                          ticket.dateLabel,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: onGradient,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Icon(Icons.schedule_rounded, color: onGradient, size: 20),
-                      const SizedBox(width: 10),
-                      Flexible(
-                        child: Text(
-                          ticket.timeLabel,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: onGradient,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
                   ),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 22, 24, 12),
+          child: BracketedTicketField(
+            controller: subtitleController,
+            resetToken: bracketResetToken,
+            textAlign: TextAlign.center,
+            minLines: 1,
+            maxLines: 4,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: _onCard,
+              fontSize: 15,
+              height: 1.4,
+            ),
+            cursorColor: _onCard,
+            hintText: 'Subtitle',
+            onChanged: cubit.updateSubtitle,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _pickDateTime(context),
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.calendar_today_outlined,
+                      color: _onCard,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Text(
+                        ticket.dateLabel,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: _onCard,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Icon(
+                      Icons.schedule_rounded,
+                      color: _onCard,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Flexible(
+                      child: Text(
+                        ticket.timeLabel,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: _onCard,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(28, 4, 28, 28),
-            child: BracketedTicketField(
-              controller: venueController,
-              resetToken: bracketResetToken,
-              minLines: 1,
-              maxLines: 3,
-              style: theme.textTheme.bodyMedium?.copyWith(color: onGradient),
-              cursorColor: onGradient,
-              hintText: 'Venue',
-              onChanged: cubit.updateVenue,
-              leading: Icon(
-                Icons.place_outlined,
-                color: onGradient,
-                size: 22,
-              ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+          child: BracketedTicketField(
+            controller: venueController,
+            resetToken: bracketResetToken,
+            minLines: 1,
+            maxLines: 3,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: _onCard,
+              fontSize: 14,
+              height: 1.35,
+            ),
+            cursorColor: _onCard,
+            hintText: 'Venue',
+            onChanged: cubit.updateVenue,
+            leading: const Icon(
+              Icons.place_outlined,
+              color: _onCard,
+              size: 22,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

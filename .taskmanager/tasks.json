@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Generate + Tickets only shell (removed Discover/Account/seating)",
-        "taskId": "task-gen-and-tickets-only-20260725",
-        "updatedAt": "2026-07-25T21:30:00.000Z",
+        "message": "App update: Generate UI overhaul — unified card, floating toolbar, pinned Save",
+        "taskId": "task-generate-ui-overhaul-20260725",
+        "updatedAt": "2026-07-25T21:55:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -941,7 +941,20 @@
       "status": "done",
       "createdAt": "2026-07-25T21:22:00.000Z",
       "updatedAt": "2026-07-25T21:30:00.000Z"
+    },
+    {
+      "id": "task-generate-ui-overhaul-20260725",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Overhaul Generate ticket creation UI/UX",
+      "description": "Off-white #F8F9FA scaffold; unified gradient ticket card with dashed tear-line; Color/Shape/Bg/Code toolbar floating below card; white card text; full-width Save pinned above bottom nav.",
+      "details": "generate_page; ticket_header_section; ticket_details_section; ticket_customize_toolbar; ticket_perforation; app_theme; saved_ticket_view",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-25T21:50:00.000Z",
+      "updatedAt": "2026-07-25T21:55:00.000Z"
     }
   ],
-  "lastSync": "2026-07-25T21:30:00.000Z"
+  "lastSync": "2026-07-25T21:55:00.000Z"
 }

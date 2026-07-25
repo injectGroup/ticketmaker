@@ -6,6 +6,7 @@ import '../bloc/generate_cubit.dart';
 import 'top_bg_color_customizer_sheet.dart';
 
 /// Floating customize bar for QR color/shape, background, and code refresh.
+/// Sits below the ticket card (not inside the gradient stub).
 class TicketCustomizeToolbar extends StatelessWidget {
   const TicketCustomizeToolbar({super.key});
 
@@ -14,12 +15,12 @@ class TicketCustomizeToolbar extends StatelessWidget {
     final cubit = context.read<GenerateCubit>();
 
     return Material(
-      elevation: 6,
+      elevation: 8,
       shadowColor: Colors.black26,
       color: AppColors.secondaryBackground,
       borderRadius: BorderRadius.circular(28),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -79,7 +80,7 @@ class _ToolState extends State<_Tool> {
         scale: _pressed ? 0.92 : 1,
         duration: const Duration(milliseconds: 120),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -90,6 +91,7 @@ class _ToolState extends State<_Tool> {
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: AppColors.secondaryText,
                   fontWeight: FontWeight.w600,
+                  fontSize: 11,
                 ),
               ),
             ],

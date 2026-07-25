@@ -7,7 +7,7 @@ abstract final class AppColors {
   static const Color secondary = Color(0xFF39D2C0);
   static const Color error = Color(0xFFFF5963);
   static const Color warning = Color(0xFFF9CF58);
-  static const Color primaryBackground = Color(0xFFF1F4F8);
+  static const Color primaryBackground = Color(0xFFF8F9FA);
   static const Color secondaryBackground = Color(0xFFFFFFFF);
   static const Color primaryText = Color(0xFF14181B);
   static const Color secondaryText = Color(0xFF57636C);
