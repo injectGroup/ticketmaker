@@ -147,13 +147,12 @@ class _GenerateViewState extends State<_GenerateView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Sticky design controls — stays under AppBar while ticket scrolls.
+              // Sticky design chips — stay under AppBar while ticket scrolls.
               Material(
                 color: AppColors.primaryBackground,
-                elevation: 1,
-                shadowColor: Colors.black12,
+                elevation: 0,
                 child: const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 12, 16, 12),
+                  padding: EdgeInsets.fromLTRB(12, 14, 12, 4),
                   child: TicketCustomizeToolbar(),
                 ),
               ),
@@ -167,7 +166,7 @@ class _GenerateViewState extends State<_GenerateView> {
                     return SingleChildScrollView(
                       padding: EdgeInsets.fromLTRB(
                         12,
-                        4,
+                        18,
                         12,
                         keyboardInset > 0 ? keyboardInset + 24 : 28,
                       ),

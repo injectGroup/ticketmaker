@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: sticky top design toolbar on Generate",
-        "taskId": "task-generate-toolbar-top-20260725",
-        "updatedAt": "2026-07-25T22:10:00.000Z",
+        "message": "App update: Generate design chips (Color/Shape/Bg/Code)",
+        "taskId": "task-generate-toolbar-chips-20260725",
+        "updatedAt": "2026-07-25T22:20:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -967,7 +967,20 @@
       "status": "done",
       "createdAt": "2026-07-25T22:10:00.000Z",
       "updatedAt": "2026-07-25T22:10:00.000Z"
+    },
+    {
+      "id": "task-generate-toolbar-chips-20260725",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Generate design controls as individual floating chips",
+      "description": "Replace single toolbar pill with 4 independent Color/Shape/Bg/Code chips; selected tint; more space above ticket card.",
+      "details": "ticket_customize_toolbar; generate_page",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-25T22:20:00.000Z",
+      "updatedAt": "2026-07-25T22:20:00.000Z"
     }
   ],
-  "lastSync": "2026-07-25T22:10:00.000Z"
+  "lastSync": "2026-07-25T22:20:00.000Z"
 }
