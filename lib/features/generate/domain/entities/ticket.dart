@@ -89,11 +89,14 @@ class Ticket extends Equatable {
   }
 
   /// Plain-text summary for the native share sheet.
+  /// Always returns a non-empty initialized string (never relies on late/l10n).
   String toShareText() {
+    final titleText = title.trim().isEmpty ? 'my event ticket' : title.trim();
     final place = venue.trim().isNotEmpty
         ? venue.trim()
-        : (subtitle.trim().isEmpty ? 'Venue' : subtitle.trim());
-    return 'Check out my ticket: $title at $place on ${dateLabel.trim()}!';
+        : (subtitle.trim().isEmpty ? 'the venue' : subtitle.trim());
+    final when = dateLabel.trim().isEmpty ? 'soon' : dateLabel.trim();
+    return 'Check out my event ticket: $titleText at $place on $when!';
   }
 
   Ticket copyWith({

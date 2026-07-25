@@ -124,6 +124,7 @@ class TicketShareHelper {
       }
 
       if (kIsWeb) {
+        // Web: never call share_plus / XFile — avoids LateInitializationError.
         downloadBytesAsFile(jpegBytes, _webFileName);
         if (!context.mounted) return;
         messenger
@@ -134,7 +135,17 @@ class TicketShareHelper {
         return;
       }
 
-      final fileName = 'ticket_${ticket.id}.jpg';
+      // Native: explicit initialized strings only — no late / l10n fields.
+      const fallbackShareText = 'Check out my event ticket!';
+      final shareText = () {
+        try {
+          final text = ticket.toShareText().trim();
+          return text.isEmpty ? fallbackShareText : text;
+        } catch (_) {
+          return fallbackShareText;
+        }
+      }();
+      final fileName = 'ticket.jpg';
       final xFile = XFile.fromData(
         jpegBytes,
         mimeType: 'image/jpeg',
@@ -144,7 +155,7 @@ class TicketShareHelper {
         ShareParams(
           files: [xFile],
           fileNameOverrides: [fileName],
-          text: ticket.toShareText(),
+          text: shareText,
           subject: _subject,
           sharePositionOrigin: origin,
           downloadFallbackEnabled: true,
@@ -207,8 +218,7 @@ class TicketShareHelper {
     final boundaryKey = GlobalKey();
     final width = MediaQuery.sizeOf(context).width.clamp(280.0, 420.0);
 
-    OverlayEntry? entry;
-    entry = OverlayEntry(
+    final entry = OverlayEntry(
       builder: (context) {
         return IgnorePointer(
           child: Opacity(
