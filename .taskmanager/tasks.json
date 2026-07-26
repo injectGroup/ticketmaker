@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: Generate design chips (Color/Shape/Bg/Code)",
-        "taskId": "task-generate-toolbar-chips-20260725",
-        "updatedAt": "2026-07-25T22:20:00.000Z",
+        "message": "App update: restore original Generate ticket layout",
+        "taskId": "task-restore-original-generate-layout-20260726",
+        "updatedAt": "2026-07-26T19:30:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -980,7 +980,20 @@
       "status": "done",
       "createdAt": "2026-07-25T22:20:00.000Z",
       "updatedAt": "2026-07-25T22:20:00.000Z"
+    },
+    {
+      "id": "task-restore-original-generate-layout-20260726",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Restore original Generate ticket creation layout",
+      "description": "Bracketed headers; Change color/shape pills; Generate Qr Code; code + info; Bg color FAB; dark image preview; blue-teal gradient and dashed tear-line.",
+      "details": "ticket_header_section; ticket_details_section; bracketed_ticket_field; ticket_perforation; generate_page; generate_cubit defaults",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-26T19:30:00.000Z",
+      "updatedAt": "2026-07-26T19:30:00.000Z"
     }
   ],
-  "lastSync": "2026-07-25T22:20:00.000Z"
+  "lastSync": "2026-07-26T19:30:00.000Z"
 }

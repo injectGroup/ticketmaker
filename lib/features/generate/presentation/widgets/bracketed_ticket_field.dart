@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_theme.dart';
-
-/// Clean editable ticket field (no decorative brackets).
-/// Shows a subtle underline hint until focused or [resetToken] cycles.
+/// Ticket text field that shows decorative `[ ]` until the user starts editing.
+/// Brackets return when [resetToken] changes (e.g. after Save Ticket).
 class BracketedTicketField extends StatefulWidget {
   const BracketedTicketField({
     super.key,
@@ -23,7 +21,7 @@ class BracketedTicketField extends StatefulWidget {
   final TextStyle? style;
   final ValueChanged<String> onChanged;
 
-  /// When this value changes (e.g. after Save Ticket), hint underline returns.
+  /// When this value changes (e.g. after Save Ticket), brackets show again.
   final Object? resetToken;
 
   final TextAlign textAlign;
@@ -33,40 +31,20 @@ class BracketedTicketField extends StatefulWidget {
   final Widget? leading;
   final String? hintText;
 
-  static InputDecoration decoration({
-    required bool showHintLine,
-    Color? hintLineColor,
-    String? hintText,
-    TextStyle? hintStyle,
-  }) {
-    final lineColor =
-        (hintLineColor ?? AppColors.secondaryText).withValues(alpha: 0.35);
-    return InputDecoration(
-      isDense: true,
-      isCollapsed: false,
-      filled: false,
-      fillColor: Colors.transparent,
-      hintText: hintText,
-      hintStyle: hintStyle,
-      border: InputBorder.none,
-      enabledBorder: showHintLine
-          ? UnderlineInputBorder(
-              borderSide: BorderSide(color: lineColor, width: 1),
-            )
-          : InputBorder.none,
-      focusedBorder: UnderlineInputBorder(
-        borderSide: BorderSide(
-          color: (hintLineColor ?? AppColors.primary).withValues(alpha: 0.55),
-          width: 1.5,
-        ),
-      ),
-      disabledBorder: InputBorder.none,
-      errorBorder: InputBorder.none,
-      focusedErrorBorder: InputBorder.none,
-      contentPadding: const EdgeInsets.symmetric(vertical: 4),
-      hoverColor: Colors.transparent,
-    );
-  }
+  static const InputDecoration plainDecoration = InputDecoration(
+    isDense: true,
+    isCollapsed: true,
+    filled: false,
+    fillColor: Colors.transparent,
+    border: InputBorder.none,
+    enabledBorder: InputBorder.none,
+    focusedBorder: InputBorder.none,
+    disabledBorder: InputBorder.none,
+    errorBorder: InputBorder.none,
+    focusedErrorBorder: InputBorder.none,
+    contentPadding: EdgeInsets.zero,
+    hoverColor: Colors.transparent,
+  );
 
   @override
   State<BracketedTicketField> createState() => _BracketedTicketFieldState();
@@ -74,7 +52,7 @@ class BracketedTicketField extends StatefulWidget {
 
 class _BracketedTicketFieldState extends State<BracketedTicketField> {
   late final FocusNode _focusNode;
-  bool _showHintLine = true;
+  bool _showBrackets = true;
 
   @override
   void initState() {
@@ -87,14 +65,13 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
   void didUpdateWidget(covariant BracketedTicketField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.resetToken != widget.resetToken) {
-      setState(() => _showHintLine = true);
+      setState(() => _showBrackets = true);
     }
   }
 
   void _onFocusChange() {
-    if (_focusNode.hasFocus && _showHintLine) {
-      setState(() => _showHintLine = false);
-    }
+    if (!_focusNode.hasFocus || !_showBrackets) return;
+    setState(() => _showBrackets = false);
   }
 
   @override
@@ -118,6 +95,7 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
           widget.leading!,
           const SizedBox(width: 12),
         ],
+        if (_showBrackets) Text('[ ', style: widget.style),
         Expanded(
           child: TextField(
             controller: widget.controller,
@@ -128,15 +106,14 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
             maxLines: widget.maxLines,
             style: widget.style,
             cursorColor: widget.cursorColor,
-            decoration: BracketedTicketField.decoration(
-              showHintLine: _showHintLine && !_focusNode.hasFocus,
-              hintLineColor: widget.cursorColor ?? widget.style?.color,
+            decoration: BracketedTicketField.plainDecoration.copyWith(
               hintText: widget.hintText,
               hintStyle: hintStyle,
             ),
             onChanged: widget.onChanged,
           ),
         ),
+        if (_showBrackets) Text(' ]', style: widget.style),
       ],
     );
   }

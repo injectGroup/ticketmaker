@@ -22,7 +22,7 @@ class GenerateCubit extends Cubit<GenerateState> {
 
   static final Ticket _defaultTicket = Ticket(
     id: 'default',
-    headerLabel: 'My Ticket',
+    headerLabel: 'MY TICKET',
     title: 'Circu Du Freak',
     subtitle: 'Vision & Sound Experience',
     venue: 'National Stadium, Abuja',
@@ -35,10 +35,10 @@ class GenerateCubit extends Cubit<GenerateState> {
     eyeColor: AppColors.error,
     dataModuleColor: AppColors.warning,
     isSquare: false,
-    topGradientStart: const Color(0xE8E0405B),
-    topGradientEnd: const Color(0xE82D3436),
-    bottomGradientStart: const Color(0xE8E0405B),
-    bottomGradientEnd: const Color(0xE82D3436),
+    topGradientStart: const Color(0x554B39EF),
+    topGradientEnd: const Color(0x5539D2C0),
+    bottomGradientStart: const Color(0x554B39EF),
+    bottomGradientEnd: const Color(0x5539D2C0),
   );
 
   static const List<(Color, Color)> _qrPalettes = [
@@ -50,11 +50,11 @@ class GenerateCubit extends Cubit<GenerateState> {
   ];
 
   static const List<(Color, Color)> _bgPalettes = [
-    (Color(0xE8E0405B), Color(0xE82D3436)),
-    (Color(0xE8FF5963), Color(0xE8F9CF58)),
-    (Color(0xE839D2C0), Color(0xE82D3436)),
-    (Color(0xE8EE8B60), Color(0xE8E0405B)),
-    (Color(0xE814181B), Color(0xE857636C)),
+    (Color(0x554B39EF), Color(0x5539D2C0)),
+    (Color(0x55FF5963), Color(0x55F9CF58)),
+    (Color(0x5539D2C0), Color(0x554B39EF)),
+    (Color(0x55EE8B60), Color(0x554B39EF)),
+    (Color(0x5514181B), Color(0x5539D2C0)),
   ];
 
   static const List<String> _weekdays = [

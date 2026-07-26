@@ -45,8 +45,9 @@ void main() {
 
     expect(find.text('Quick Ticket Maker'), findsOneWidget);
     expect(find.text('Circu Du Freak'), findsOneWidget);
-    expect(find.text('Color'), findsOneWidget);
-    expect(find.text('Shape'), findsOneWidget);
+    expect(find.text('Change color'), findsOneWidget);
+    expect(find.text('Change shape'), findsOneWidget);
+    expect(find.text('Generate Qr Code'), findsOneWidget);
     expect(find.text('Save Ticket'), findsOneWidget);
 
     expect(find.text('Generate'), findsWidgets);
@@ -60,13 +61,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Quick Ticket Maker'), findsOneWidget);
-    expect(find.text('My Ticket'), findsOneWidget);
+    expect(find.text('MY TICKET'), findsOneWidget);
     expect(find.text('Circu Du Freak'), findsOneWidget);
     expect(find.text('Vision & Sound Experience'), findsOneWidget);
     expect(find.text('National Stadium, Abuja'), findsOneWidget);
     expect(find.byIcon(Icons.threed_rotation), findsNothing);
     expect(find.byIcon(Icons.place_outlined), findsOneWidget);
-    expect(find.text('Color'), findsOneWidget);
+    expect(find.text('Generate Qr Code'), findsOneWidget);
+    expect(find.text('Bg color'), findsOneWidget);
     expect(find.text('Save Ticket'), findsOneWidget);
   });
 

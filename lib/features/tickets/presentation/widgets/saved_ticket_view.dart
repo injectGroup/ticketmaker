@@ -126,10 +126,7 @@ class SavedTicketView extends StatelessWidget {
             background: _onCard.withValues(alpha: 0.14),
           ),
           const SizedBox(height: 16),
-          const TicketPerforation(
-            notchColor: AppColors.primaryBackground,
-            dashColor: Colors.white70,
-          ),
+          const TicketPerforation(),
           const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),

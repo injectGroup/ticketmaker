@@ -6,7 +6,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/auth_gate.dart';
 import '../../../tickets/presentation/bloc/tickets_cubit.dart';
 import '../bloc/generate_cubit.dart';
-import '../widgets/ticket_customize_toolbar.dart';
 import '../widgets/ticket_details_section.dart';
 import '../widgets/ticket_header_section.dart';
 import '../widgets/ticket_perforation.dart';
@@ -37,7 +36,7 @@ class _GenerateViewState extends State<_GenerateView> {
   late final TextEditingController _venueController;
   bool _isSaving = false;
 
-  /// Bumped after Save Ticket so field hint underlines return for the next ticket.
+  /// Bumped after Save Ticket so brackets return for the next ticket.
   int _ticketSession = 0;
 
   @override
@@ -64,7 +63,6 @@ class _GenerateViewState extends State<_GenerateView> {
     setState(() => _isSaving = true);
     try {
       await requireAuthThenSaveTicket(context);
-      // Bracket underlines reset for the next ticket (cubit already defaulted).
       if (mounted) {
         setState(() => _ticketSession++);
       }
@@ -98,8 +96,6 @@ class _GenerateViewState extends State<_GenerateView> {
         appBar: AppBar(
           title: const Text('Quick Ticket Maker'),
           automaticallyImplyLeading: false,
-          elevation: 0,
-          backgroundColor: AppColors.primary,
         ),
         body: MultiBlocListener(
           listeners: [
@@ -144,94 +140,41 @@ class _GenerateViewState extends State<_GenerateView> {
               },
             ),
           ],
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Sticky design chips — stay under AppBar while ticket scrolls.
-              Material(
-                color: AppColors.primaryBackground,
-                elevation: 0,
-                child: const Padding(
-                  padding: EdgeInsets.fromLTRB(12, 14, 12, 4),
-                  child: TicketCustomizeToolbar(),
-                ),
-              ),
-              Expanded(
-                child: BlocBuilder<GenerateCubit, GenerateState>(
-                  buildWhen: (previous, current) =>
-                      previous.ticket != current.ticket ||
-                      previous.imageBytes != current.imageBytes,
-                  builder: (context, state) {
-                    final ticket = state.ticket;
-                    return SingleChildScrollView(
-                      padding: EdgeInsets.fromLTRB(
-                        12,
-                        18,
-                        12,
-                        keyboardInset > 0 ? keyboardInset + 24 : 28,
-                      ),
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      child: Column(
-                        children: [
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.12),
-                                  blurRadius: 28,
-                                  offset: const Offset(0, 14),
-                                ),
-                                BoxShadow(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.08,
-                                  ),
-                                  blurRadius: 18,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(24),
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      ticket.topGradientStart,
-                                      ticket.topGradientEnd,
-                                    ],
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                  ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    TicketHeaderSection(
-                                      ticket: ticket,
-                                      headerLabelController:
-                                          _headerLabelController,
-                                      bracketResetToken: _ticketSession,
-                                    ),
-                                    const TicketPerforation(
-                                      notchColor: AppColors.primaryBackground,
-                                      dashColor: Colors.white70,
-                                    ),
-                                    TicketDetailsSection(
-                                      ticket: ticket,
-                                      titleController: _titleController,
-                                      subtitleController: _subtitleController,
-                                      venueController: _venueController,
-                                      bracketResetToken: _ticketSession,
-                                      imageBytes: state.imageBytes,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          SizedBox(
+          child: SafeArea(
+            child: ColoredBox(
+              color: AppColors.secondaryBackground,
+              child: BlocBuilder<GenerateCubit, GenerateState>(
+                buildWhen: (previous, current) =>
+                    previous.ticket != current.ticket ||
+                    previous.imageBytes != current.imageBytes,
+                builder: (context, state) {
+                  final ticket = state.ticket;
+                  return SingleChildScrollView(
+                    padding: EdgeInsets.only(
+                      bottom: keyboardInset > 0 ? keyboardInset + 24 : 28,
+                    ),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    child: Column(
+                      children: [
+                        TicketHeaderSection(
+                          ticket: ticket,
+                          headerLabelController: _headerLabelController,
+                          bracketResetToken: _ticketSession,
+                        ),
+                        const TicketPerforation(),
+                        TicketDetailsSection(
+                          ticket: ticket,
+                          titleController: _titleController,
+                          subtitleController: _subtitleController,
+                          venueController: _venueController,
+                          bracketResetToken: _ticketSession,
+                          imageBytes: state.imageBytes,
+                        ),
+                        const SizedBox(height: 24),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: SizedBox(
                             width: double.infinity,
                             child: FilledButton.icon(
                               onPressed: _isSaving ? null : _saveTicket,
@@ -250,15 +193,13 @@ class _GenerateViewState extends State<_GenerateView> {
                               ),
                             ),
                           ),
-                          // Generous space above shell bottom NavigationBar.
-                          const SizedBox(height: 20),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-            ],
+            ),
           ),
         ),
       ),

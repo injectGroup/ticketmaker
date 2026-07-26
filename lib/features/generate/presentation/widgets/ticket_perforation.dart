@@ -3,21 +3,18 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/dashed_divider.dart';
 
-/// Ticket stub with side notches and a subtle dashed tear-line.
+/// Ticket stub with white side notches and a dashed blue tear-line.
 class TicketPerforation extends StatelessWidget {
   const TicketPerforation({
     super.key,
-    this.notchColor = AppColors.primaryBackground,
-    this.bandColor,
-    this.dashColor = Colors.white70,
+    this.notchColor = AppColors.secondaryBackground,
+    this.bandColor = AppColors.secondary,
+    this.dashColor = AppColors.primary,
   });
 
-  /// Matches the page/canvas behind the pass card so cutouts look punched out.
+  /// Matches the canvas behind the pass so cutouts look punched out.
   final Color notchColor;
-
-  /// Band behind the tear-line. Null = transparent (continuous card look).
-  final Color? bandColor;
-
+  final Color bandColor;
   final Color dashColor;
 
   @override
@@ -25,7 +22,7 @@ class TicketPerforation extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: 28,
-      color: bandColor ?? Colors.transparent,
+      color: bandColor,
       child: Row(
         children: [
           Container(
@@ -43,9 +40,9 @@ class TicketPerforation extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: DashedDivider(
-                thickness: 1.5,
-                dashWidth: 5,
-                dashSpace: 5,
+                thickness: 2,
+                dashWidth: 6,
+                dashSpace: 4,
                 color: dashColor,
               ),
             ),
