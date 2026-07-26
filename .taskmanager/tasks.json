@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: restore original Generate ticket layout",
-        "taskId": "task-restore-original-generate-layout-20260726",
-        "updatedAt": "2026-07-26T19:30:00.000Z",
+        "message": "App update: modern frosted chips + gradient Generate QR CTA",
+        "taskId": "task-modernize-generate-edit-buttons-20260726",
+        "updatedAt": "2026-07-26T19:45:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -993,7 +993,20 @@
       "status": "done",
       "createdAt": "2026-07-26T19:30:00.000Z",
       "updatedAt": "2026-07-26T19:30:00.000Z"
+    },
+    {
+      "id": "task-modernize-generate-edit-buttons-20260726",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Modernize Generate edit button atomic styling",
+      "description": "Frosted glass Change color/shape chips with micro-icons; Bg color FAB ambient shadow; Generate Qr Code indigo gradient CTA. Layout positions unchanged.",
+      "details": "ticket_header_section.dart",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-26T19:45:00.000Z",
+      "updatedAt": "2026-07-26T19:45:00.000Z"
     }
   ],
-  "lastSync": "2026-07-26T19:30:00.000Z"
+  "lastSync": "2026-07-26T19:45:00.000Z"
 }

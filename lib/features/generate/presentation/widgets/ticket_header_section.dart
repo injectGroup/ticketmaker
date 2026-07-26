@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -8,8 +10,9 @@ import 'bracketed_ticket_field.dart';
 import 'generate_qr_code.dart';
 import 'top_bg_color_customizer_sheet.dart';
 
-/// FlutterFlow-style indigo used for QR control pills / primary QR action.
+/// Indigo-purple brand tint for QR edit controls.
 const Color _qrControlPurple = Color(0xFF4B39EF);
+const Color _qrControlPurpleDeep = Color(0xFF6C63FF);
 
 class TicketHeaderSection extends StatelessWidget {
   const TicketHeaderSection({
@@ -73,30 +76,20 @@ class TicketHeaderSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _ChipButton(
+                icon: Icons.palette_outlined,
                 label: 'Change color',
                 onTap: cubit.cycleQrColors,
               ),
               const SizedBox(width: 10),
               _ChipButton(
+                icon: Icons.category_outlined,
                 label: 'Change shape',
                 onTap: cubit.toggleQrShape,
               ),
             ],
           ),
           const SizedBox(height: 16),
-          FilledButton(
-            onPressed: cubit.generateTicketCode,
-            style: FilledButton.styleFrom(
-              backgroundColor: _qrControlPurple,
-              foregroundColor: Colors.white,
-              elevation: 2,
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
-              textStyle: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            child: const Text('Generate Qr Code'),
-          ),
+          _GenerateQrButton(onPressed: cubit.generateTicketCode),
           const SizedBox(height: 20),
           Text(
             '[ ${ticket.code} ]',
@@ -128,31 +121,100 @@ class TicketHeaderSection extends StatelessWidget {
 }
 
 class _ChipButton extends StatelessWidget {
-  const _ChipButton({required this.label, required this.onTap});
+  const _ChipButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
+  final IconData icon;
   final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      elevation: 1,
-      shadowColor: Colors.black26,
+    return ClipRRect(
       borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: SizedBox(
-          width: 118,
-          height: 28,
-          child: Center(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Material(
+          color: Colors.white.withValues(alpha: 0.85),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              width: 118,
+              height: 28,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.6),
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 14, color: _qrControlPurple),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      label,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: _qrControlPurple,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GenerateQrButton extends StatelessWidget {
+  const _GenerateQrButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(50),
+        gradient: const LinearGradient(
+          colors: [_qrControlPurple, _qrControlPurpleDeep],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _qrControlPurple.withValues(alpha: 0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(50),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
             child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: _qrControlPurple,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
+              'Generate Qr Code',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
               ),
             ),
           ),
@@ -172,19 +234,29 @@ class _BgColorFab extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Material(
-          color: Colors.white,
-          shape: const CircleBorder(
-            side: BorderSide(color: _qrControlPurple, width: 1.5),
+        Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
-          elevation: 2,
-          shadowColor: Colors.black26,
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: onPressed,
-            child: const Padding(
-              padding: EdgeInsets.all(12),
-              child: Icon(Icons.color_lens, color: AppColors.primaryText),
+          child: Material(
+            color: Colors.white,
+            shape: const CircleBorder(
+              side: BorderSide(color: _qrControlPurple, width: 1.5),
+            ),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: onPressed,
+              child: const Padding(
+                padding: EdgeInsets.all(12),
+                child: Icon(Icons.color_lens, color: _qrControlPurple),
+              ),
             ),
           ),
         ),
@@ -193,7 +265,8 @@ class _BgColorFab extends StatelessWidget {
           'Bg color',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: AppColors.primaryText,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.2,
           ),
         ),
       ],
