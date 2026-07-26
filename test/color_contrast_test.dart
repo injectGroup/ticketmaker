@@ -55,4 +55,23 @@ void main() {
     const fill = Color(0xFF14181B);
     expect(ColorContrast.onGradient(fill, fill), ColorContrast.onDark);
   });
+
+  test('brand dark plum default yields white ticket text', () {
+    const fill = Color(0xFF1A1A2E);
+    expect(ColorContrast.onGradient(fill, fill), ColorContrast.onDark);
+  });
+
+  test('white QR modules get dark plum pad', () {
+    expect(
+      ColorContrast.qrPadForPattern(Colors.white),
+      const Color(0xFF1A1A2E),
+    );
+  });
+
+  test('dark QR modules get white pad', () {
+    expect(
+      ColorContrast.qrPadForPattern(const Color(0xFF1A1A2E)),
+      Colors.white,
+    );
+  });
 }

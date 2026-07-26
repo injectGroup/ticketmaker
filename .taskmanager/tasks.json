@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: fix blank Hosting page after Auth startup crash",
-        "taskId": "task-fix-blank-web-startup-20260726",
-        "updatedAt": "2026-07-26T19:18:00.000Z",
+        "message": "App update: brand default ticket palette #E94560 / #1A1A2E",
+        "taskId": "task-brand-default-ticket-palette-20260726",
+        "updatedAt": "2026-07-26T19:30:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1045,7 +1045,20 @@
       "status": "done",
       "createdAt": "2026-07-26T19:15:00.000Z",
       "updatedAt": "2026-07-26T19:18:00.000Z"
+    },
+    {
+      "id": "task-brand-default-ticket-palette-20260726",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Brand default ticket preview palette (#E94560)",
+      "description": "Default card #1A1A2E; primary/accents/QR corners #E94560; white body text + QR modules on dark; auto QR pad contrast; blush preset available.",
+      "details": "app_theme; generate_cubit; color_contrast; generate_qr_code; ticket_header_section; ticket_details_section; saved_ticket_view; ticket_perforation; ticket_category_palettes",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-26T19:21:00.000Z",
+      "updatedAt": "2026-07-26T19:30:00.000Z"
     }
   ],
-  "lastSync": "2026-07-26T19:18:00.000Z"
+  "lastSync": "2026-07-26T19:30:00.000Z"
 }

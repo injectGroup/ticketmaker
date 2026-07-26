@@ -8,7 +8,7 @@ class TicketPerforation extends StatelessWidget {
   const TicketPerforation({
     super.key,
     this.notchColor = AppColors.secondaryBackground,
-    this.bandColor = AppColors.secondary,
+    this.bandColor = AppColors.brandDarkPlum,
     this.dashColor = AppColors.primary,
   });
 

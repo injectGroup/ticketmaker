@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../../../core/utils/color_contrast.dart';
+
 /// Renders a styled QR code with configurable eye/module colors and shapes.
 class GenerateQrCode extends StatelessWidget {
   const GenerateQrCode({
@@ -11,6 +13,7 @@ class GenerateQrCode extends StatelessWidget {
     required this.eyeStyleColor,
     required this.dataModuleStyleColor,
     required this.isSquare,
+    this.backgroundColor,
   });
 
   final double? width;
@@ -20,9 +23,14 @@ class GenerateQrCode extends StatelessWidget {
   final Color dataModuleStyleColor;
   final bool isSquare;
 
+  /// When null, picks a high-contrast pad from [dataModuleStyleColor].
+  final Color? backgroundColor;
+
   @override
   Widget build(BuildContext context) {
     final size = width ?? height ?? 150;
+    final pad =
+        backgroundColor ?? ColorContrast.qrPadForPattern(dataModuleStyleColor);
 
     return SizedBox(
       width: size,
@@ -30,7 +38,7 @@ class GenerateQrCode extends StatelessWidget {
       child: QrImageView(
         data: data,
         size: size,
-        backgroundColor: Colors.white,
+        backgroundColor: pad,
         eyeStyle: QrEyeStyle(
           color: eyeStyleColor,
           eyeShape: isSquare ? QrEyeShape.square : QrEyeShape.circle,

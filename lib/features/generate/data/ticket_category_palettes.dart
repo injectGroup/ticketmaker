@@ -60,11 +60,11 @@ abstract final class TicketCategoryPalettes {
   static TicketCategoryPalette forCategory(String category) {
     switch (category) {
       case music:
-        return TicketCategoryPalette(
-          eyeColor: const Color(0xFF1A1A2E),
-          dataModuleColor: const Color(0xFFE94560),
-          backgroundStart: _bg(0xFF5963),
-          backgroundEnd: _bg(0xF9CF58),
+        return const TicketCategoryPalette(
+          eyeColor: AppColors.primary,
+          dataModuleColor: Colors.white,
+          backgroundStart: AppColors.brandDarkPlum,
+          backgroundEnd: AppColors.brandDarkPlum,
         );
       case tech:
         return const TicketCategoryPalette(

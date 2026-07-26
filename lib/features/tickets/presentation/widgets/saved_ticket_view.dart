@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/color_contrast.dart';
 import '../../../../core/widgets/ticket_photo_placeholder.dart';
 import '../../../generate/domain/entities/ticket.dart';
 import '../../../generate/presentation/widgets/generate_qr_code.dart';
@@ -20,8 +21,6 @@ class SavedTicketView extends StatelessWidget {
 
   final Ticket ticket;
   final Uint8List? imageBytes;
-
-  static const Color _onCard = Colors.white;
 
   Widget _eventImage() {
     const width = 300.0;
@@ -86,6 +85,10 @@ class SavedTicketView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final onCard = ColorContrast.onGradient(
+      ticket.topGradientStart,
+      ticket.topGradientEnd,
+    );
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -106,7 +109,7 @@ class SavedTicketView extends StatelessWidget {
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: _onCard,
+                color: onCard,
               ),
             ),
           ),
@@ -122,11 +125,14 @@ class SavedTicketView extends StatelessWidget {
           const SizedBox(height: 20),
           TicketCodeBadge(
             code: ticket.code,
-            foreground: _onCard,
-            background: _onCard.withValues(alpha: 0.14),
+            foreground: onCard,
+            background: onCard.withValues(alpha: 0.14),
           ),
           const SizedBox(height: 16),
-          const TicketPerforation(),
+          const TicketPerforation(
+            bandColor: AppColors.brandDarkPlum,
+            dashColor: AppColors.primary,
+          ),
           const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -134,7 +140,7 @@ class SavedTicketView extends StatelessWidget {
               ticket.title,
               textAlign: TextAlign.center,
               style: theme.textTheme.headlineLarge?.copyWith(
-                color: _onCard,
+                color: onCard,
               ),
             ),
           ),
@@ -151,7 +157,7 @@ class SavedTicketView extends StatelessWidget {
                 ticket.subtitle,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: _onCard,
+                  color: onCard,
                 ),
               ),
             ),
@@ -160,25 +166,25 @@ class SavedTicketView extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(30, 0, 30, 8),
             child: Row(
               children: [
-                const Icon(Icons.date_range_sharp, color: _onCard, size: 24),
+                Icon(Icons.date_range_sharp, color: onCard, size: 24),
                 const SizedBox(width: 16),
                 Flexible(
                   child: Text(
                     ticket.dateLabel,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: _onCard,
+                      color: onCard,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const SizedBox(width: 16),
-                const Icon(Icons.access_time_rounded, color: _onCard, size: 24),
+                Icon(Icons.access_time_rounded, color: onCard, size: 24),
                 const SizedBox(width: 12),
                 Flexible(
                   child: Text(
                     ticket.timeLabel,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: _onCard,
+                      color: onCard,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -192,13 +198,13 @@ class SavedTicketView extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.place_outlined, color: _onCard, size: 24),
+                  Icon(Icons.place_outlined, color: onCard, size: 24),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       ticket.venue,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: _onCard,
+                        color: onCard,
                       ),
                     ),
                   ),

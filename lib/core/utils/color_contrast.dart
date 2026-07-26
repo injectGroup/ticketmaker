@@ -30,6 +30,14 @@ abstract final class ColorContrast {
     return opaque.computeLuminance() > 0.5 ? onLight : onDark;
   }
 
+  /// QR pad behind modules/eyes so patterns stay scanner-legible.
+  /// Light modules (e.g. white) sit on dark plum; dark modules on white.
+  static Color qrPadForPattern(Color dataModuleColor) {
+    return dataModuleColor.computeLuminance() > 0.5
+        ? AppColors.brandDarkPlum
+        : Colors.white;
+  }
+
   /// Contrasting color for a two-stop gradient.
   ///
   /// Prefers luminance of alpha-blended stops (what shows on [surface]).

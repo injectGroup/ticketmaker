@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/color_contrast.dart';
 import '../../data/ticket_category_palettes.dart';
 import '../../domain/entities/ticket.dart';
 
@@ -32,25 +33,28 @@ class GenerateCubit extends Cubit<GenerateState> {
     code: '1234-5678-910',
     qrData: 'https://www.linkedin.com/in/abdulkadirmohammed/',
     imagePath: '',
-    eyeColor: AppColors.error,
-    dataModuleColor: AppColors.warning,
+    // Brand pink corners + white modules on dark plum card.
+    eyeColor: AppColors.primary,
+    dataModuleColor: Colors.white,
     isSquare: false,
-    topGradientStart: const Color(0x554B39EF),
-    topGradientEnd: const Color(0x5539D2C0),
-    bottomGradientStart: const Color(0x554B39EF),
-    bottomGradientEnd: const Color(0x5539D2C0),
+    topGradientStart: AppColors.brandDarkPlum,
+    topGradientEnd: AppColors.brandDarkPlum,
+    bottomGradientStart: AppColors.brandDarkPlum,
+    bottomGradientEnd: AppColors.brandDarkPlum,
   );
 
   static const List<(Color, Color)> _qrPalettes = [
+    (AppColors.primary, Colors.white),
+    (AppColors.primary, AppColors.brandDarkPlum),
     (AppColors.error, AppColors.warning),
     (AppColors.primary, AppColors.secondary),
-    (Color(0xFF1A1A2E), Color(0xFFE94560)),
     (Color(0xFF0F3460), Color(0xFF16C79A)),
     (Color(0xFF6A0572), Color(0xFFFFB703)),
   ];
 
   static const List<(Color, Color)> _bgPalettes = [
-    (Color(0x554B39EF), Color(0x5539D2C0)),
+    (AppColors.brandDarkPlum, AppColors.brandDarkPlum),
+    (AppColors.brandBlush, AppColors.brandBlush),
     (Color(0x55FF5963), Color(0x55F9CF58)),
     (Color(0x5539D2C0), Color(0x554B39EF)),
     (Color(0x55EE8B60), Color(0x554B39EF)),
@@ -119,12 +123,12 @@ class GenerateCubit extends Cubit<GenerateState> {
 
   /// Solid / gradient presets shown in the background customizer sheet.
   static const List<Color> topBgColorPresets = [
+    AppColors.brandDarkPlum,
     AppColors.primary,
+    AppColors.brandBlush,
     AppColors.secondary,
     AppColors.error,
     AppColors.warning,
-    Color(0xFF1A1A2E),
-    Color(0xFFE94560),
     Color(0xFF0F3460),
     Color(0xFF16C79A),
     Color(0xFF6A0572),
@@ -143,12 +147,20 @@ class GenerateCubit extends Cubit<GenerateState> {
   }
 
   /// Applies the same solid/gradient to both ticket halves.
+  /// Syncs QR corners to brand pink and modules to high-contrast white/dark.
   void setTopBackgroundGradient({required Color start, required Color end}) {
     final ticket = state.ticket;
+    final onFg = ColorContrast.onGradient(start, end);
+    final darkCard = onFg == ColorContrast.onDark;
+    final eye = AppColors.primary;
+    final modules = darkCard ? Colors.white : AppColors.brandDarkPlum;
+
     if (ticket.topGradientStart.toARGB32() == start.toARGB32() &&
         ticket.topGradientEnd.toARGB32() == end.toARGB32() &&
         ticket.bottomGradientStart.toARGB32() == start.toARGB32() &&
-        ticket.bottomGradientEnd.toARGB32() == end.toARGB32()) {
+        ticket.bottomGradientEnd.toARGB32() == end.toARGB32() &&
+        ticket.eyeColor.toARGB32() == eye.toARGB32() &&
+        ticket.dataModuleColor.toARGB32() == modules.toARGB32()) {
       return;
     }
     emit(
@@ -158,6 +170,8 @@ class GenerateCubit extends Cubit<GenerateState> {
           topGradientEnd: end,
           bottomGradientStart: start,
           bottomGradientEnd: end,
+          eyeColor: eye,
+          dataModuleColor: modules,
         ),
       ),
     );

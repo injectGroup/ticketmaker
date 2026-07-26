@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/color_contrast.dart';
 import '../../../../core/widgets/ticket_photo_placeholder.dart';
 import '../../../tickets/data/ticket_image_store.dart';
 import '../../domain/entities/ticket.dart';
@@ -158,7 +159,10 @@ class TicketDetailsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cubit = context.read<GenerateCubit>();
-    final onText = AppColors.primaryText;
+    final onText = ColorContrast.onGradient(
+      ticket.topGradientStart,
+      ticket.topGradientEnd,
+    );
 
     return Container(
       width: double.infinity,

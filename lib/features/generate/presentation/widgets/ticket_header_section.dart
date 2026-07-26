@@ -4,14 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/color_contrast.dart';
 import '../../domain/entities/ticket.dart';
 import '../bloc/generate_cubit.dart';
 import 'bracketed_ticket_field.dart';
 import 'generate_qr_code.dart';
 import 'top_bg_color_customizer_sheet.dart';
-
-/// Indigo-purple brand tint for QR edit chips.
-const Color _qrControlPurple = Color(0xFF4B39EF);
 
 class TicketHeaderSection extends StatelessWidget {
   const TicketHeaderSection({
@@ -29,9 +27,14 @@ class TicketHeaderSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cubit = context.read<GenerateCubit>();
+    final onText = ColorContrast.onGradient(
+      ticket.topGradientStart,
+      ticket.topGradientEnd,
+    );
+    final onMuted = onText.withValues(alpha: 0.72);
     final labelStyle = theme.textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.w800,
-      color: AppColors.primaryText,
+      color: onText,
       letterSpacing: 0.4,
     );
 
@@ -56,7 +59,7 @@ class TicketHeaderSection extends StatelessWidget {
               minLines: 1,
               maxLines: 2,
               style: labelStyle,
-              cursorColor: AppColors.primaryText,
+              cursorColor: onText,
               hintText: 'Pass title',
               onChanged: cubit.updateHeaderLabel,
             ),
@@ -93,7 +96,7 @@ class TicketHeaderSection extends StatelessWidget {
           Text(
             '[ ${ticket.code} ]',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.primaryText,
+              color: onText,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.4,
             ),
@@ -101,7 +104,7 @@ class TicketHeaderSection extends StatelessWidget {
           const SizedBox(height: 4),
           Icon(
             Icons.info_outline_rounded,
-            color: AppColors.secondaryText,
+            color: onMuted,
             size: 24,
           ),
           Align(
@@ -110,6 +113,7 @@ class TicketHeaderSection extends StatelessWidget {
               padding: const EdgeInsets.only(right: 20, top: 8, bottom: 12),
               child: _BgColorFab(
                 onPressed: () => TopBgColorCustomizerSheet.show(context),
+                labelColor: onText,
               ),
             ),
           ),
@@ -154,14 +158,14 @@ class _ChipButton extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, size: 14, color: _qrControlPurple),
+                  Icon(icon, size: 14, color: AppColors.primary),
                   const SizedBox(width: 4),
                   Flexible(
                     child: Text(
                       label,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: _qrControlPurple,
+                        color: AppColors.primary,
                         fontWeight: FontWeight.w600,
                         fontSize: 12,
                         letterSpacing: 0.3,
@@ -183,22 +187,15 @@ class _GenerateQrButton extends StatelessWidget {
 
   final VoidCallback onPressed;
 
-  static const Color _indigo = Color(0xFF6366F1);
-  static const Color _violet = Color(0xFF8B5CF6);
-
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
-          colors: [_indigo, _violet],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
+        color: AppColors.primary,
         boxShadow: [
           BoxShadow(
-            color: _indigo.withValues(alpha: 0.4),
+            color: AppColors.primary.withValues(alpha: 0.4),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -227,9 +224,13 @@ class _GenerateQrButton extends StatelessWidget {
 }
 
 class _BgColorFab extends StatelessWidget {
-  const _BgColorFab({required this.onPressed});
+  const _BgColorFab({
+    required this.onPressed,
+    required this.labelColor,
+  });
 
   final VoidCallback onPressed;
+  final Color labelColor;
 
   @override
   Widget build(BuildContext context) {
@@ -275,7 +276,7 @@ class _BgColorFab extends StatelessWidget {
                             fit: BoxFit.cover,
                             errorBuilder: (_, _, _) => const Icon(
                               Icons.confirmation_number_rounded,
-                              color: Color(0xFF6366F1),
+                              color: AppColors.primary,
                               size: 26,
                             ),
                           ),
@@ -299,7 +300,7 @@ class _BgColorFab extends StatelessWidget {
                             child: const Icon(
                               Icons.palette_rounded,
                               size: 12,
-                              color: Color(0xFF6366F1),
+                              color: AppColors.primary,
                             ),
                           ),
                         ),
@@ -315,7 +316,7 @@ class _BgColorFab extends StatelessWidget {
         Text(
           'Bg color',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.primaryText,
+            color: labelColor,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.2,
           ),
