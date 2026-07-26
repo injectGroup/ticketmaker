@@ -9,6 +9,7 @@ import '../../domain/entities/ticket.dart';
 import '../bloc/generate_cubit.dart';
 import 'bracketed_ticket_field.dart';
 import 'generate_qr_code.dart';
+import 'ticket_code_badge.dart';
 import 'top_bg_color_customizer_sheet.dart';
 
 class TicketHeaderSection extends StatelessWidget {
@@ -31,7 +32,6 @@ class TicketHeaderSection extends StatelessWidget {
       ticket.topGradientStart,
       ticket.topGradientEnd,
     );
-    final onMuted = onText.withValues(alpha: 0.72);
     final labelStyle = theme.textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.w800,
       color: onText,
@@ -93,24 +93,16 @@ class TicketHeaderSection extends StatelessWidget {
           const SizedBox(height: 16),
           _GenerateQrButton(onPressed: cubit.generateTicketCode),
           const SizedBox(height: 20),
-          Text(
-            '[ ${ticket.code} ]',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: onText,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.4,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Icon(
-            Icons.info_outline_rounded,
-            color: onMuted,
-            size: 24,
+          TicketCodeBadge(
+            code: ticket.code,
+            foreground: onText,
+            background: Colors.white.withValues(alpha: 0.16),
+            showInfo: true,
           ),
           Align(
             alignment: Alignment.centerRight,
             child: Padding(
-              padding: const EdgeInsets.only(right: 20, top: 8, bottom: 12),
+              padding: const EdgeInsets.only(right: 20, top: 12, bottom: 12),
               child: _BgColorFab(
                 onPressed: () => TopBgColorCustomizerSheet.show(context),
                 labelColor: onText,
@@ -134,47 +126,45 @@ class _ChipButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
+  static const Color _chipBg = Color(0xFFF8F9FA);
+  static const Color _chipBorder = Color(0xFFE2E8F0);
+
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
+    return Material(
+      color: _chipBg,
+      elevation: 2,
+      shadowColor: Colors.black.withValues(alpha: 0.12),
       borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Material(
-          color: Colors.white.withValues(alpha: 0.85),
-          child: InkWell(
-            onTap: onTap,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          width: 118,
+          height: 28,
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            child: Container(
-              width: 118,
-              height: 28,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.6),
+            border: Border.all(color: _chipBorder),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 14, color: AppColors.primary),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                    letterSpacing: 0.3,
+                  ),
                 ),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, size: 14, color: AppColors.primary),
-                  const SizedBox(width: 4),
-                  Flexible(
-                    child: Text(
-                      label,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
         ),
       ),

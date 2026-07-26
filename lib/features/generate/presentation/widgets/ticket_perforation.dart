@@ -7,14 +7,16 @@ import '../../../../core/widgets/dashed_divider.dart';
 class TicketPerforation extends StatelessWidget {
   const TicketPerforation({
     super.key,
-    this.notchColor = AppColors.secondaryBackground,
+    this.notchColor = const Color(0xFFF8FAFC),
     this.bandColor = AppColors.brandDarkPlum,
-    this.dashColor = AppColors.primary,
+    this.dashColor = const Color(0xFFCBD5E1),
   });
 
   /// Matches the canvas behind the pass so cutouts look punched out.
   final Color notchColor;
   final Color bandColor;
+
+  /// Soft slate dashed tear-line.
   final Color dashColor;
 
   @override

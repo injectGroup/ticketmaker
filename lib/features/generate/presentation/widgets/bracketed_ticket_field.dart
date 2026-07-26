@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Ticket text field that shows decorative `[ ]` until the user starts editing.
-/// Brackets return when [resetToken] changes (e.g. after Save Ticket).
+import '../../../../core/theme/app_theme.dart';
+
+/// Ticket text field with a modern section badge (light-pink tag + • •)
+/// until the user starts editing. Badge returns when [resetToken] changes.
 class BracketedTicketField extends StatefulWidget {
   const BracketedTicketField({
     super.key,
@@ -21,7 +23,7 @@ class BracketedTicketField extends StatefulWidget {
   final TextStyle? style;
   final ValueChanged<String> onChanged;
 
-  /// When this value changes (e.g. after Save Ticket), brackets show again.
+  /// When this value changes (e.g. after Save Ticket), badge shows again.
   final Object? resetToken;
 
   final TextAlign textAlign;
@@ -52,7 +54,7 @@ class BracketedTicketField extends StatefulWidget {
 
 class _BracketedTicketFieldState extends State<BracketedTicketField> {
   late final FocusNode _focusNode;
-  bool _showBrackets = true;
+  bool _showBadge = true;
 
   @override
   void initState() {
@@ -65,13 +67,13 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
   void didUpdateWidget(covariant BracketedTicketField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.resetToken != widget.resetToken) {
-      setState(() => _showBrackets = true);
+      setState(() => _showBadge = true);
     }
   }
 
   void _onFocusChange() {
-    if (!_focusNode.hasFocus || !_showBrackets) return;
-    setState(() => _showBrackets = false);
+    if (!_focusNode.hasFocus || !_showBadge) return;
+    setState(() => _showBadge = false);
   }
 
   @override
@@ -83,10 +85,54 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
 
   @override
   Widget build(BuildContext context) {
-    final hintStyle = widget.style?.copyWith(
-      color: widget.style?.color?.withValues(alpha: 0.45),
+    final baseStyle = widget.style;
+    final hintStyle = baseStyle?.copyWith(
+      color: baseStyle.color?.withValues(alpha: 0.45),
       fontWeight: FontWeight.w400,
     );
+    final bulletStyle = baseStyle?.copyWith(
+      color: AppColors.primary.withValues(alpha: 0.85),
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0,
+    );
+
+    final field = TextField(
+      controller: widget.controller,
+      focusNode: _focusNode,
+      textAlign: widget.textAlign,
+      textAlignVertical: TextAlignVertical.center,
+      minLines: widget.minLines,
+      maxLines: widget.maxLines,
+      style: baseStyle,
+      cursorColor: widget.cursorColor,
+      decoration: BracketedTicketField.plainDecoration.copyWith(
+        hintText: widget.hintText,
+        hintStyle: hintStyle,
+      ),
+      onChanged: widget.onChanged,
+    );
+
+    final content = _showBadge
+        ? Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFCE7EC),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.18),
+              ),
+            ),
+            child: Row(
+              children: [
+                Text('•', style: bulletStyle),
+                const SizedBox(width: 8),
+                Expanded(child: field),
+                const SizedBox(width: 8),
+                Text('•', style: bulletStyle),
+              ],
+            ),
+          )
+        : Row(children: [Expanded(child: field)]);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -95,25 +141,7 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
           widget.leading!,
           const SizedBox(width: 12),
         ],
-        if (_showBrackets) Text('[ ', style: widget.style),
-        Expanded(
-          child: TextField(
-            controller: widget.controller,
-            focusNode: _focusNode,
-            textAlign: widget.textAlign,
-            textAlignVertical: TextAlignVertical.center,
-            minLines: widget.minLines,
-            maxLines: widget.maxLines,
-            style: widget.style,
-            cursorColor: widget.cursorColor,
-            decoration: BracketedTicketField.plainDecoration.copyWith(
-              hintText: widget.hintText,
-              hintStyle: hintStyle,
-            ),
-            onChanged: widget.onChanged,
-          ),
-        ),
-        if (_showBrackets) Text(' ]', style: widget.style),
+        Expanded(child: content),
       ],
     );
   }

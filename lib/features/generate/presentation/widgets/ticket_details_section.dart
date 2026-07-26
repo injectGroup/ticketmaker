@@ -299,7 +299,7 @@ class TicketDetailsSection extends StatelessWidget {
                       const SizedBox(width: 12),
                       Flexible(
                         child: Text(
-                          '[ ${ticket.dateLabel} ]',
+                          ticket.dateLabel,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: onText,
                             fontWeight: FontWeight.w600,
@@ -312,7 +312,7 @@ class TicketDetailsSection extends StatelessWidget {
                       const SizedBox(width: 10),
                       Flexible(
                         child: Text(
-                          '[ ${ticket.timeLabel} ]',
+                          ticket.timeLabel,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: onText,
                             fontWeight: FontWeight.w600,

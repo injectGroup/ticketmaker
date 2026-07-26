@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/color_contrast.dart';
 import '../../../../core/widgets/ticket_photo_placeholder.dart';
 import '../../../generate/domain/entities/ticket.dart';
@@ -129,10 +128,7 @@ class SavedTicketView extends StatelessWidget {
             background: onCard.withValues(alpha: 0.14),
           ),
           const SizedBox(height: 16),
-          const TicketPerforation(
-            bandColor: AppColors.brandDarkPlum,
-            dashColor: AppColors.primary,
-          ),
+          const TicketPerforation(),
           const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),

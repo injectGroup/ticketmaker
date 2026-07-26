@@ -2,7 +2,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/auth_gate.dart';
 import '../../../tickets/presentation/bloc/tickets_cubit.dart';
 import '../bloc/generate_cubit.dart';
@@ -92,7 +91,7 @@ class _GenerateViewState extends State<_GenerateView> {
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
-        backgroundColor: AppColors.primaryBackground,
+        backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
           title: const Text('Quick Ticket Maker'),
           automaticallyImplyLeading: false,
@@ -142,7 +141,7 @@ class _GenerateViewState extends State<_GenerateView> {
           ],
           child: SafeArea(
             child: ColoredBox(
-              color: AppColors.secondaryBackground,
+              color: const Color(0xFFF8FAFC),
               child: BlocBuilder<GenerateCubit, GenerateState>(
                 buildWhen: (previous, current) =>
                     previous.ticket != current.ticket ||
@@ -151,58 +150,83 @@ class _GenerateViewState extends State<_GenerateView> {
                   final ticket = state.ticket;
                   return SingleChildScrollView(
                     padding: EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      top: 12,
                       bottom: keyboardInset > 0 ? keyboardInset + 24 : 28,
                     ),
                     keyboardDismissBehavior:
                         ScrollViewKeyboardDismissBehavior.onDrag,
                     child: Column(
                       children: [
-                        TicketHeaderSection(
-                          ticket: ticket,
-                          headerLabelController: _headerLabelController,
-                          bracketResetToken: _ticketSession,
-                        ),
-                        const TicketPerforation(),
-                        TicketDetailsSection(
-                          ticket: ticket,
-                          titleController: _titleController,
-                          subtitleController: _subtitleController,
-                          venueController: _venueController,
-                          bracketResetToken: _ticketSession,
-                          imageBytes: state.imageBytes,
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 28,
+                                offset: const Offset(0, 12),
+                              ),
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: Column(
+                              children: [
+                                TicketHeaderSection(
+                                  ticket: ticket,
+                                  headerLabelController:
+                                      _headerLabelController,
+                                  bracketResetToken: _ticketSession,
+                                ),
+                                const TicketPerforation(),
+                                TicketDetailsSection(
+                                  ticket: ticket,
+                                  titleController: _titleController,
+                                  subtitleController: _subtitleController,
+                                  venueController: _venueController,
+                                  bracketResetToken: _ticketSession,
+                                  imageBytes: state.imageBytes,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 24),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: 52,
-                            child: FilledButton.icon(
-                              onPressed: _isSaving ? null : _saveTicket,
-                              style: FilledButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                textStyle: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.3,
-                                ),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: FilledButton.icon(
+                            onPressed: _isSaving ? null : _saveTicket,
+                            style: FilledButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
                               ),
-                              icon: _isSaving
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Icon(
-                                      Icons.confirmation_number_outlined,
+                              textStyle: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                            icon: _isSaving
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
                                     ),
-                              label: Text(
-                                _isSaving ? 'Saving…' : 'Save Ticket',
-                              ),
+                                  )
+                                : const Icon(
+                                    Icons.confirmation_number_outlined,
+                                  ),
+                            label: Text(
+                              _isSaving ? 'Saving…' : 'Save Ticket',
                             ),
                           ),
                         ),

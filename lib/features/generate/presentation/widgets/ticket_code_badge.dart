@@ -10,11 +10,15 @@ class TicketCodeBadge extends StatelessWidget {
     required this.code,
     this.foreground,
     this.background,
+    this.showInfo = false,
   });
 
   final String code;
   final Color? foreground;
   final Color? background;
+
+  /// Places an info icon inside the pill beside the code.
+  final bool showInfo;
 
   Future<void> _copy(BuildContext context) async {
     await Clipboard.setData(ClipboardData(text: code));
@@ -27,16 +31,21 @@ class TicketCodeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fg = foreground ?? AppColors.primaryText;
-    final bg = background ?? AppColors.primary.withValues(alpha: 0.14);
+    final bg = background ?? const Color(0xFFF1F5F9);
 
     return Material(
       color: bg,
+      elevation: 0,
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: () => _copy(context),
         borderRadius: BorderRadius.circular(20),
-        child: Padding(
+        child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: fg.withValues(alpha: 0.22)),
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -50,7 +59,19 @@ class TicketCodeBadge extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(Icons.copy_rounded, size: 16, color: fg.withValues(alpha: 0.85)),
+              Icon(
+                Icons.copy_rounded,
+                size: 15,
+                color: fg.withValues(alpha: 0.75),
+              ),
+              if (showInfo) ...[
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.info_outline_rounded,
+                  size: 16,
+                  color: fg.withValues(alpha: 0.7),
+                ),
+              ],
             ],
           ),
         ),
