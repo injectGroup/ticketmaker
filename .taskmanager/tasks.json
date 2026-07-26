@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: modern frosted chips + gradient Generate QR CTA",
-        "taskId": "task-modernize-generate-edit-buttons-20260726",
-        "updatedAt": "2026-07-26T19:45:00.000Z",
+        "message": "App update: modern Generate QR/Bg/Save/Change controls",
+        "taskId": "task-modernize-four-controls-20260726",
+        "updatedAt": "2026-07-26T19:55:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1006,7 +1006,20 @@
       "status": "done",
       "createdAt": "2026-07-26T19:45:00.000Z",
       "updatedAt": "2026-07-26T19:45:00.000Z"
+    },
+    {
+      "id": "task-modernize-four-controls-20260726",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Modernize Generate QR, Bg FAB, Save, and Change photo controls",
+      "description": "Indigo-violet Generate QR CTA; frosted Bg FAB with logo + palette badge; full-width Save pill; glass Change photo badge. Positions unchanged.",
+      "details": "ticket_header_section; ticket_details_section; generate_page; assets/images/app_logo_mark.png",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-26T19:55:00.000Z",
+      "updatedAt": "2026-07-26T19:55:00.000Z"
     }
   ],
-  "lastSync": "2026-07-26T19:45:00.000Z"
+  "lastSync": "2026-07-26T19:55:00.000Z"
 }

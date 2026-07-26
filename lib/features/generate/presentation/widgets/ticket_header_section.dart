@@ -10,9 +10,8 @@ import 'bracketed_ticket_field.dart';
 import 'generate_qr_code.dart';
 import 'top_bg_color_customizer_sheet.dart';
 
-/// Indigo-purple brand tint for QR edit controls.
+/// Indigo-purple brand tint for QR edit chips.
 const Color _qrControlPurple = Color(0xFF4B39EF);
-const Color _qrControlPurpleDeep = Color(0xFF6C63FF);
 
 class TicketHeaderSection extends StatelessWidget {
   const TicketHeaderSection({
@@ -184,21 +183,24 @@ class _GenerateQrButton extends StatelessWidget {
 
   final VoidCallback onPressed;
 
+  static const Color _indigo = Color(0xFF6366F1);
+  static const Color _violet = Color(0xFF8B5CF6);
+
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(50),
+        borderRadius: BorderRadius.circular(28),
         gradient: const LinearGradient(
-          colors: [_qrControlPurple, _qrControlPurpleDeep],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          colors: [_indigo, _violet],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: _qrControlPurple.withValues(alpha: 0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: _indigo.withValues(alpha: 0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -206,7 +208,7 @@ class _GenerateQrButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onPressed,
-          borderRadius: BorderRadius.circular(50),
+          borderRadius: BorderRadius.circular(28),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
             child: Text(
@@ -214,7 +216,7 @@ class _GenerateQrButton extends StatelessWidget {
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w700,
-                letterSpacing: 0.2,
+                letterSpacing: 0.8,
               ),
             ),
           ),
@@ -240,22 +242,71 @@ class _BgColorFab extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 16,
+                blurRadius: 18,
                 offset: const Offset(0, 6),
               ),
             ],
           ),
-          child: Material(
-            color: Colors.white,
-            shape: const CircleBorder(
-              side: BorderSide(color: _qrControlPurple, width: 1.5),
-            ),
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: onPressed,
-              child: const Padding(
-                padding: EdgeInsets.all(12),
-                child: Icon(Icons.color_lens, color: _qrControlPurple),
+          child: ClipOval(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: Material(
+                color: Colors.white.withValues(alpha: 0.85),
+                shape: CircleBorder(
+                  side: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.6),
+                  ),
+                ),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: onPressed,
+                  child: SizedBox(
+                    width: 52,
+                    height: 52,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      clipBehavior: Clip.none,
+                      children: [
+                        ClipOval(
+                          child: Image.asset(
+                            'assets/images/app_logo_mark.png',
+                            width: 28,
+                            height: 28,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => const Icon(
+                              Icons.confirmation_number_rounded,
+                              color: Color(0xFF6366F1),
+                              size: 26,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          right: 2,
+                          bottom: 2,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.95),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.palette_rounded,
+                              size: 12,
+                              color: Color(0xFF6366F1),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

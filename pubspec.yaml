@@ -40,3 +40,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/ticket_event_placeholder.png
+    - assets/images/app_logo_mark.png

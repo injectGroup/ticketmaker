@@ -176,8 +176,18 @@ class _GenerateViewState extends State<_GenerateView> {
                           padding: const EdgeInsets.symmetric(horizontal: 24),
                           child: SizedBox(
                             width: double.infinity,
+                            height: 52,
                             child: FilledButton.icon(
                               onPressed: _isSaving ? null : _saveTicket,
+                              style: FilledButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                textStyle: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
                               icon: _isSaving
                                   ? const SizedBox(
                                       width: 18,
@@ -187,7 +197,9 @@ class _GenerateViewState extends State<_GenerateView> {
                                         color: Colors.white,
                                       ),
                                     )
-                                  : const Icon(Icons.save_outlined),
+                                  : const Icon(
+                                      Icons.confirmation_number_outlined,
+                                    ),
                               label: Text(
                                 _isSaving ? 'Saving…' : 'Save Ticket',
                               ),

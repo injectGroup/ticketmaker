@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -213,20 +214,47 @@ class TicketDetailsSection extends StatelessWidget {
                 Positioned(
                   top: 8,
                   right: 8,
-                  child: Material(
-                    color: Colors.white,
-                    shape: const CircleBorder(
-                      side: BorderSide(color: Color(0xFF4B39EF), width: 1.5),
-                    ),
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: () => _pickGalleryImage(context),
-                      child: const Padding(
-                        padding: EdgeInsets.all(8),
-                        child: Icon(
-                          Icons.insert_photo,
-                          color: AppColors.primaryText,
-                          size: 22,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Material(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        child: InkWell(
+                          onTap: () => _pickGalleryImage(context),
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.photo_camera_outlined,
+                                  size: 16,
+                                  color: AppColors.primaryText,
+                                ),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Change',
+                                  style: TextStyle(
+                                    color: AppColors.primaryText,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
