@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: modern Generate QR/Bg/Save/Change controls",
-        "taskId": "task-modernize-four-controls-20260726",
-        "updatedAt": "2026-07-26T19:55:00.000Z",
+        "message": "App update: Firebase Auth web persistence + Hosting redeploy for Sign Up",
+        "taskId": "task-fix-firebase-auth-signup-console-20260726",
+        "updatedAt": "2026-07-26T19:12:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1019,7 +1019,20 @@
       "status": "done",
       "createdAt": "2026-07-26T19:55:00.000Z",
       "updatedAt": "2026-07-26T19:55:00.000Z"
+    },
+    {
+      "id": "task-fix-firebase-auth-signup-console-20260726",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Fix Firebase Auth Sign Up/Sign In on web",
+      "description": "Confirmed Email/Password + authorized domains for quick-ticket-maker-sandbox; lazy Auth/GoogleSignIn init; web Persistence.LOCAL; clearer channel-error copy; rebuilt and redeployed Hosting.",
+      "details": "Firebase Console Email/Password + authorized domains; auth_repository.dart; main.dart; flutter build web --pwa-strategy=none; firebase deploy --only hosting",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-26T19:06:00.000Z",
+      "updatedAt": "2026-07-26T19:12:00.000Z"
     }
   ],
-  "lastSync": "2026-07-26T19:55:00.000Z"
+  "lastSync": "2026-07-26T19:12:00.000Z"
 }

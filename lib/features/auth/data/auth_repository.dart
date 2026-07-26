@@ -50,22 +50,30 @@ class FirebaseAuthRepository implements AuthRepository {
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
     GoogleSignIn? googleSignIn,
-  }) : _auth = auth ?? FirebaseAuth.instance,
-       _firestore = firestore ?? FirebaseFirestore.instance,
-       _googleSignIn = googleSignIn ?? GoogleSignIn.instance;
+  }) : _authOverride = auth,
+       _firestoreOverride = firestore,
+       _googleSignInOverride = googleSignIn;
 
   /// iOS OAuth client from GoogleService-Info.plist `CLIENT_ID`.
   static const _googleIosClientId =
       '107781542059-s9csu7kamfsavn0n0c30eda68ikrgma6.apps.googleusercontent.com';
 
   /// Web OAuth client from google-services.json (client_type 3) — used as
-  /// `serverClientId` so Google returns an ID token for Firebase Auth.
+  /// `serverClientId` so Android/iOS can obtain an ID token for Firebase Auth.
   static const _googleWebClientId =
       '107781542059-j20t5d1kggv1lkfek3s6nti1lduojoo3.apps.googleusercontent.com';
 
-  final FirebaseAuth _auth;
-  final FirebaseFirestore _firestore;
-  final GoogleSignIn _googleSignIn;
+  final FirebaseAuth? _authOverride;
+  final FirebaseFirestore? _firestoreOverride;
+  final GoogleSignIn? _googleSignInOverride;
+
+  // Lazy so constructing AuthCubit on web does not touch optional plugins early.
+  FirebaseAuth get _auth => _authOverride ?? FirebaseAuth.instance;
+  FirebaseFirestore get _firestore =>
+      _firestoreOverride ?? FirebaseFirestore.instance;
+  GoogleSignIn get _googleSignIn =>
+      _googleSignInOverride ?? GoogleSignIn.instance;
+
   bool _googleInitialized = false;
 
   CollectionReference<Map<String, dynamic>> get _users =>
@@ -407,15 +415,16 @@ class FirebaseAuthRepository implements AuthRepository {
       case 'operation-not-allowed':
         return 'This sign-in method is not enabled in Firebase Console.';
       case 'channel-error':
-        // FlutterFire surfaces the pigeon method name here; never show that.
+        // FlutterFire may surface pigeon channel failures on misconfigured web.
         return 'Could not reach Firebase Auth. Enable Email/Password in '
-            'Firebase Console and confirm this domain is authorized.';
+            'Firebase Console, authorize this domain, then hard-refresh '
+            '(Cmd+Shift+R) and try again.';
       default:
         final message = e.message?.trim() ?? '';
         if (message.isEmpty || message.contains('FirebaseAuthHostApi')) {
-          return 'Authentication failed. Try again.';
+          return 'Authentication failed (${e.code}). Try again.';
         }
-        return message;
+        return '$message (${e.code})';
     }
   }
 
@@ -428,7 +437,8 @@ class FirebaseAuthRepository implements AuthRepository {
     if (text.contains('channel-error') ||
         text.contains('FirebaseAuthHostApi')) {
       return 'Could not reach Firebase Auth. Enable Email/Password in '
-          'Firebase Console and confirm this domain is authorized.';
+          'Firebase Console, authorize this domain, then hard-refresh '
+          '(Cmd+Shift+R) and try again.';
     }
     return fallback;
   }
