@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../generate/domain/entities/ticket.dart';
 import '../../data/ticket_share_helper.dart';
-import '../bloc/tickets_cubit.dart';
 import '../pages/tickets_page.dart';
 
 /// List card for a persisted ticket, with a native share action.
@@ -27,13 +25,12 @@ class SavedTicketCard extends StatelessWidget {
 
   Future<void> _share(BuildContext buttonContext) async {
     try {
-      final bytes =
-          buttonContext.read<TicketsCubit>().state.imageBytesFor(ticket.id);
+      // List cards are summary rows only — no ticket RepaintBoundary.
       await TicketShareHelper.share(
         buttonContext,
         ticket,
         sharePositionOrigin: TicketShareHelper.shareOriginFrom(buttonContext),
-        imageBytes: bytes,
+        allowOffscreenCapture: false,
       );
     } catch (e, st) {
       debugPrint('SavedTicketCard share failed: $e\n$st');
@@ -42,7 +39,7 @@ class SavedTicketCard extends StatelessWidget {
         ..hideCurrentSnackBar()
         ..showSnackBar(
           const SnackBar(
-            content: Text('Could not prepare ticket image to share.'),
+            content: Text('Could not share ticket. Try again.'),
           ),
         );
     }

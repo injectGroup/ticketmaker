@@ -44,8 +44,9 @@ class TicketShareHelper {
     double pixelRatio = 1.5,
     int quality = 72,
   }) async {
-    final boundary =
-        boundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    final context = boundaryKey.currentContext;
+    if (context == null) return null;
+    final boundary = context.findRenderObject() as RenderRepaintBoundary?;
     if (boundary == null) return null;
     if (!boundary.hasSize ||
         boundary.size.width <= 0 ||
@@ -72,8 +73,9 @@ class TicketShareHelper {
     GlobalKey boundaryKey, {
     double pixelRatio = 2,
   }) async {
-    final boundary =
-        boundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    final context = boundaryKey.currentContext;
+    if (context == null) return null;
+    final boundary = context.findRenderObject() as RenderRepaintBoundary?;
     if (boundary == null) return null;
     if (!boundary.hasSize ||
         boundary.size.width <= 0 ||
@@ -96,10 +98,12 @@ class TicketShareHelper {
     }
   }
 
-  /// Shares [ticket] as a JPEG (plus caption on native).
+  /// Shares [ticket] as a JPEG when a painted [boundaryKey] or [imageBytes]
+  /// is available; otherwise shares/copies the ticket text or link.
   ///
-  /// Prefers cached [imageBytes] (list items are not painted as tickets), then
-  /// an on-screen [boundaryKey], then an offscreen [SavedTicketView] capture.
+  /// List cards pass [allowOffscreenCapture] `false` — they do not paint a
+  /// full ticket [RepaintBoundary], so JPEG capture is skipped to avoid
+  /// web [LateInitializationError] from offscreen `toImage`.
   ///
   /// **Web:** tries Web Share via [SharePlus]; on failure / unsupported,
   /// falls back to an HTML blob download of `ticket.jpg`, then copying a
@@ -110,6 +114,7 @@ class TicketShareHelper {
     GlobalKey? boundaryKey,
     Rect? sharePositionOrigin,
     Uint8List? imageBytes,
+    bool allowOffscreenCapture = true,
   }) async {
     final messenger = ScaffoldMessenger.maybeOf(context);
     messenger
@@ -130,31 +135,17 @@ class TicketShareHelper {
         ticket,
         boundaryKey: boundaryKey,
         imageBytes: imageBytes,
+        allowOffscreenCapture: allowOffscreenCapture,
       );
       if (!context.mounted) return;
 
       if (jpegBytes == null || jpegBytes.isEmpty) {
-        if (kIsWeb) {
-          final copied = await _copyShareableFallback(ticket);
-          if (!context.mounted) return;
-          messenger
-            ?..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text(
-                  copied
-                      ? 'Ticket link copied to clipboard'
-                      : _prepareFailedMessage,
-                ),
-              ),
-            );
-          return;
-        }
-        messenger
-          ?..hideCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(content: Text(_prepareFailedMessage)),
-          );
+        await _shareTextOrCopyLink(
+          context,
+          ticket,
+          origin: origin,
+          messenger: messenger,
+        );
         return;
       }
 
@@ -207,19 +198,12 @@ class TicketShareHelper {
             debugPrint('Web download fallback failed: $downloadError\n$downloadSt');
           }
         }
-        final copied = await _copyShareableFallback(ticket);
-        if (!context.mounted) return;
-        messenger
-          ?..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(
-                copied
-                    ? 'Ticket link copied to clipboard'
-                    : _friendlyErrorMessage(e),
-              ),
-            ),
-          );
+        await _shareTextOrCopyLink(
+          context,
+          ticket,
+          origin: origin,
+          messenger: messenger,
+        );
         return;
       }
 
@@ -229,6 +213,62 @@ class TicketShareHelper {
           SnackBar(content: Text(_friendlyErrorMessage(e))),
         );
     }
+  }
+
+  /// List / no-image path: native share sheet with text, or clipboard on web.
+  static Future<void> _shareTextOrCopyLink(
+    BuildContext context,
+    Ticket ticket, {
+    required Rect origin,
+    ScaffoldMessengerState? messenger,
+  }) async {
+    final text = _linkOrShareText(ticket);
+
+    if (kIsWeb) {
+      final copied = await _copyShareableFallback(ticket);
+      if (!context.mounted) return;
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              copied
+                  ? 'Ticket link copied to clipboard'
+                  : _prepareFailedMessage,
+            ),
+          ),
+        );
+      return;
+    }
+
+    try {
+      await SharePlus.instance.share(
+        ShareParams(
+          text: text,
+          subject: _subject,
+          sharePositionOrigin: origin,
+        ),
+      );
+      if (!context.mounted) return;
+      messenger?.hideCurrentSnackBar();
+    } catch (e, st) {
+      debugPrint('Text share failed: $e\n$st');
+      if (!context.mounted) return;
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text(_shareFailedMessage)),
+        );
+    }
+  }
+
+  static String _linkOrShareText(Ticket ticket) {
+    final qr = ticket.qrData.trim();
+    if (qr.startsWith('http://') || qr.startsWith('https://')) {
+      final caption = _shareTextFor(ticket);
+      return '$caption\n$qr';
+    }
+    return _shareTextFor(ticket);
   }
 
   /// Never surface raw LateInitializationError / pigeon strings to users.
@@ -335,24 +375,37 @@ class TicketShareHelper {
 
   /// Builds JPEG bytes for share.
   ///
-  /// Order: on-screen [boundaryKey] (detail) → session [imageBytes] (list) →
-  /// offscreen [SavedTicketView] → network `ticket.imagePath` last resort.
+  /// Order: on-screen [boundaryKey] (when context is mounted) → session
+  /// [imageBytes] → optional offscreen [SavedTicketView] → network path.
+  ///
+  /// When [allowOffscreenCapture] is false (My Tickets list cards), skips
+  /// offscreen `toImage` entirely — list rows have no ticket RepaintBoundary.
   static Future<Uint8List?> _prepareTicketJpeg(
     BuildContext context,
     Ticket ticket, {
     GlobalKey? boundaryKey,
     Uint8List? imageBytes,
+    bool allowOffscreenCapture = true,
   }) async {
     try {
-      if (boundaryKey != null) {
+      if (boundaryKey != null && boundaryKey.currentContext != null) {
         final captured = await captureJpegBytes(boundaryKey);
         if (captured != null && captured.isNotEmpty) return captured;
       }
 
-      // List cards are not painted as tickets — prefer session photo bytes.
       if (imageBytes != null && imageBytes.isNotEmpty) {
         final fromCache = await compressImageToJpeg(imageBytes);
         if (fromCache.isNotEmpty) return fromCache;
+      }
+
+      // List summary cards: do not invent an offscreen RepaintBoundary.
+      if (!allowOffscreenCapture) {
+        return null;
+      }
+
+      // Offscreen capture is unreliable on Flutter Web (LateInitializationError).
+      if (kIsWeb) {
+        return null;
       }
 
       if (!context.mounted) return null;

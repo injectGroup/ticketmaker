@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: fix Share LateInitializationError + web JPEG fallback",
-        "taskId": "task-fix-share-late-init-20260727",
-        "updatedAt": "2026-07-27T08:05:00.000Z",
+        "message": "App update: list Share skips JPEG capture, copies ticket link",
+        "taskId": "task-fix-list-share-skip-jpeg-20260727",
+        "updatedAt": "2026-07-27T08:25:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1084,7 +1084,20 @@
       "status": "done",
       "createdAt": "2026-07-27T08:00:00.000Z",
       "updatedAt": "2026-07-27T08:05:00.000Z"
+    },
+    {
+      "id": "task-fix-list-share-skip-jpeg-20260727",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "List Share skips JPEG capture; share/copy ticket link",
+      "description": "My Tickets cards have no RepaintBoundary; allowOffscreenCapture=false; GlobalKey.currentContext null-check before findRenderObject; link/text share without LateInitializationError.",
+      "details": "ticket_share_helper.dart; saved_ticket_card.dart",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-27T08:20:00.000Z",
+      "updatedAt": "2026-07-27T08:25:00.000Z"
     }
   ],
-  "lastSync": "2026-07-27T08:05:00.000Z"
+  "lastSync": "2026-07-27T08:25:00.000Z"
 }
