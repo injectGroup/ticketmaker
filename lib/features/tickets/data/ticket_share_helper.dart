@@ -46,17 +46,26 @@ class TicketShareHelper {
     int quality = 72,
   }) async {
     try {
-      final boundary = _mountedRepaintBoundary(boundaryKey);
-      if (boundary == null) return null;
+      if (boundaryKey.currentContext == null) return null;
 
-      RenderRepaintBoundary? ready = boundary;
-      if (ready.debugNeedsPaint) {
+      RenderRepaintBoundary? boundary =
+          boundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
+      if (boundary == null) return null;
+      if (boundary.debugNeedsPaint) {
         await Future<void>.delayed(const Duration(milliseconds: 50));
-        ready = _mountedRepaintBoundary(boundaryKey);
-        if (ready == null) return null;
+        if (boundaryKey.currentContext == null) return null;
+        boundary = boundaryKey.currentContext?.findRenderObject()
+            as RenderRepaintBoundary?;
+        if (boundary == null || boundary.debugNeedsPaint) return null;
+      }
+      if (!boundary.hasSize ||
+          boundary.size.width <= 0 ||
+          boundary.size.height <= 0) {
+        return null;
       }
 
-      final image = await ready.toImage(pixelRatio: pixelRatio);
+      final image = await boundary.toImage(pixelRatio: pixelRatio);
       final jpeg = await uiImageToJpeg(image, quality: quality);
       image.dispose();
       if (jpeg == null || jpeg.isEmpty) return null;
@@ -72,7 +81,7 @@ class TicketShareHelper {
     }
   }
 
-  /// Encodes [boundaryKey]'s [RepaintBoundary] to PNG bytes in memory.
+  /// Encodes [repaintKey]'s [RepaintBoundary] to PNG bytes in memory.
   ///
   /// Returns `null` when the key is not attached, the boundary is missing /
   /// still painting, or capture fails — never throws.
@@ -80,15 +89,14 @@ class TicketShareHelper {
   /// No `late` locals — every render/image/byte reference is nullable and
   /// checked before use.
   static Future<Uint8List?> capturePngBytes(
-    GlobalKey boundaryKey, {
+    GlobalKey repaintKey, {
     double pixelRatio = 2,
   }) async {
     try {
-      if (boundaryKey.currentContext == null) return null;
+      if (repaintKey.currentContext == null) return null;
 
-      final RenderRepaintBoundary? boundary =
-          boundaryKey.currentContext?.findRenderObject()
-              as RenderRepaintBoundary?;
+      final boundary = repaintKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
       if (boundary == null || boundary.debugNeedsPaint) return null;
       if (!boundary.hasSize ||
           boundary.size.width <= 0 ||
@@ -96,7 +104,8 @@ class TicketShareHelper {
         return null;
       }
 
-      final ui.Image image = await boundary.toImage(pixelRatio: pixelRatio);
+      final image = await boundary.toImage(pixelRatio: pixelRatio);
+
       final ByteData? byteData =
           await image.toByteData(format: ui.ImageByteFormat.png);
       image.dispose();
@@ -105,8 +114,7 @@ class TicketShareHelper {
       if (bytes == null || bytes.isEmpty) return null;
       return bytes;
     } catch (e, st) {
-      // Expected on Flutter Web / missing paint — return null quietly.
-      // Avoid logging LateInitializationError noise for list-item share.
+      // Expected when no ticket card is painted / Flutter Web LateInit.
       final message = e.toString();
       if (!message.contains('LateInitializationError') &&
           !message.contains('LateInitialization')) {
@@ -114,20 +122,6 @@ class TicketShareHelper {
       }
       return null;
     }
-  }
-
-  /// Resolves a laid-out [RenderRepaintBoundary] for [boundaryKey], or null.
-  static RenderRepaintBoundary? _mountedRepaintBoundary(GlobalKey boundaryKey) {
-    final context = boundaryKey.currentContext;
-    if (context == null || !context.mounted) return null;
-    final renderObject = context.findRenderObject();
-    if (renderObject is! RenderRepaintBoundary) return null;
-    if (!renderObject.hasSize ||
-        renderObject.size.width <= 0 ||
-        renderObject.size.height <= 0) {
-      return null;
-    }
-    return renderObject;
   }
 
   /// Shares [ticket] as a JPEG of the **full ticket** when image capture is

@@ -51,7 +51,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    late List<int>? bytes;
+    List<int>? bytes;
     await tester.runAsync(() async {
       bytes = await TicketShareHelper.capturePngBytes(boundaryKey);
     });
@@ -60,6 +60,22 @@ void main() {
     expect(bytes!, isNotEmpty);
     // PNG magic header.
     expect(bytes!.take(8).toList(), [137, 80, 78, 71, 13, 10, 26, 10]);
+  });
+
+  testWidgets('capturePngBytes returns null when no ticket card is mounted', (
+    tester,
+  ) async {
+    final detachedKey = GlobalKey();
+
+    await tester.pumpWidget(const MaterialApp(home: SizedBox.shrink()));
+    await tester.pumpAndSettle();
+
+    Uint8List? bytes = Uint8List(0);
+    await tester.runAsync(() async {
+      bytes = await TicketShareHelper.capturePngBytes(detachedKey);
+    });
+
+    expect(bytes, isNull);
   });
 
   testWidgets(
@@ -88,7 +104,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      late Uint8List? composite;
+      Uint8List? composite;
       await tester.runAsync(() async {
         composite = await TicketShareHelper.captureJpegBytes(boundaryKey);
       });

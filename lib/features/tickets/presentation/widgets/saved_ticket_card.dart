@@ -25,8 +25,8 @@ class SavedTicketCard extends StatelessWidget {
 
   Future<void> _share(BuildContext buttonContext) async {
     try {
-      // List rows do not paint a full-ticket RepaintBoundary — skip image
-      // capture and share ticket link/details only (no LateInitializationError).
+      // List rows have no full-ticket RepaintBoundary. capturePngBytes would
+      // return null — share ticket link/details only (clipboard / share sheet).
       await TicketShareHelper.share(
         buttonContext,
         ticket,

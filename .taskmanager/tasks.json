@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-07-27T21:15:00.000Z",
+      "updatedAt": "2026-07-27T21:35:00.000Z",
       "lastMilestone": {
-        "message": "Generate defaults to today; Create Guest Link removed; payload minted on Save",
-        "taskId": "task-today-date-remove-guest-link-20260727",
-        "updatedAt": "2026-07-27T21:15:00.000Z",
+        "message": "Share Ticket null-safe capturePngBytes with link fallback",
+        "taskId": "task-fix-capture-png-share-null-20260727",
+        "updatedAt": "2026-07-27T21:35:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify may require Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1279,6 +1279,19 @@
       "status": "done",
       "createdAt": "2026-07-27T21:10:00.000Z",
       "updatedAt": "2026-07-27T21:15:00.000Z"
+    },
+    {
+      "id": "task-fix-capture-png-share-null-20260727",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Fix capturePngBytes Share null-safety",
+      "description": "Null-safe capturePngBytes/captureJpegBytes without late locals; Share Ticket falls back to link/clipboard when capture returns null.",
+      "details": "ticket_share_helper.dart; ticket_detail_page.dart; saved_ticket_card.dart; tests.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-27T21:30:00.000Z",
+      "updatedAt": "2026-07-27T21:35:00.000Z"
     }
   ],
   "epics": [

@@ -25,23 +25,54 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
     try {
       final bytes =
           context.read<TicketsCubit>().state.imageBytesFor(ticket.id);
+      final origin = TicketShareHelper.shareOriginFrom(buttonContext);
+
+      // If the ticket card isn't painted / capture fails, never crash —
+      // fall back to link/text share (clipboard on web, share sheet native).
+      final png = await TicketShareHelper.capturePngBytes(_ticketBoundaryKey);
+      if (!mounted) return;
+
+      if (png == null || png.isEmpty) {
+        await TicketShareHelper.share(
+          context,
+          ticket,
+          sharePositionOrigin: origin,
+          eventImageBytes: bytes,
+          attachTicketImage: false,
+        );
+        return;
+      }
+
       await TicketShareHelper.share(
         context,
         ticket,
         boundaryKey: _ticketBoundaryKey,
-        sharePositionOrigin: TicketShareHelper.shareOriginFrom(buttonContext),
+        sharePositionOrigin: origin,
         eventImageBytes: bytes,
       );
     } catch (e, st) {
       debugPrint('TicketDetailPage share failed: $e\n$st');
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('Could not prepare ticket image to share.'),
-          ),
+      // Last-resort link share so the Share button still completes.
+      try {
+        await TicketShareHelper.share(
+          context,
+          ticket,
+          sharePositionOrigin:
+              TicketShareHelper.shareOriginFrom(buttonContext),
+          attachTicketImage: false,
         );
+      } catch (fallbackError, fallbackSt) {
+        debugPrint('TicketDetailPage link fallback failed: $fallbackError\n$fallbackSt');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Could not share ticket. Try again.'),
+            ),
+          );
+      }
     }
   }
 
