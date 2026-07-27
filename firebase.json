@@ -39,6 +39,7 @@
     }
   },
   "hosting": {
+    "site": "quick-ticket-maker-sandbox",
     "public": "build/web",
     "ignore": [
       "firebase.json",
