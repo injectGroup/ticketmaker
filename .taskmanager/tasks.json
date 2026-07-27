@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-07-27T15:27:06.000Z",
+      "updatedAt": "2026-07-27T15:41:29.000Z",
       "lastMilestone": {
-        "message": "Share/download now includes full ticket details (not event photo only)",
-        "taskId": "task-fix-share-full-ticket-20260727",
-        "updatedAt": "2026-07-27T15:27:06.000Z",
+        "message": "Firebase Hosting redeployed to quick-ticket-maker-sandbox.web.app",
+        "taskId": "task-fix-firebase-hosting-deploy-20260727",
+        "updatedAt": "2026-07-27T15:41:29.000Z",
         "source": "local-fallback",
         "note": "Cloud notify may require Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1227,6 +1227,19 @@
       "status": "done",
       "createdAt": "2026-07-27T15:27:06.000Z",
       "updatedAt": "2026-07-27T15:27:06.000Z"
+    },
+    {
+      "id": "task-fix-firebase-hosting-deploy-20260727",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Fix Firebase Hosting deploy (reauth + site pin)",
+      "description": "Reauthed Firebase CLI; pinned hosting site quick-ticket-maker-sandbox in firebase.json; built web and deployed hosting.",
+      "details": "Hosting URL: https://quick-ticket-maker-sandbox.web.app",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-27T15:41:29.000Z",
+      "updatedAt": "2026-07-27T15:41:29.000Z"
     }
   ],
   "epics": [
@@ -1242,5 +1255,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-07-27T15:27:06.000Z"
+  "lastSync": "2026-07-27T15:41:29.000Z"
 }
