@@ -25,14 +25,16 @@ class TicketShareHelper {
       'Could not prepare ticket image to share.';
   static const String _shareFailedMessage =
       'Could not share ticket. Try again.';
-  static const String _downloadedMessage = 'Ticket downloaded successfully!';
+  static const String _downloadedMessage = 'Ticket image downloaded!';
   static const String _linkCopiedMessage = 'Share link copied to clipboard';
+  static const String _downloadFailedMessage =
+      'Could not prepare ticket image to download.';
   static const String _copyFailedMessage =
       'Could not copy share link. Try again.';
 
-  /// Sanitized web download name: `Ticket_<code>.png`.
+  /// Sanitized web download name: `Ticket_<ticket.id>.png`.
   static String downloadFileNameFor(Ticket ticket) {
-    final raw = ticket.code.trim();
+    final raw = ticket.id.trim();
     final safe = raw.replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '_');
     return 'Ticket_${safe.isEmpty ? 'ticket' : safe}.png';
   }
@@ -275,20 +277,16 @@ class TicketShareHelper {
         }
         if (!context.mounted) return;
         if (pngBytes == null || pngBytes.isEmpty) {
-          final copied = await _copyShareableFallback(ticket);
-          if (!context.mounted) return;
           messenger
             ?..hideCurrentSnackBar()
             ..showSnackBar(
-              SnackBar(
-                content: Text(
-                  copied ? _linkCopiedMessage : _copyFailedMessage,
-                ),
-              ),
+              const SnackBar(content: Text(_downloadFailedMessage)),
             );
           return;
         }
         try {
+          // Web-only blob download into the browser Downloads folder.
+          assert(kIsWeb, 'Download Ticket Image is web-only');
           downloadBytesAsFile(
             pngBytes,
             downloadFileNameFor(ticket),
@@ -302,16 +300,10 @@ class TicketShareHelper {
         } catch (e, st) {
           debugPrint('Web ticket download failed: $e\n$st');
           if (!context.mounted) return;
-          final copied = await _copyShareableFallback(ticket);
-          if (!context.mounted) return;
           messenger
             ?..hideCurrentSnackBar()
             ..showSnackBar(
-              SnackBar(
-                content: Text(
-                  copied ? _linkCopiedMessage : _copyFailedMessage,
-                ),
-              ),
+              const SnackBar(content: Text(_downloadFailedMessage)),
             );
         }
       case WebShareOption.copyLink:

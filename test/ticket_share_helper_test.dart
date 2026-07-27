@@ -118,10 +118,10 @@ void main() {
     },
   );
 
-  test('downloadFileNameFor uses Ticket_<code>.png', () {
+  test('downloadFileNameFor uses Ticket_<id>.png', () {
     expect(
       TicketShareHelper.downloadFileNameFor(sampleTicket),
-      'Ticket_1111-2222-333.png',
+      'Ticket_ticket-share-test.png',
     );
   });
 
