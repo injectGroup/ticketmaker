@@ -46,11 +46,15 @@ class SavedTicketView extends StatelessWidget {
     }
 
     if (path.startsWith('http://') || path.startsWith('https://')) {
+      // Prefer CORS-safe MemoryImage when bytes are supplied by the share
+      // pipeline. Direct NetworkImage can taint CanvasKit snapshots on web.
       return Image.network(
         path,
         width: width,
         height: height,
         fit: BoxFit.cover,
+        // Force Flutter decoding path when possible (avoids HTML element CORS).
+        webHtmlElementStrategy: WebHtmlElementStrategy.never,
         errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
           width: width,
           height: height,

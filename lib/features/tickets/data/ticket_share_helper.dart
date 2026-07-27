@@ -10,6 +10,7 @@ import '../../generate/domain/entities/ticket.dart';
 import '../presentation/widgets/saved_ticket_view.dart';
 import '../presentation/widgets/web_share_options_dialog.dart';
 import 'ticket_image_codec.dart';
+import 'ticket_network_image.dart';
 import 'ticket_share_download_stub.dart'
     if (dart.library.js_interop) 'ticket_share_download_web.dart';
 
@@ -101,10 +102,10 @@ class TicketShareHelper {
   /// never paints, or capture fails — never throws.
   ///
   /// No `late` locals — every render/image/byte reference is nullable and
-  /// checked before use. Waits for [endOfFrame] when still needing paint.
+  /// checked before use. Waits for [endOfFrame] + paint delay before [toImage].
   static Future<Uint8List?> capturePngBytes(
     GlobalKey repaintKey, {
-    double pixelRatio = 2,
+    double pixelRatio = 3.0,
   }) async {
     try {
       if (repaintKey.currentContext == null) return null;
@@ -114,8 +115,11 @@ class TicketShareHelper {
               as RenderRepaintBoundary?;
       if (boundary == null) return null;
 
-      // Wait for layout/paint instead of failing immediately (list Download).
-      for (var i = 0; i < 8; i++) {
+      // Allow network image / QR / layout to paint before snapshot.
+      await _awaitFrameOrTimeout();
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+
+      for (var i = 0; i < 6; i++) {
         final current = boundary;
         if (current == null) return null;
         if (!current.debugNeedsPaint &&
@@ -124,8 +128,8 @@ class TicketShareHelper {
             current.size.height > 0) {
           break;
         }
-        await WidgetsBinding.instance.endOfFrame;
-        await Future<void>.delayed(Duration(milliseconds: 40 + (i * 20)));
+        await _awaitFrameOrTimeout();
+        await Future<void>.delayed(Duration(milliseconds: 50 + (i * 25)));
         if (repaintKey.currentContext == null) return null;
         boundary = repaintKey.currentContext?.findRenderObject()
             as RenderRepaintBoundary?;
@@ -140,8 +144,16 @@ class TicketShareHelper {
         return null;
       }
 
-      final ratio = kIsWeb ? 1.5 : pixelRatio;
-      final image = await ready.toImage(pixelRatio: ratio);
+      ui.Image? image;
+      try {
+        image = await ready.toImage(pixelRatio: pixelRatio);
+      } catch (e, st) {
+        // Canvas/SecurityError often means a CORS-tainted network image.
+        debugPrint(
+          'capturePngBytes toImage failed (possible CORS/SecurityError): $e\n$st',
+        );
+        return null;
+      }
 
       final ByteData? byteData =
           await image.toByteData(format: ui.ImageByteFormat.png);
@@ -151,14 +163,18 @@ class TicketShareHelper {
       if (bytes == null || bytes.isEmpty) return null;
       return bytes;
     } catch (e, st) {
-      // Expected when no ticket card is painted / Flutter Web LateInit.
-      final message = e.toString();
-      if (!message.contains('LateInitializationError') &&
-          !message.contains('LateInitialization')) {
-        debugPrint('capturePngBytes failed: $e\n$st');
-      }
+      debugPrint('capturePngBytes failed: $e\n$st');
       return null;
     }
+  }
+
+  /// [endOfFrame] can hang in widget tests; bound the wait.
+  static Future<void> _awaitFrameOrTimeout() async {
+    try {
+      await WidgetsBinding.instance.endOfFrame.timeout(
+        const Duration(milliseconds: 500),
+      );
+    } catch (_) {}
   }
 
   /// Shares [ticket] as a JPEG of the **full ticket** when image capture is
@@ -286,7 +302,7 @@ class TicketShareHelper {
             ),
           );
         // Let the share dialog finish dismissing before painting capture UI.
-        await WidgetsBinding.instance.endOfFrame;
+        await _awaitFrameOrTimeout();
         await Future<void>.delayed(const Duration(milliseconds: 50));
         if (!context.mounted) return;
 
@@ -441,7 +457,7 @@ class TicketShareHelper {
   /// Builds PNG bytes for a full ticket composite from [ticket] model data.
   ///
   /// Order: on-screen [boundaryKey] → painted Overlay → opaque modal.
-  /// Never requires a My Tickets list-row [RepaintBoundary].
+  /// Network photos are fetched to [MemoryImage] bytes first (CORS-safe).
   /// Never throws — returns null so callers can show a failure SnackBar.
   static Future<Uint8List?> composeTicketPngBytes(
     BuildContext context,
@@ -450,6 +466,11 @@ class TicketShareHelper {
     Uint8List? eventImageBytes,
   }) async {
     try {
+      final photoBytes = await _resolveEventPhotoBytes(
+        ticket,
+        eventImageBytes: eventImageBytes,
+      );
+
       if (boundaryKey != null && boundaryKey.currentContext != null) {
         final onScreen = await _capturePngWithRetries(boundaryKey);
         if (onScreen != null && onScreen.isNotEmpty) return onScreen;
@@ -462,7 +483,7 @@ class TicketShareHelper {
       final viaOverlay = await _captureViaPaintedOverlay(
         context,
         ticket,
-        eventImageBytes: eventImageBytes,
+        eventImageBytes: photoBytes,
       );
       if (viaOverlay != null && viaOverlay.isNotEmpty) return viaOverlay;
 
@@ -471,7 +492,7 @@ class TicketShareHelper {
       final viaModal = await _captureViaOpaqueModal(
         context,
         ticket,
-        eventImageBytes: eventImageBytes,
+        eventImageBytes: photoBytes,
         preferPng: true,
       );
       if (viaModal != null && viaModal.isNotEmpty) return viaModal;
@@ -480,6 +501,21 @@ class TicketShareHelper {
       debugPrint('Ticket PNG compose failed: $e\n$st');
       return null;
     }
+  }
+
+  /// Prefer in-memory event photo bytes; otherwise HTTP-fetch network paths.
+  static Future<Uint8List?> _resolveEventPhotoBytes(
+    Ticket ticket, {
+    Uint8List? eventImageBytes,
+  }) async {
+    if (eventImageBytes != null && eventImageBytes.isNotEmpty) {
+      return eventImageBytes;
+    }
+    final path = ticket.imagePath.trim();
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return fetchImageBytesCorsSafe(path);
+    }
+    return null;
   }
 
   /// Builds JPEG bytes for share: always a **full ticket** composite.
@@ -592,8 +628,8 @@ class TicketShareHelper {
       // Force a rebuild so the OverlayEntry lays out before we wait on frames.
       entry.markNeedsBuild();
 
-      await WidgetsBinding.instance.endOfFrame;
-      await WidgetsBinding.instance.endOfFrame;
+      await _awaitFrameOrTimeout();
+      await _awaitFrameOrTimeout();
       if (boundaryKey.currentContext != null &&
           boundaryKey.currentContext!.mounted) {
         await _precacheTicketImages(
@@ -602,7 +638,7 @@ class TicketShareHelper {
           eventImageBytes: eventImageBytes,
         );
       }
-      await WidgetsBinding.instance.endOfFrame;
+      await _awaitFrameOrTimeout();
       await Future<void>.delayed(const Duration(milliseconds: 350));
 
       return await _capturePngWithRetries(boundaryKey, attempts: 8);
@@ -640,8 +676,8 @@ class TicketShareHelper {
               captureStarted = true;
               WidgetsBinding.instance.addPostFrameCallback((_) async {
                 try {
-                  await WidgetsBinding.instance.endOfFrame;
-                  await WidgetsBinding.instance.endOfFrame;
+                  await _awaitFrameOrTimeout();
+                  await _awaitFrameOrTimeout();
 
                   final captureContext = boundaryKey.currentContext;
                   if (captureContext != null && captureContext.mounted) {
@@ -652,7 +688,7 @@ class TicketShareHelper {
                     );
                   }
 
-                  await WidgetsBinding.instance.endOfFrame;
+                  await _awaitFrameOrTimeout();
                   await Future<void>.delayed(const Duration(milliseconds: 400));
 
                   Uint8List? bytes;
@@ -734,6 +770,15 @@ class TicketShareHelper {
 
     final path = ticket.imagePath;
     if (path.startsWith('http://') || path.startsWith('https://')) {
+      // Prefer bytes → MemoryImage to avoid CORS-tainted NetworkImage on web.
+      final fetched = await fetchImageBytesCorsSafe(path);
+      if (!context.mounted) return;
+      if (fetched != null && fetched.isNotEmpty) {
+        try {
+          await precacheImage(MemoryImage(fetched), context);
+        } catch (_) {}
+        return;
+      }
       try {
         await precacheImage(NetworkImage(path), context);
       } catch (_) {}
