@@ -38,74 +38,84 @@ class TicketShareHelper {
   }
 
   /// Encodes [boundaryKey]'s [RepaintBoundary] to JPEG bytes in memory.
+  /// Returns null on any failure (including Flutter Web LateInitializationError).
   static Future<Uint8List?> captureJpegBytes(
     GlobalKey boundaryKey, {
     double pixelRatio = 1.5,
     int quality = 72,
   }) async {
     try {
-      final context = boundaryKey.currentContext;
-      if (context == null) return null;
-      var boundary = context.findRenderObject() as RenderRepaintBoundary?;
+      final boundary = _mountedRepaintBoundary(boundaryKey);
       if (boundary == null) return null;
-      if (!boundary.hasSize ||
-          boundary.size.width <= 0 ||
-          boundary.size.height <= 0) {
-        return null;
-      }
-      if (boundary.debugNeedsPaint) {
+
+      RenderRepaintBoundary? ready = boundary;
+      if (ready.debugNeedsPaint) {
         await Future<void>.delayed(const Duration(milliseconds: 50));
-        // Re-check after yield — context may have detached.
-        if (boundaryKey.currentContext == null) return null;
-        boundary =
-            boundaryKey.currentContext!.findRenderObject()
-                as RenderRepaintBoundary?;
-        if (boundary == null ||
-            !boundary.hasSize ||
-            boundary.size.width <= 0 ||
-            boundary.size.height <= 0) {
-          return null;
-        }
+        ready = _mountedRepaintBoundary(boundaryKey);
+        if (ready == null) return null;
       }
-      final image = await boundary.toImage(pixelRatio: pixelRatio);
+
+      final image = await ready.toImage(pixelRatio: pixelRatio);
       final jpeg = await uiImageToJpeg(image, quality: quality);
       image.dispose();
       if (jpeg == null || jpeg.isEmpty) return null;
       return jpeg;
     } catch (e, st) {
+      // Catch Exception and Error (e.g. LateInitializationError from toImage).
       debugPrint('captureJpegBytes failed: $e\n$st');
       return null;
     }
   }
 
   /// Encodes [boundaryKey]'s [RepaintBoundary] to PNG bytes in memory.
+  /// Returns null on any failure (including Flutter Web LateInitializationError).
+  ///
+  /// No `late` locals — every render/image/byte reference is nullable and
+  /// checked before use.
   static Future<Uint8List?> capturePngBytes(
     GlobalKey boundaryKey, {
     double pixelRatio = 2,
   }) async {
-    final context = boundaryKey.currentContext;
-    if (context == null) return null;
-    final boundary = context.findRenderObject() as RenderRepaintBoundary?;
-    if (boundary == null) return null;
-    if (!boundary.hasSize ||
-        boundary.size.width <= 0 ||
-        boundary.size.height <= 0) {
-      return null;
-    }
-    if (boundary.debugNeedsPaint) {
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-    }
     try {
-      final image = await boundary.toImage(pixelRatio: pixelRatio);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (boundaryKey.currentContext == null) return null;
+
+      final RenderRepaintBoundary? boundary =
+          boundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
+      if (boundary == null || boundary.debugNeedsPaint) return null;
+      if (!boundary.hasSize ||
+          boundary.size.width <= 0 ||
+          boundary.size.height <= 0) {
+        return null;
+      }
+
+      final ui.Image image = await boundary.toImage(pixelRatio: pixelRatio);
+      final ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
       image.dispose();
-      final bytes = byteData?.buffer.asUint8List();
+
+      final Uint8List? bytes = byteData?.buffer.asUint8List();
       if (bytes == null || bytes.isEmpty) return null;
       return bytes;
     } catch (e, st) {
+      // Catch Exception and Error (e.g. LateInitializationError).
       debugPrint('capturePngBytes failed: $e\n$st');
       return null;
     }
+  }
+
+  /// Resolves a laid-out [RenderRepaintBoundary] for [boundaryKey], or null.
+  static RenderRepaintBoundary? _mountedRepaintBoundary(GlobalKey boundaryKey) {
+    final context = boundaryKey.currentContext;
+    if (context == null || !context.mounted) return null;
+    final renderObject = context.findRenderObject();
+    if (renderObject is! RenderRepaintBoundary) return null;
+    if (!renderObject.hasSize ||
+        renderObject.size.width <= 0 ||
+        renderObject.size.height <= 0) {
+      return null;
+    }
+    return renderObject;
   }
 
   /// Shares [ticket] as a JPEG of the **full ticket** (title, QR, details +
@@ -244,7 +254,7 @@ class TicketShareHelper {
           SnackBar(
             content: Text(
               copied
-                  ? 'Ticket link copied to clipboard'
+                  ? 'Could not create ticket image — link copied instead'
                   : _prepareFailedMessage,
             ),
           ),
@@ -372,7 +382,7 @@ class TicketShareHelper {
             SnackBar(
               content: Text(
                 copied
-                    ? 'Ticket link copied to clipboard'
+                    ? 'Could not download ticket image — link copied instead'
                     : _prepareFailedMessage,
               ),
             ),
@@ -386,9 +396,12 @@ class TicketShareHelper {
 
   /// Builds JPEG bytes for share: always a **full ticket** composite.
   ///
-  /// Order: on-screen [boundaryKey] → on-screen overlay [SavedTicketView].
+  /// Order: on-screen [boundaryKey] → opaque modal [SavedTicketView].
   /// [eventImageBytes] / [ticket.imagePath] feed the photo slot only — they
   /// are never returned as the share file by themselves.
+  ///
+  /// Never throws: capture/LateInitializationError failures return null so
+  /// callers can fall back to text/link share.
   static Future<Uint8List?> _prepareTicketJpeg(
     BuildContext context,
     Ticket ticket, {
@@ -403,54 +416,91 @@ class TicketShareHelper {
 
       if (!context.mounted) return null;
 
-      final png = await _captureViaOverlay(
+      // Opaque full-screen modal paints a real ticket (reliable on Flutter Web).
+      final jpeg = await _captureViaOpaqueModal(
         context,
         ticket,
         eventImageBytes: eventImageBytes,
       );
-      if (png != null && png.isNotEmpty) {
-        return await compressImageToJpeg(png);
-      }
+      if (jpeg != null && jpeg.isNotEmpty) return jpeg;
       return null;
     } catch (e, st) {
+      // Catch Exception and Error (e.g. LateInitializationError).
       debugPrint('Ticket JPEG prepare failed: $e\n$st');
       return null;
     }
   }
 
-  /// On-screen, nearly invisible ticket render for capture (works on Flutter Web).
-  /// Far-offscreen overlays often skip paint / fail `toImage` on web.
-  static Future<Uint8List?> _captureViaOverlay(
+  /// Full-opacity modal with [SavedTicketView] + [RepaintBoundary], then capture.
+  /// Prefer this over low-opacity overlays on Flutter Web (`toImage` is flaky).
+  static Future<Uint8List?> _captureViaOpaqueModal(
     BuildContext context,
     Ticket ticket, {
     Uint8List? eventImageBytes,
   }) async {
-    final overlay = Overlay.maybeOf(context, rootOverlay: true);
-    if (overlay == null) return null;
+    if (!context.mounted) return null;
 
     final boundaryKey = GlobalKey();
-    final width = MediaQuery.sizeOf(context).width.clamp(280.0, 420.0);
+    Uint8List? captured;
+    var captureStarted = false;
 
-    OverlayEntry? entry;
-    entry = OverlayEntry(
-      builder: (context) {
-        return Positioned.fill(
-          child: IgnorePointer(
-            child: Opacity(
-              // Low but non-zero so the layer still paints (incl. web).
-              opacity: 0.02,
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: Material(
-                  color: Colors.transparent,
-                  child: SizedBox(
-                    width: width,
-                    child: OverflowBox(
-                      alignment: Alignment.topCenter,
-                      minWidth: width,
-                      maxWidth: width,
-                      minHeight: 0,
-                      maxHeight: double.infinity,
+    try {
+      await Navigator.of(context, rootNavigator: true).push<void>(
+        PageRouteBuilder<void>(
+          opaque: true,
+          fullscreenDialog: true,
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (routeContext, animation, secondaryAnimation) {
+            if (!captureStarted) {
+              captureStarted = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                try {
+                  await WidgetsBinding.instance.endOfFrame;
+                  await WidgetsBinding.instance.endOfFrame;
+
+                  final captureContext = boundaryKey.currentContext;
+                  if (captureContext != null && captureContext.mounted) {
+                    await _precacheTicketImages(
+                      captureContext,
+                      ticket,
+                      eventImageBytes: eventImageBytes,
+                    );
+                  }
+
+                  await WidgetsBinding.instance.endOfFrame;
+                  await Future<void>.delayed(const Duration(milliseconds: 200));
+
+                  // Prefer JPEG; fall back to PNG→JPEG.
+                  Uint8List? bytes = await captureJpegBytes(boundaryKey);
+                  if (bytes == null || bytes.isEmpty) {
+                    final png = await capturePngBytes(boundaryKey);
+                    if (png != null && png.isNotEmpty) {
+                      bytes = await compressImageToJpeg(png);
+                    }
+                  }
+                  if (bytes != null && bytes.isNotEmpty) {
+                    captured = bytes;
+                  }
+                } catch (e, st) {
+                  debugPrint('Opaque modal ticket capture failed: $e\n$st');
+                } finally {
+                  if (routeContext.mounted) {
+                    Navigator.of(routeContext).pop();
+                  }
+                }
+              });
+            }
+
+            final width =
+                MediaQuery.sizeOf(routeContext).width.clamp(280.0, 420.0);
+            return Material(
+              color: Colors.white,
+              child: SafeArea(
+                child: Center(
+                  child: SingleChildScrollView(
+                    child: SizedBox(
+                      width: width,
                       child: RepaintBoundary(
                         key: boundaryKey,
                         child: SavedTicketView(
@@ -462,30 +512,16 @@ class TicketShareHelper {
                   ),
                 ),
               ),
-            ),
-          ),
-        );
-      },
-    );
-
-    overlay.insert(entry);
-    try {
-      await WidgetsBinding.instance.endOfFrame;
-      await WidgetsBinding.instance.endOfFrame;
-      final captureContext = boundaryKey.currentContext;
-      if (captureContext != null && captureContext.mounted) {
-        await _precacheTicketImages(
-          captureContext,
-          ticket,
-          eventImageBytes: eventImageBytes,
-        );
-      }
-      await WidgetsBinding.instance.endOfFrame;
-      await Future<void>.delayed(const Duration(milliseconds: 120));
-      return await capturePngBytes(boundaryKey);
-    } finally {
-      entry.remove();
+            );
+          },
+        ),
+      );
+    } catch (e, st) {
+      debugPrint('Opaque modal navigation failed: $e\n$st');
+      return null;
     }
+
+    return captured;
   }
 
   static Future<void> _precacheTicketImages(
