@@ -91,8 +91,6 @@ class TicketHeaderSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _GenerateQrButton(onPressed: cubit.generateTicketCode),
-          const SizedBox(height: 20),
           TicketCodeBadge(
             code: ticket.code,
             foreground: onText,
@@ -165,47 +163,6 @@ class _ChipButton extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GenerateQrButton extends StatelessWidget {
-  const _GenerateQrButton({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        color: AppColors.primary,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(28),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
-            child: Text(
-              'Create Guest Link',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.8,
-              ),
-            ),
           ),
         ),
       ),

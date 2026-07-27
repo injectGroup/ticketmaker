@@ -68,6 +68,8 @@ Future<void> _executePending(
     case PendingSaveTicketAction():
       final generateCubit = context.read<GenerateCubit>();
       try {
+        // Mint a unique guest link before persist — Share Ticket uses this URL.
+        generateCubit.ensureTicketPayload();
         await context
             .read<TicketsCubit>()
             .saveTicket(

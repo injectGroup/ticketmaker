@@ -7,20 +7,26 @@ void main() {
   test('GenerateCubit defaults to personal birthday ticket values', () {
     final cubit = GenerateCubit();
     final ticket = cubit.state.ticket;
+    final now = DateTime.now();
 
     expect(ticket.title, "Ejike's Birthday Bash");
     expect(ticket.subtitle, 'VIP Guest Pass');
-    expect(ticket.code, '1234-5678-910');
-    expect(ticket.qrData, 'https://ticketmaker.app/t/1234-5678-910');
+    expect(ticket.eventAt.year, now.year);
+    expect(ticket.eventAt.month, now.month);
+    expect(ticket.eventAt.day, now.day);
+    expect(ticket.dateLabel, GenerateCubit.formatDateLabel(now));
+    expect(ticket.qrData, startsWith('https://ticketmaker.app/t/'));
+    expect(ticket.code, matches(RegExp(r'^\d{4}-\d{4}-\d{3}$')));
     cubit.close();
   });
 
-  test('generateTicketCode writes ticketmaker.app payload with new code', () {
+  test('ensureTicketPayload writes ticketmaker.app URL with new code', () {
     final cubit = GenerateCubit();
-    cubit.generateTicketCode();
+    final before = cubit.state.ticket.code;
+    cubit.ensureTicketPayload();
     final ticket = cubit.state.ticket;
 
-    expect(ticket.code, isNot(equals('1234-5678-910')));
+    expect(ticket.code, isNot(equals(before)));
     expect(ticket.qrData, 'https://ticketmaker.app/t/${ticket.code}');
     cubit.close();
   });

@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-07-27T20:55:00.000Z",
+      "updatedAt": "2026-07-27T21:15:00.000Z",
       "lastMilestone": {
-        "message": "V1 personal ticket defaults, Generate UI copy, and Share payload with ticketmaker.app URL",
-        "taskId": "task-v1-personal-ticket-share-20260727",
-        "updatedAt": "2026-07-27T20:55:00.000Z",
+        "message": "Generate defaults to today; Create Guest Link removed; payload minted on Save",
+        "taskId": "task-today-date-remove-guest-link-20260727",
+        "updatedAt": "2026-07-27T21:15:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify may require Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1266,6 +1266,19 @@
       "status": "done",
       "createdAt": "2026-07-27T20:50:00.000Z",
       "updatedAt": "2026-07-27T20:55:00.000Z"
+    },
+    {
+      "id": "task-today-date-remove-guest-link-20260727",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Today date default and remove Create Guest Link",
+      "description": "Generate eventAt defaults to DateTime.now(); removed Create Guest Link button; ensureTicketPayload mints unique URL on Save for Share Ticket.",
+      "details": "generate_cubit.dart; ticket_header_section.dart; auth_gate.dart; tests.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-27T21:10:00.000Z",
+      "updatedAt": "2026-07-27T21:15:00.000Z"
     }
   ],
   "epics": [

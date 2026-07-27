@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ticket_maker/app.dart';
 import 'package:ticket_maker/core/router/app_router.dart';
 import 'package:ticket_maker/features/auth/data/auth_repository.dart';
+import 'package:ticket_maker/features/generate/presentation/bloc/generate_cubit.dart';
 import 'package:ticket_maker/features/generate/presentation/pages/generate_page.dart';
 import 'package:ticket_maker/features/tickets/data/ticket_local_repository.dart';
 
@@ -47,7 +48,7 @@ void main() {
     expect(find.text("Ejike's Birthday Bash"), findsOneWidget);
     expect(find.text('Change color'), findsOneWidget);
     expect(find.text('Change shape'), findsOneWidget);
-    expect(find.text('Create Guest Link'), findsOneWidget);
+    expect(find.text('Create Guest Link'), findsNothing);
     expect(find.text('Save Ticket'), findsOneWidget);
 
     expect(find.text('Generate'), findsWidgets);
@@ -67,9 +68,12 @@ void main() {
     expect(find.text('Private gathering'), findsOneWidget);
     expect(find.byIcon(Icons.threed_rotation), findsNothing);
     expect(find.byIcon(Icons.place_outlined), findsOneWidget);
-    expect(find.text('Create Guest Link'), findsOneWidget);
+    expect(find.text('Create Guest Link'), findsNothing);
     expect(find.text('Bg color'), findsOneWidget);
     expect(find.text('Save Ticket'), findsOneWidget);
+    // Date row defaults to today (GenerateCubit uses DateTime.now()).
+    final todayLabel = GenerateCubit.formatDateLabel(DateTime.now());
+    expect(find.text(todayLabel), findsOneWidget);
   });
 
   testWidgets('Tickets tab starts empty without saved records', (tester) async {
