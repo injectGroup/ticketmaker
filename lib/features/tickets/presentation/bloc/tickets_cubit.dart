@@ -79,6 +79,7 @@ class TicketsCubit extends Cubit<TicketsState> {
     }
 
     // Firestore doc + JPEG compress + Storage upload (non-blocking).
+    // Guests / web: failures here must never fail the local save above.
     unawaited(_persistImageAndCloudInBackground(saved, imageBytes));
   }
 

@@ -44,19 +44,30 @@ class TicketShareHelper {
     double pixelRatio = 1.5,
     int quality = 72,
   }) async {
-    final context = boundaryKey.currentContext;
-    if (context == null) return null;
-    final boundary = context.findRenderObject() as RenderRepaintBoundary?;
-    if (boundary == null) return null;
-    if (!boundary.hasSize ||
-        boundary.size.width <= 0 ||
-        boundary.size.height <= 0) {
-      return null;
-    }
-    if (boundary.debugNeedsPaint) {
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-    }
     try {
+      final context = boundaryKey.currentContext;
+      if (context == null) return null;
+      var boundary = context.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return null;
+      if (!boundary.hasSize ||
+          boundary.size.width <= 0 ||
+          boundary.size.height <= 0) {
+        return null;
+      }
+      if (boundary.debugNeedsPaint) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        // Re-check after yield — context may have detached.
+        if (boundaryKey.currentContext == null) return null;
+        boundary =
+            boundaryKey.currentContext!.findRenderObject()
+                as RenderRepaintBoundary?;
+        if (boundary == null ||
+            !boundary.hasSize ||
+            boundary.size.width <= 0 ||
+            boundary.size.height <= 0) {
+          return null;
+        }
+      }
       final image = await boundary.toImage(pixelRatio: pixelRatio);
       final jpeg = await uiImageToJpeg(image, quality: quality);
       image.dispose();

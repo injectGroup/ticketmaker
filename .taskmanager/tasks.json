@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: guest Save Ticket + JPEG Share after save",
-        "taskId": "task-guest-save-share-20260727",
-        "updatedAt": "2026-07-27T08:50:00.000Z",
+        "message": "App update: save ticket ignores snapshot LateInitializationError",
+        "taskId": "task-fix-save-late-init-20260727",
+        "updatedAt": "2026-07-27T08:55:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1110,7 +1110,20 @@
       "status": "done",
       "createdAt": "2026-07-27T08:45:00.000Z",
       "updatedAt": "2026-07-27T08:50:00.000Z"
+    },
+    {
+      "id": "task-fix-save-late-init-20260727",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Fix Save Ticket LateInitializationError on snapshot",
+      "description": "Optional JPEG capture never blocks local save; skip web toImage; context null-checks; no late controllers; sync JPEG compress on web.",
+      "details": "generate_page.dart; ticket_share_helper.dart; ticket_image_codec.dart",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-27T08:52:00.000Z",
+      "updatedAt": "2026-07-27T08:55:00.000Z"
     }
   ],
-  "lastSync": "2026-07-27T08:50:00.000Z"
+  "lastSync": "2026-07-27T08:55:00.000Z"
 }

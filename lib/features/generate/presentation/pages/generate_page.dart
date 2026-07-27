@@ -1,7 +1,7 @@
-import 'dart:typed_data';
-
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../auth/presentation/auth_gate.dart';
@@ -32,10 +32,10 @@ class _GenerateView extends StatefulWidget {
 }
 
 class _GenerateViewState extends State<_GenerateView> {
-  late final TextEditingController _headerLabelController;
-  late final TextEditingController _titleController;
-  late final TextEditingController _subtitleController;
-  late final TextEditingController _venueController;
+  final TextEditingController _headerLabelController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _subtitleController = TextEditingController();
+  final TextEditingController _venueController = TextEditingController();
   final GlobalKey _ticketBoundaryKey = GlobalKey();
   bool _isSaving = false;
 
@@ -46,10 +46,10 @@ class _GenerateViewState extends State<_GenerateView> {
   void initState() {
     super.initState();
     final ticket = context.read<GenerateCubit>().state.ticket;
-    _headerLabelController = TextEditingController(text: ticket.headerLabel);
-    _titleController = TextEditingController(text: ticket.title);
-    _subtitleController = TextEditingController(text: ticket.subtitle);
-    _venueController = TextEditingController(text: ticket.venue);
+    _headerLabelController.text = ticket.headerLabel;
+    _titleController.text = ticket.title;
+    _subtitleController.text = ticket.subtitle;
+    _venueController.text = ticket.venue;
   }
 
   @override
@@ -61,15 +61,37 @@ class _GenerateViewState extends State<_GenerateView> {
     super.dispose();
   }
 
+  /// Best-effort JPEG snapshot. Never throws — save proceeds with null bytes.
+  Future<Uint8List?> _tryCaptureTicketJpeg() async {
+    try {
+      // Flutter Web `toImage` is flaky (LateInitializationError); skip snapshot.
+      if (kIsWeb) return null;
+
+      final captureContext = _ticketBoundaryKey.currentContext;
+      if (captureContext == null) return null;
+
+      final boundary =
+          captureContext.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null ||
+          !boundary.hasSize ||
+          boundary.size.width <= 0 ||
+          boundary.size.height <= 0) {
+        return null;
+      }
+
+      return await TicketShareHelper.captureJpegBytes(_ticketBoundaryKey);
+    } catch (e, st) {
+      debugPrint('Ticket snapshot skipped (save continues): $e\n$st');
+      return null;
+    }
+  }
+
   Future<void> _saveTicket() async {
     if (_isSaving) return;
     setState(() => _isSaving = true);
     try {
-      // Capture painted ticket when the RepaintBoundary is attached.
-      Uint8List? captured;
-      if (_ticketBoundaryKey.currentContext != null) {
-        captured = await TicketShareHelper.captureJpegBytes(_ticketBoundaryKey);
-      }
+      // Snapshot is optional — local save must succeed even if capture is null.
+      final captured = await _tryCaptureTicketJpeg();
       if (!mounted) return;
 
       // Guests save locally — no Sign In / Sign Up gate.
@@ -82,13 +104,17 @@ class _GenerateViewState extends State<_GenerateView> {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text('Failed to save: $e')));
-    } catch (e) {
-      debugPrint('Failed to save ticket: $e');
+        ..showSnackBar(
+          const SnackBar(content: Text('Could not save ticket. Try again.')),
+        );
+    } catch (e, st) {
+      debugPrint('Failed to save ticket: $e\n$st');
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text('Failed to save: $e')));
+        ..showSnackBar(
+          const SnackBar(content: Text('Could not save ticket. Try again.')),
+        );
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);

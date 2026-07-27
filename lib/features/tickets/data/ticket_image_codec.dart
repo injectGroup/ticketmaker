@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -11,11 +10,17 @@ Future<Uint8List> compressImageToJpeg(
   int maxWidth = 1280,
 }) async {
   if (bytes.isEmpty) return bytes;
+  final args = _JpegCompressArgs(
+    bytes: bytes,
+    quality: quality,
+    maxWidth: maxWidth,
+  );
   try {
-    return await compute(
-      _compressJpegIsolate,
-      _JpegCompressArgs(bytes: bytes, quality: quality, maxWidth: maxWidth),
-    );
+    // `compute` / isolates are unreliable on Flutter Web (LateInitializationError).
+    if (kIsWeb) {
+      return _compressJpegIsolate(args);
+    }
+    return await compute(_compressJpegIsolate, args);
   } catch (e, st) {
     debugPrint('JPEG compress failed, using original bytes: $e\n$st');
     return bytes;
@@ -56,14 +61,19 @@ Future<Uint8List?> uiImageToJpeg(
   ui.Image image, {
   int quality = 72,
 }) async {
-  final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
-  if (byteData == null) return null;
-  final converted = img.Image.fromBytes(
-    width: image.width,
-    height: image.height,
-    bytes: byteData.buffer,
-    bytesOffset: byteData.offsetInBytes,
-    order: img.ChannelOrder.rgba,
-  );
-  return Uint8List.fromList(img.encodeJpg(converted, quality: quality));
+  try {
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    if (byteData == null) return null;
+    final converted = img.Image.fromBytes(
+      width: image.width,
+      height: image.height,
+      bytes: byteData.buffer,
+      bytesOffset: byteData.offsetInBytes,
+      order: img.ChannelOrder.rgba,
+    );
+    return Uint8List.fromList(img.encodeJpg(converted, quality: quality));
+  } catch (e, st) {
+    debugPrint('uiImageToJpeg failed: $e\n$st');
+    return null;
+  }
 }

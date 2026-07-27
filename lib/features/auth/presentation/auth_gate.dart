@@ -90,6 +90,10 @@ Future<void> _executePending(
         context.go(TicketsPage.routePath);
       } catch (e, st) {
         debugPrint('Failed to save ticket: $e\n$st');
+        // Never surface LateInitializationError from optional image work.
+        if (e.toString().contains('LateInitialization')) {
+          // Local metadata may already be saved; still surface a soft failure.
+        }
         rethrow;
       }
   }
