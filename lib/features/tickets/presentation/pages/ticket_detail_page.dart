@@ -22,15 +22,27 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
   final GlobalKey _ticketBoundaryKey = GlobalKey();
 
   Future<void> _share(BuildContext buttonContext, Ticket ticket) async {
-    final bytes =
-        context.read<TicketsCubit>().state.imageBytesFor(ticket.id);
-    await TicketShareHelper.share(
-      context,
-      ticket,
-      boundaryKey: _ticketBoundaryKey,
-      sharePositionOrigin: TicketShareHelper.shareOriginFrom(buttonContext),
-      imageBytes: bytes,
-    );
+    try {
+      final bytes =
+          context.read<TicketsCubit>().state.imageBytesFor(ticket.id);
+      await TicketShareHelper.share(
+        context,
+        ticket,
+        boundaryKey: _ticketBoundaryKey,
+        sharePositionOrigin: TicketShareHelper.shareOriginFrom(buttonContext),
+        imageBytes: bytes,
+      );
+    } catch (e, st) {
+      debugPrint('TicketDetailPage share failed: $e\n$st');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Could not prepare ticket image to share.'),
+          ),
+        );
+    }
   }
 
   @override

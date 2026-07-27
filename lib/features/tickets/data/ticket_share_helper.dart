@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../generate/domain/entities/ticket.dart';
@@ -19,6 +20,10 @@ class TicketShareHelper {
   static const String _subject = 'My Custom Ticket Design';
   static const String _webFileName = 'ticket.jpg';
   static const String _fallbackShareText = 'Check out my event ticket!';
+  static const String _prepareFailedMessage =
+      'Could not prepare ticket image to share.';
+  static const String _shareFailedMessage =
+      'Could not share ticket. Try again.';
 
   /// Share-sheet anchor rect for iOS/iPadOS popovers.
   static Rect shareOriginFrom(BuildContext context) {
@@ -42,6 +47,11 @@ class TicketShareHelper {
     final boundary =
         boundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
     if (boundary == null) return null;
+    if (!boundary.hasSize ||
+        boundary.size.width <= 0 ||
+        boundary.size.height <= 0) {
+      return null;
+    }
     if (boundary.debugNeedsPaint) {
       await Future<void>.delayed(const Duration(milliseconds: 50));
     }
@@ -91,8 +101,9 @@ class TicketShareHelper {
   /// Prefers cached [imageBytes] (list items are not painted as tickets), then
   /// an on-screen [boundaryKey], then an offscreen [SavedTicketView] capture.
   ///
-  /// **Web:** tries [Share.shareXFiles]; on failure / cancel / unsupported,
-  /// falls back to an HTML blob download of `ticket.jpg`.
+  /// **Web:** tries Web Share via [SharePlus]; on failure / unsupported,
+  /// falls back to an HTML blob download of `ticket.jpg`, then copying a
+  /// shareable URL if image bytes are unavailable.
   static Future<void> share(
     BuildContext context,
     Ticket ticket, {
@@ -123,12 +134,26 @@ class TicketShareHelper {
       if (!context.mounted) return;
 
       if (jpegBytes == null || jpegBytes.isEmpty) {
+        if (kIsWeb) {
+          final copied = await _copyShareableFallback(ticket);
+          if (!context.mounted) return;
+          messenger
+            ?..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(
+                  copied
+                      ? 'Ticket link copied to clipboard'
+                      : _prepareFailedMessage,
+                ),
+              ),
+            );
+          return;
+        }
         messenger
           ?..hideCurrentSnackBar()
           ..showSnackBar(
-            const SnackBar(
-              content: Text('Could not prepare ticket image to share.'),
-            ),
+            const SnackBar(content: Text(_prepareFailedMessage)),
           );
         return;
       }
@@ -164,29 +189,57 @@ class TicketShareHelper {
       if (!context.mounted) return;
       messenger?.hideCurrentSnackBar();
     } catch (e, st) {
+      // Catch Exception and Error (e.g. LateInitializationError).
       debugPrint('Share failed: $e\n$st');
       if (!context.mounted) return;
-      if (kIsWeb && jpegBytes != null && jpegBytes.isNotEmpty) {
-        downloadBytesAsFile(jpegBytes, _webFileName);
+
+      if (kIsWeb) {
+        if (jpegBytes != null && jpegBytes.isNotEmpty) {
+          try {
+            downloadBytesAsFile(jpegBytes, _webFileName);
+            messenger
+              ?..hideCurrentSnackBar()
+              ..showSnackBar(
+                const SnackBar(content: Text('Ticket image downloaded')),
+              );
+            return;
+          } catch (downloadError, downloadSt) {
+            debugPrint('Web download fallback failed: $downloadError\n$downloadSt');
+          }
+        }
+        final copied = await _copyShareableFallback(ticket);
+        if (!context.mounted) return;
         messenger
           ?..hideCurrentSnackBar()
           ..showSnackBar(
-            const SnackBar(content: Text('Ticket image downloaded')),
+            SnackBar(
+              content: Text(
+                copied
+                    ? 'Ticket link copied to clipboard'
+                    : _friendlyErrorMessage(e),
+              ),
+            ),
           );
         return;
       }
+
       messenger
         ?..hideCurrentSnackBar()
         ..showSnackBar(
-          SnackBar(
-            content: Text(
-              kIsWeb
-                  ? 'Could not prepare ticket image to share.'
-                  : 'Could not share ticket. Try again.',
-            ),
-          ),
+          SnackBar(content: Text(_friendlyErrorMessage(e))),
         );
     }
+  }
+
+  /// Never surface raw LateInitializationError / pigeon strings to users.
+  static String _friendlyErrorMessage(Object error) {
+    final text = error.toString();
+    if (text.contains('LateInitializationError') ||
+        text.contains('LateInitialization') ||
+        text.contains('Null check operator')) {
+      return kIsWeb ? _prepareFailedMessage : _shareFailedMessage;
+    }
+    return kIsWeb ? _prepareFailedMessage : _shareFailedMessage;
   }
 
   static String _shareTextFor(Ticket ticket) {
@@ -198,7 +251,23 @@ class TicketShareHelper {
     }
   }
 
-  /// Web: attempt share_plus file share; always fall back to blob download.
+  /// Prefer QR / ticket URL; otherwise share caption text.
+  static Future<bool> _copyShareableFallback(Ticket ticket) async {
+    try {
+      final qr = ticket.qrData.trim();
+      final payload = (qr.startsWith('http://') || qr.startsWith('https://'))
+          ? qr
+          : _shareTextFor(ticket);
+      if (payload.isEmpty) return false;
+      await Clipboard.setData(ClipboardData(text: payload));
+      return true;
+    } catch (e, st) {
+      debugPrint('Clipboard share fallback failed: $e\n$st');
+      return false;
+    }
+  }
+
+  /// Web: attempt share_plus file share; fall back to blob download.
   static Future<void> _shareOrDownloadWeb(
     BuildContext context,
     Uint8List jpegBytes, {
@@ -213,27 +282,51 @@ class TicketShareHelper {
         mimeType: 'image/jpeg',
         name: _webFileName,
       );
-      // shareXFiles is the Web Share API path when the browser supports it.
-      await Share.shareXFiles(
-        [xFile],
-        text: _shareTextFor(ticket),
-        subject: _subject,
-        sharePositionOrigin: origin,
+      // Web Share API when supported; may throw LateInitializationError.
+      // Equivalent to legacy Share.shareXFiles with downloadFallbackEnabled.
+      final result = await SharePlus.instance.share(
+        ShareParams(
+          files: [xFile],
+          fileNameOverrides: const [_webFileName],
+          text: _shareTextFor(ticket),
+          subject: _subject,
+          sharePositionOrigin: origin,
+          downloadFallbackEnabled: true,
+        ),
       );
-      shared = true;
+      shared = result.status == ShareResultStatus.success ||
+          result.status == ShareResultStatus.unavailable;
     } catch (e, st) {
-      debugPrint('Web Share.shareXFiles failed, downloading: $e\n$st');
+      debugPrint('Web SharePlus.share failed, downloading: $e\n$st');
+      shared = false;
     }
 
     if (!context.mounted) return;
 
     if (!shared) {
-      downloadBytesAsFile(jpegBytes, _webFileName);
-      messenger
-        ?..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(content: Text('Ticket image downloaded')),
-        );
+      try {
+        downloadBytesAsFile(jpegBytes, _webFileName);
+        messenger
+          ?..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(content: Text('Ticket image downloaded')),
+          );
+      } catch (e, st) {
+        debugPrint('Blob download failed: $e\n$st');
+        final copied = await _copyShareableFallback(ticket);
+        if (!context.mounted) return;
+        messenger
+          ?..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                copied
+                    ? 'Ticket link copied to clipboard'
+                    : _prepareFailedMessage,
+              ),
+            ),
+          );
+      }
       return;
     }
 
@@ -295,17 +388,20 @@ class TicketShareHelper {
       final provider = NetworkImage(trimmed);
       final stream = provider.resolve(const ImageConfiguration());
       final completer = Completer<ui.Image>();
-      late final ImageStreamListener listener;
+      // Nullable — never use `late` here (sync callbacks can race assignment).
+      ImageStreamListener? listener;
       listener = ImageStreamListener(
         (info, _) {
+          final active = listener;
+          if (active != null) stream.removeListener(active);
           if (!completer.isCompleted) completer.complete(info.image);
-          stream.removeListener(listener);
         },
         onError: (Object e, StackTrace? st) {
+          final active = listener;
+          if (active != null) stream.removeListener(active);
           if (!completer.isCompleted) {
             completer.completeError(e, st);
           }
-          stream.removeListener(listener);
         },
       );
       stream.addListener(listener);
@@ -335,7 +431,8 @@ class TicketShareHelper {
     final boundaryKey = GlobalKey();
     final width = MediaQuery.sizeOf(context).width.clamp(280.0, 420.0);
 
-    final entry = OverlayEntry(
+    OverlayEntry? entry;
+    entry = OverlayEntry(
       builder: (context) {
         return Positioned(
           left: -10000,

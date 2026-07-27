@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-22T08:35:30.000Z",
       "lastMilestone": {
-        "message": "App update: ultra-modern ticket screen polish (layout locked)",
-        "taskId": "task-modern-ticket-screen-polish-20260726",
-        "updatedAt": "2026-07-26T19:40:00.000Z",
+        "message": "App update: fix Share LateInitializationError + web JPEG fallback",
+        "taskId": "task-fix-share-late-init-20260727",
+        "updatedAt": "2026-07-27T08:05:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1071,7 +1071,20 @@
       "status": "done",
       "createdAt": "2026-07-26T19:35:00.000Z",
       "updatedAt": "2026-07-26T19:40:00.000Z"
+    },
+    {
+      "id": "task-fix-share-late-init-20260727",
+      "projectId": "S48ODI73lfsZJSn8Kke2",
+      "epicId": null,
+      "title": "Fix Share LateInitializationError + web JPEG fallback",
+      "description": "Nullable ImageStreamListener/OverlayEntry; capture hasSize guards; web Share.shareXFiles falls back to JPEG download then clipboard URL; friendly SnackBar; try/catch on Share buttons.",
+      "details": "ticket_share_helper.dart; saved_ticket_card.dart; ticket_detail_page.dart",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-27T08:00:00.000Z",
+      "updatedAt": "2026-07-27T08:05:00.000Z"
     }
   ],
-  "lastSync": "2026-07-26T19:40:00.000Z"
+  "lastSync": "2026-07-27T08:05:00.000Z"
 }

@@ -26,14 +26,26 @@ class SavedTicketCard extends StatelessWidget {
   final VoidCallback? onSelectionToggle;
 
   Future<void> _share(BuildContext buttonContext) async {
-    final bytes =
-        buttonContext.read<TicketsCubit>().state.imageBytesFor(ticket.id);
-    await TicketShareHelper.share(
-      buttonContext,
-      ticket,
-      sharePositionOrigin: TicketShareHelper.shareOriginFrom(buttonContext),
-      imageBytes: bytes,
-    );
+    try {
+      final bytes =
+          buttonContext.read<TicketsCubit>().state.imageBytesFor(ticket.id);
+      await TicketShareHelper.share(
+        buttonContext,
+        ticket,
+        sharePositionOrigin: TicketShareHelper.shareOriginFrom(buttonContext),
+        imageBytes: bytes,
+      );
+    } catch (e, st) {
+      debugPrint('SavedTicketCard share failed: $e\n$st');
+      if (!buttonContext.mounted) return;
+      ScaffoldMessenger.of(buttonContext)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Could not prepare ticket image to share.'),
+          ),
+        );
+    }
   }
 
   @override
