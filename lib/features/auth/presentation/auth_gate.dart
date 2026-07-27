@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../generate/presentation/bloc/generate_cubit.dart';
 import '../../tickets/presentation/bloc/tickets_cubit.dart';
 import '../../tickets/presentation/pages/tickets_page.dart';
+import '../../tickets/presentation/widgets/saved_ticket_view.dart';
 import '../domain/pending_auth_action.dart';
 import 'bloc/auth_cubit.dart';
 import 'widgets/auth_flow_sheet.dart';
@@ -44,14 +44,14 @@ Future<void> requireAuthThen(
 }
 
 /// Persists the current Generate ticket locally without Sign In / Sign Up.
-Future<void> saveTicketAsGuest(
-  BuildContext context, {
-  Uint8List? capturedJpegBytes,
-}) {
+///
+/// Stores the Generate **event photo** (`GenerateCubit.imageBytes`) for the
+/// ticket photo slot. Full-ticket share JPEGs are composed at share time from
+/// [SavedTicketView] — never by re-sharing the event photo alone.
+Future<void> saveTicketAsGuest(BuildContext context) {
   return _executePending(
     context,
     const PendingSaveTicketAction(),
-    capturedJpegBytes: capturedJpegBytes,
   );
 }
 
@@ -62,9 +62,8 @@ Future<void> requireAuthThenSaveTicket(BuildContext context) {
 
 Future<void> _executePending(
   BuildContext context,
-  PendingAuthAction action, {
-  Uint8List? capturedJpegBytes,
-}) async {
+  PendingAuthAction action,
+) async {
   switch (action) {
     case PendingSaveTicketAction():
       final generateCubit = context.read<GenerateCubit>();
@@ -73,8 +72,8 @@ Future<void> _executePending(
             .read<TicketsCubit>()
             .saveTicket(
               generateCubit.state.ticket,
-              imageBytes:
-                  capturedJpegBytes ?? generateCubit.state.imageBytes,
+              // Event gallery photo only (not a full-ticket snapshot).
+              imageBytes: generateCubit.state.imageBytes,
             )
             .timeout(
               const Duration(seconds: 10),

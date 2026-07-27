@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -59,4 +61,44 @@ void main() {
     // PNG magic header.
     expect(bytes!.take(8).toList(), [137, 80, 78, 71, 13, 10, 26, 10]);
   });
+
+  testWidgets(
+    'share composite from boundary is larger than raw event photo alone',
+    (tester) async {
+      final boundaryKey = GlobalKey();
+      // Tiny 1x1 JPEG-ish payload — event photo stand-in (not a full ticket).
+      final eventPhoto = Uint8List.fromList([
+        0xFF, 0xD8, 0xFF, 0xD9, // minimal JPEG SOI/EOI
+      ]);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: RepaintBoundary(
+                key: boundaryKey,
+                child: SavedTicketView(
+                  ticket: sampleTicket,
+                  imageBytes: eventPhoto,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      late Uint8List? composite;
+      await tester.runAsync(() async {
+        composite = await TicketShareHelper.captureJpegBytes(boundaryKey);
+      });
+
+      expect(composite, isNotNull);
+      expect(composite!, isNotEmpty);
+      // Full ticket JPEG must not be just the tiny event photo bytes.
+      expect(composite!.length, greaterThan(eventPhoto.length));
+      expect(find.text('Share Capture Concert'), findsOneWidget);
+      expect(find.text('1111-2222-333'), findsOneWidget);
+    },
+  );
 }

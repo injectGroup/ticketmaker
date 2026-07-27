@@ -27,15 +27,14 @@ class SavedTicketCard extends StatelessWidget {
 
   Future<void> _share(BuildContext buttonContext) async {
     try {
-      // Prefer JPEG captured at save time; never offscreen-capture list rows.
+      // Event photo only — share always composites SavedTicketView.
       final bytes =
           buttonContext.read<TicketsCubit>().state.imageBytesFor(ticket.id);
       await TicketShareHelper.share(
         buttonContext,
         ticket,
         sharePositionOrigin: TicketShareHelper.shareOriginFrom(buttonContext),
-        imageBytes: bytes,
-        allowOffscreenCapture: false,
+        eventImageBytes: bytes,
       );
     } catch (e, st) {
       debugPrint('SavedTicketCard share failed: $e\n$st');

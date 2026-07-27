@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -109,23 +108,24 @@ class TicketShareHelper {
     }
   }
 
-  /// Shares [ticket] as a JPEG when a painted [boundaryKey] or [imageBytes]
-  /// is available; otherwise shares/copies the ticket text or link.
+  /// Shares [ticket] as a JPEG of the **full ticket** (title, QR, details +
+  /// event photo), never the raw event gallery image alone.
   ///
-  /// List cards pass [allowOffscreenCapture] `false` — they do not paint a
-  /// full ticket [RepaintBoundary], so JPEG capture is skipped to avoid
-  /// web [LateInitializationError] from offscreen `toImage`.
+  /// [eventImageBytes] is only used as the photo slot inside [SavedTicketView].
+  /// Prefer an on-screen [boundaryKey] (detail page); otherwise compose via a
+  /// web-safe on-screen overlay.
   ///
   /// **Web:** tries Web Share via [SharePlus]; on failure / unsupported,
   /// falls back to an HTML blob download of `ticket.jpg`, then copying a
-  /// shareable URL if image bytes are unavailable.
+  /// shareable URL if composite capture fails.
   static Future<void> share(
     BuildContext context,
     Ticket ticket, {
     GlobalKey? boundaryKey,
     Rect? sharePositionOrigin,
+    Uint8List? eventImageBytes,
+    @Deprecated('Use eventImageBytes — never shared as the ticket file')
     Uint8List? imageBytes,
-    bool allowOffscreenCapture = true,
   }) async {
     final messenger = ScaffoldMessenger.maybeOf(context);
     messenger
@@ -139,14 +139,14 @@ class TicketShareHelper {
 
     final origin = sharePositionOrigin ?? shareOriginFrom(context);
     Uint8List? jpegBytes;
+    final photoBytes = eventImageBytes ?? imageBytes;
 
     try {
       jpegBytes = await _prepareTicketJpeg(
         context,
         ticket,
         boundaryKey: boundaryKey,
-        imageBytes: imageBytes,
-        allowOffscreenCapture: allowOffscreenCapture,
+        eventImageBytes: photoBytes,
       );
       if (!context.mounted) return;
 
@@ -384,19 +384,16 @@ class TicketShareHelper {
     messenger?.hideCurrentSnackBar();
   }
 
-  /// Builds JPEG bytes for share.
+  /// Builds JPEG bytes for share: always a **full ticket** composite.
   ///
-  /// Order: on-screen [boundaryKey] (when context is mounted) → session
-  /// [imageBytes] → optional offscreen [SavedTicketView] → network path.
-  ///
-  /// When [allowOffscreenCapture] is false (My Tickets list cards), skips
-  /// offscreen `toImage` entirely — list rows have no ticket RepaintBoundary.
+  /// Order: on-screen [boundaryKey] → on-screen overlay [SavedTicketView].
+  /// [eventImageBytes] / [ticket.imagePath] feed the photo slot only — they
+  /// are never returned as the share file by themselves.
   static Future<Uint8List?> _prepareTicketJpeg(
     BuildContext context,
     Ticket ticket, {
     GlobalKey? boundaryKey,
-    Uint8List? imageBytes,
-    bool allowOffscreenCapture = true,
+    Uint8List? eventImageBytes,
   }) async {
     try {
       if (boundaryKey != null && boundaryKey.currentContext != null) {
@@ -404,35 +401,15 @@ class TicketShareHelper {
         if (captured != null && captured.isNotEmpty) return captured;
       }
 
-      if (imageBytes != null && imageBytes.isNotEmpty) {
-        final fromCache = await compressImageToJpeg(imageBytes);
-        if (fromCache.isNotEmpty) return fromCache;
-      }
-
-      // List summary cards: do not invent an offscreen RepaintBoundary.
-      if (!allowOffscreenCapture) {
-        return null;
-      }
-
-      // Offscreen capture is unreliable on Flutter Web (LateInitializationError).
-      if (kIsWeb) {
-        return null;
-      }
-
       if (!context.mounted) return null;
 
       final png = await _captureViaOverlay(
         context,
         ticket,
-        imageBytes: imageBytes,
+        eventImageBytes: eventImageBytes,
       );
       if (png != null && png.isNotEmpty) {
         return await compressImageToJpeg(png);
-      }
-
-      final fromUrl = await _bytesFromNetworkPath(ticket.imagePath);
-      if (fromUrl != null && fromUrl.isNotEmpty) {
-        return await compressImageToJpeg(fromUrl);
       }
       return null;
     } catch (e, st) {
@@ -441,53 +418,12 @@ class TicketShareHelper {
     }
   }
 
-  /// Download bytes from an http(s) [path], or null.
-  static Future<Uint8List?> _bytesFromNetworkPath(String path) async {
-    final trimmed = path.trim();
-    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-      return null;
-    }
-
-    try {
-      final provider = NetworkImage(trimmed);
-      final stream = provider.resolve(const ImageConfiguration());
-      final completer = Completer<ui.Image>();
-      // Nullable — never use `late` here (sync callbacks can race assignment).
-      ImageStreamListener? listener;
-      listener = ImageStreamListener(
-        (info, _) {
-          final active = listener;
-          if (active != null) stream.removeListener(active);
-          if (!completer.isCompleted) completer.complete(info.image);
-        },
-        onError: (Object e, StackTrace? st) {
-          final active = listener;
-          if (active != null) stream.removeListener(active);
-          if (!completer.isCompleted) {
-            completer.completeError(e, st);
-          }
-        },
-      );
-      stream.addListener(listener);
-      final image = await completer.future.timeout(
-        const Duration(seconds: 8),
-      );
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      image.dispose();
-      final bytes = byteData?.buffer.asUint8List();
-      if (bytes == null || bytes.isEmpty) return null;
-      return bytes;
-    } catch (e, st) {
-      debugPrint('Could not load ticket.imagePath bytes: $e\n$st');
-      return null;
-    }
-  }
-
-  /// Offscreen full-opacity ticket render (avoids near-zero Opacity paint skips).
+  /// On-screen, nearly invisible ticket render for capture (works on Flutter Web).
+  /// Far-offscreen overlays often skip paint / fail `toImage` on web.
   static Future<Uint8List?> _captureViaOverlay(
     BuildContext context,
     Ticket ticket, {
-    Uint8List? imageBytes,
+    Uint8List? eventImageBytes,
   }) async {
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return null;
@@ -498,25 +434,30 @@ class TicketShareHelper {
     OverlayEntry? entry;
     entry = OverlayEntry(
       builder: (context) {
-        return Positioned(
-          left: -10000,
-          top: 0,
+        return Positioned.fill(
           child: IgnorePointer(
-            child: Material(
-              color: Colors.transparent,
-              child: SizedBox(
-                width: width,
-                child: OverflowBox(
-                  alignment: Alignment.topLeft,
-                  minWidth: width,
-                  maxWidth: width,
-                  minHeight: 0,
-                  maxHeight: double.infinity,
-                  child: RepaintBoundary(
-                    key: boundaryKey,
-                    child: SavedTicketView(
-                      ticket: ticket,
-                      imageBytes: imageBytes,
+            child: Opacity(
+              // Low but non-zero so the layer still paints (incl. web).
+              opacity: 0.02,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: Material(
+                  color: Colors.transparent,
+                  child: SizedBox(
+                    width: width,
+                    child: OverflowBox(
+                      alignment: Alignment.topCenter,
+                      minWidth: width,
+                      maxWidth: width,
+                      minHeight: 0,
+                      maxHeight: double.infinity,
+                      child: RepaintBoundary(
+                        key: boundaryKey,
+                        child: SavedTicketView(
+                          ticket: ticket,
+                          imageBytes: eventImageBytes,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -536,7 +477,7 @@ class TicketShareHelper {
         await _precacheTicketImages(
           captureContext,
           ticket,
-          imageBytes: imageBytes,
+          eventImageBytes: eventImageBytes,
         );
       }
       await WidgetsBinding.instance.endOfFrame;
@@ -550,13 +491,13 @@ class TicketShareHelper {
   static Future<void> _precacheTicketImages(
     BuildContext context,
     Ticket ticket, {
-    Uint8List? imageBytes,
+    Uint8List? eventImageBytes,
   }) async {
     if (!context.mounted) return;
 
-    if (imageBytes != null && imageBytes.isNotEmpty) {
+    if (eventImageBytes != null && eventImageBytes.isNotEmpty) {
       try {
-        await precacheImage(MemoryImage(imageBytes), context);
+        await precacheImage(MemoryImage(eventImageBytes), context);
       } catch (_) {}
       return;
     }

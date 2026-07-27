@@ -30,7 +30,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
         ticket,
         boundaryKey: _ticketBoundaryKey,
         sharePositionOrigin: TicketShareHelper.shareOriginFrom(buttonContext),
-        imageBytes: bytes,
+        eventImageBytes: bytes,
       );
     } catch (e, st) {
       debugPrint('TicketDetailPage share failed: $e\n$st');

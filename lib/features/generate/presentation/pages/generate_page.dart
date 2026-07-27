@@ -1,11 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../auth/presentation/auth_gate.dart';
-import '../../../tickets/data/ticket_share_helper.dart';
 import '../../../tickets/presentation/bloc/tickets_cubit.dart';
 import '../bloc/generate_cubit.dart';
 import '../widgets/ticket_details_section.dart';
@@ -61,41 +58,13 @@ class _GenerateViewState extends State<_GenerateView> {
     super.dispose();
   }
 
-  /// Best-effort JPEG snapshot. Never throws — save proceeds with null bytes.
-  Future<Uint8List?> _tryCaptureTicketJpeg() async {
-    try {
-      // Flutter Web `toImage` is flaky (LateInitializationError); skip snapshot.
-      if (kIsWeb) return null;
-
-      final captureContext = _ticketBoundaryKey.currentContext;
-      if (captureContext == null) return null;
-
-      final boundary =
-          captureContext.findRenderObject() as RenderRepaintBoundary?;
-      if (boundary == null ||
-          !boundary.hasSize ||
-          boundary.size.width <= 0 ||
-          boundary.size.height <= 0) {
-        return null;
-      }
-
-      return await TicketShareHelper.captureJpegBytes(_ticketBoundaryKey);
-    } catch (e, st) {
-      debugPrint('Ticket snapshot skipped (save continues): $e\n$st');
-      return null;
-    }
-  }
-
   Future<void> _saveTicket() async {
     if (_isSaving) return;
     setState(() => _isSaving = true);
     try {
-      // Snapshot is optional — local save must succeed even if capture is null.
-      final captured = await _tryCaptureTicketJpeg();
-      if (!mounted) return;
-
-      // Guests save locally — no Sign In / Sign Up gate.
-      await saveTicketAsGuest(context, capturedJpegBytes: captured);
+      // Guests save locally — event photo from GenerateCubit; share composes
+      // the full ticket later via SavedTicketView.
+      await saveTicketAsGuest(context);
       if (mounted) {
         setState(() => _ticketSession++);
       }

@@ -48,8 +48,12 @@ class TicketsCubit extends Cubit<TicketsState> {
     }
   }
 
-  /// Saves ticket metadata immediately, then compresses/uploads the image in
-  /// the background so the UI is not blocked.
+  /// Saves ticket metadata immediately, then compresses/uploads the **event
+  /// photo** in the background so the UI is not blocked.
+  ///
+  /// [imageBytes] is the event gallery image for [SavedTicketView]'s photo
+  /// slot (and durable `imagePath`). Full-ticket share JPEGs are composed at
+  /// share time — do not pass a full-ticket snapshot here.
   Future<void> saveTicket(
     Ticket ticket, {
     Uint8List? imageBytes,
@@ -83,6 +87,10 @@ class TicketsCubit extends Cubit<TicketsState> {
     unawaited(_persistImageAndCloudInBackground(saved, imageBytes));
   }
 
+  /// Compresses/uploads the event photo (not a full-ticket composite).
+  /// Falls back to reading a local [Ticket.imagePath] file when bytes are
+  /// missing. Share/download always re-renders [SavedTicketView] instead of
+  /// using these bytes as the ticket file.
   Future<void> _persistImageAndCloudInBackground(
     Ticket ticket,
     Uint8List? imageBytes,
