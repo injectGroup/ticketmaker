@@ -119,7 +119,7 @@ class SavedTicketCard extends StatelessWidget {
                 Builder(
                   builder: (buttonContext) {
                     return IconButton(
-                      tooltip: 'Share',
+                      tooltip: 'Share Ticket',
                       onPressed: () => _share(buttonContext),
                       icon: const Icon(Icons.share_outlined),
                       color: AppColors.primary,

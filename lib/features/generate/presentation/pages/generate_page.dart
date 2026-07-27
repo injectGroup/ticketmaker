@@ -100,7 +100,7 @@ class _GenerateViewState extends State<_GenerateView> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
-          title: const Text('Quick Ticket Maker'),
+          title: const Text('Personal Tickets'),
           automaticallyImplyLeading: false,
         ),
         body: MultiBlocListener(

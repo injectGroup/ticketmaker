@@ -68,7 +68,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                 Builder(
                   builder: (buttonContext) {
                     return IconButton(
-                      tooltip: 'Share',
+                      tooltip: 'Share Ticket',
                       onPressed: () => _share(buttonContext, ticket!),
                       icon: const Icon(Icons.share_outlined),
                     );

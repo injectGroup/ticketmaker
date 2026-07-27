@@ -89,14 +89,27 @@ class Ticket extends Equatable {
   }
 
   /// Plain-text summary for the native share sheet.
-  /// Always returns a non-empty initialized string (never relies on late/l10n).
+  /// Includes ticket details and the generated URL when [qrData] is http(s).
   String toShareText() {
-    final titleText = title.trim().isEmpty ? 'my event ticket' : title.trim();
+    final titleText =
+        title.trim().isEmpty ? 'my personal event' : title.trim();
+    final pass = subtitle.trim();
     final place = venue.trim().isNotEmpty
         ? venue.trim()
-        : (subtitle.trim().isEmpty ? 'the venue' : subtitle.trim());
+        : (pass.isEmpty ? 'a private gathering' : pass);
     final when = dateLabel.trim().isEmpty ? 'soon' : dateLabel.trim();
-    return 'Check out my event ticket: $titleText at $place on $when!';
+    final buffer = StringBuffer(
+      "You're invited: $titleText at $place on $when",
+    );
+    if (pass.isNotEmpty) {
+      buffer.write(' ($pass)');
+    }
+    buffer.write('!');
+    final link = qrData.trim();
+    if (link.startsWith('http://') || link.startsWith('https://')) {
+      buffer.write('\n$link');
+    }
+    return buffer.toString();
   }
 
   Ticket copyWith({

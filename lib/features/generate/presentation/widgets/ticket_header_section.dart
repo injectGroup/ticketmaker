@@ -60,7 +60,7 @@ class TicketHeaderSection extends StatelessWidget {
               maxLines: 2,
               style: labelStyle,
               cursorColor: onText,
-              hintText: 'Pass title',
+              hintText: 'Birthday, dinner, or gathering',
               onChanged: cubit.updateHeaderLabel,
             ),
           ),
@@ -199,7 +199,7 @@ class _GenerateQrButton extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
             child: Text(
-              'Generate Qr Code',
+              'Create Guest Link',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w700,

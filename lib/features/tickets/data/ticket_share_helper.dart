@@ -16,9 +16,10 @@ import 'ticket_share_download_stub.dart'
 class TicketShareHelper {
   TicketShareHelper._();
 
-  static const String _subject = 'My Custom Ticket Design';
+  static const String _subject = 'Your personal event ticket';
   static const String _webFileName = 'ticket.jpg';
-  static const String _fallbackShareText = 'Check out my event ticket!';
+  static const String _fallbackShareText =
+      "You're invited — open your personal guest ticket!";
   static const String _prepareFailedMessage =
       'Could not prepare ticket image to share.';
   static const String _shareFailedMessage =
@@ -200,7 +201,7 @@ class TicketShareHelper {
         return;
       }
 
-      final shareText = _shareTextFor(ticket);
+      final shareText = _linkOrShareText(ticket);
       const fileName = _webFileName;
       final xFile = XFile.fromData(
         jpegBytes,
@@ -308,11 +309,7 @@ class TicketShareHelper {
   }
 
   static String _linkOrShareText(Ticket ticket) {
-    final qr = ticket.qrData.trim();
-    if (qr.startsWith('http://') || qr.startsWith('https://')) {
-      final caption = _shareTextFor(ticket);
-      return '$caption\n$qr';
-    }
+    // toShareText already appends the http(s) payload URL when present.
     return _shareTextFor(ticket);
   }
 
@@ -373,7 +370,7 @@ class TicketShareHelper {
         ShareParams(
           files: [xFile],
           fileNameOverrides: const [_webFileName],
-          text: _shareTextFor(ticket),
+          text: _linkOrShareText(ticket),
           subject: _subject,
           sharePositionOrigin: origin,
           downloadFallbackEnabled: true,

@@ -43,11 +43,11 @@ void main() {
     await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('Quick Ticket Maker'), findsOneWidget);
-    expect(find.text('Circu Du Freak'), findsOneWidget);
+    expect(find.text('Personal Tickets'), findsOneWidget);
+    expect(find.text("Ejike's Birthday Bash"), findsOneWidget);
     expect(find.text('Change color'), findsOneWidget);
     expect(find.text('Change shape'), findsOneWidget);
-    expect(find.text('Generate Qr Code'), findsOneWidget);
+    expect(find.text('Create Guest Link'), findsOneWidget);
     expect(find.text('Save Ticket'), findsOneWidget);
 
     expect(find.text('Generate'), findsWidgets);
@@ -60,14 +60,14 @@ void main() {
     await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('Quick Ticket Maker'), findsOneWidget);
-    expect(find.text('MY TICKET'), findsOneWidget);
-    expect(find.text('Circu Du Freak'), findsOneWidget);
-    expect(find.text('Vision & Sound Experience'), findsOneWidget);
-    expect(find.text('National Stadium, Abuja'), findsOneWidget);
+    expect(find.text('Personal Tickets'), findsOneWidget);
+    expect(find.text('GUEST PASS'), findsOneWidget);
+    expect(find.text("Ejike's Birthday Bash"), findsOneWidget);
+    expect(find.text('VIP Guest Pass'), findsOneWidget);
+    expect(find.text('Private gathering'), findsOneWidget);
     expect(find.byIcon(Icons.threed_rotation), findsNothing);
     expect(find.byIcon(Icons.place_outlined), findsOneWidget);
-    expect(find.text('Generate Qr Code'), findsOneWidget);
+    expect(find.text('Create Guest Link'), findsOneWidget);
     expect(find.text('Bg color'), findsOneWidget);
     expect(find.text('Save Ticket'), findsOneWidget);
   });
@@ -80,7 +80,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('No saved tickets yet'), findsOneWidget);
-    expect(find.text('Circu Du Freak'), findsNothing);
+    expect(find.text("Ejike's Birthday Bash"), findsNothing);
   });
 
   testWidgets('Guest Save Ticket saves without auth gate', (tester) async {
@@ -138,7 +138,7 @@ void main() {
     expect(find.text('Detail View Concert Tagline'), findsOneWidget);
     expect(find.text('National Stadium Abuja'), findsOneWidget);
     expect(find.text('9999-8888-777'), findsOneWidget);
-    expect(find.text('Generate Qr Code'), findsNothing);
+    expect(find.text('Create Guest Link'), findsNothing);
     expect(find.text('Save Ticket'), findsNothing);
   });
 

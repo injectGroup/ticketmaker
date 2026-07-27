@@ -21,17 +21,24 @@ class GenerateCubit extends Cubit<GenerateState> {
 
   static final DateTime _defaultEventAt = DateTime(2026, 7, 18, 20, 0);
 
+  /// Default ticket code used for initial QR / share payload.
+  static const String _defaultCode = '1234-5678-910';
+
+  /// Public ticket link template; [code] is the generated ticket id.
+  static String ticketPayloadUrl(String code) =>
+      'https://ticketmaker.app/t/$code';
+
   static final Ticket _defaultTicket = Ticket(
     id: 'default',
-    headerLabel: 'MY TICKET',
-    title: 'Circu Du Freak',
-    subtitle: 'Vision & Sound Experience',
-    venue: 'National Stadium, Abuja',
+    headerLabel: 'GUEST PASS',
+    title: "Ejike's Birthday Bash",
+    subtitle: 'VIP Guest Pass',
+    venue: 'Private gathering',
     dateLabel: formatDateLabel(_defaultEventAt),
     timeLabel: formatTimeLabel(_defaultEventAt),
     eventAt: _defaultEventAt,
-    code: '1234-5678-910',
-    qrData: 'https://www.linkedin.com/in/abdulkadirmohammed/',
+    code: _defaultCode,
+    qrData: ticketPayloadUrl(_defaultCode),
     imagePath: '',
     // Brand pink corners + white modules on dark plum card.
     eyeColor: AppColors.primary,
@@ -254,9 +261,9 @@ class GenerateCubit extends Cubit<GenerateState> {
       state.copyWith(
         ticket: state.ticket.copyWith(
           code: code,
-          qrData: 'https://ticketmaker.app/t/$code',
+          qrData: ticketPayloadUrl(code),
         ),
-        message: 'QR code generated',
+        message: 'Personal ticket link ready',
       ),
     );
   }
