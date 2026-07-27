@@ -1,0 +1,32 @@
+rules_version = '2';
+
+// Quick Ticket Maker — Storage security rules
+// Paths used by the app:
+//   users/{uid}/tickets/{ticketId}.jpg — Ticket JPEG uploads
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isJpegUnderFiveMb() {
+      return request.resource != null
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/jpeg');
+    }
+
+    match /users/{userId}/tickets/{fileName} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId) && isJpegUnderFiveMb();
+      allow delete: if isOwner(userId);
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

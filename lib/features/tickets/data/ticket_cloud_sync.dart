@@ -27,7 +27,14 @@ class TicketCloudSync {
       _firestoreOverride ?? FirebaseFirestore.instance;
   FirebaseStorage get _storage => _storageOverride ?? FirebaseStorage.instance;
 
-  String? get _uid => _auth.currentUser?.uid;
+  String? get _uid {
+    try {
+      return _auth.currentUser?.uid;
+    } catch (_) {
+      // Firebase not initialized (unit tests / early boot).
+      return null;
+    }
+  }
 
   DocumentReference<Map<String, dynamic>>? _ticketDoc(String ticketId) {
     final uid = _uid;

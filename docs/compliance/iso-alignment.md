@@ -13,8 +13,8 @@ Map Quick Ticket Maker repository practices to selected ISO/IEC standards used b
 | Field | Value |
 | --- | --- |
 | Product | Quick Ticket Maker |
-| Repository | injectGroup/ticketmaker |
-| Last reviewed | 2026-07-16 |
+| Repository | injectGroup/ticketmaker; ejike-art/ticketmaker-gen-and-tickets-only |
+| Last reviewed | 2026-07-27 |
 
 ---
 
@@ -39,19 +39,20 @@ Map Quick Ticket Maker repository practices to selected ISO/IEC standards used b
 | Theme | Repository implementation |
 | --- | --- |
 | Policies for information security | [security/information-security-policy.md](../security/information-security-policy.md) |
-| Access control / least privilege | Private repo; collaborator roles; SSH preferred ([getting-started.md](../getting-started.md)) |
-| Secure development life cycle | PR reviews, analyzer/tests, [secure-coding.md](../security/secure-coding.md) |
-| Management of technical vulnerabilities | [SECURITY.md](../../SECURITY.md), dependency review expectations |
-| Logging / privacy in logs | Secure coding + privacy notice restrictions |
-| Supplier relationships (packages) | Dependency rules in development + threat model |
+| Access control / least privilege | Public-by-decision remotes + LICENSE; collaborator roles; SSH preferred; [github-hardening-checklist.md](../security/github-hardening-checklist.md) |
+| Secure development life cycle | PR reviews, Security CI (`flutter analyze` / `test` / gitleaks), [secure-coding.md](../security/secure-coding.md) |
+| Management of technical vulnerabilities | [SECURITY.md](../../SECURITY.md), Dependabot, disclosure process |
+| Logging / privacy in logs | Secure coding + privacy notice; no raw password logs |
+| Supplier relationships (packages) | Dependency rules + Dependabot |
+| Cloud data access | Firestore/Storage owner-only rules; [firebase-console-hardening.md](../security/firebase-console-hardening.md) |
 
 ### B. Privacy (27701 themes)
 
 | Theme | Repository implementation |
 | --- | --- |
 | Privacy notice / transparency | [privacy.md](../privacy.md) |
-| Data minimization | In-memory preview state; no account system |
-| Purpose limitation | Features doc states preview-only purpose |
+| Data minimization | Local preview by default; cloud sync only for signed-in owners |
+| Purpose limitation | Features doc + threat model |
 | Breach / vulnerability communication | Security disclosure channels (not public Issues) |
 
 ### C. Vulnerability disclosure & handling (29147 / 30111)
@@ -95,10 +96,10 @@ Map Quick Ticket Maker repository practices to selected ISO/IEC standards used b
 | Gap | Status | Planned direction |
 | --- | --- | --- |
 | Formal org-wide ISMS certification evidence | Outside this repo | Maintain org documents separately |
-| Enforced GitHub branch protection / required reviewers | Configuration dependent | Enable on `main` for all writes |
-| Automated SAST/DAST in CI | Not yet configured | Add CI workflow when ready |
-| Persistent data encryption controls | N/A (no persistence) | Define before adding storage |
-| Production telemetry governance | N/A | Update privacy + threat model before enabling |
+| Enforced GitHub branch protection / required reviewers | Configured on primary public remote when admin available | Keep checklist current; mirror on injectGroup if org admin |
+| Automated SAST beyond analyze + gitleaks | Partial (Security CI) | Expand when ready |
+| App Check / API key restrictions in Console | Operator checklist | Enforce in Firebase/GCP Console |
+| Formal ISO certification claim | Not claimed | Alignment only |
 
 ---
 

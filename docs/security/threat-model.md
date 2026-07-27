@@ -4,9 +4,9 @@
 
 Identify assets, trust boundaries, threats, and mitigations for Quick Ticket Maker. Methodologically aligned with common secure design practice used alongside ISO/IEC 27005 risk concepts and STRIDE-style analysis.
 
-**Model version:** 1.0  
-**Date:** 2026-07-16  
-**System version:** app `1.0.0+1` / branch `main`
+**Model version:** 2.0  
+**Date:** 2026-07-27  
+**System version:** app with Firebase Auth + cloud ticket sync / public GitHub remotes
 
 ---
 
@@ -14,22 +14,27 @@ Identify assets, trust boundaries, threats, and mitigations for Quick Ticket Mak
 
 | Asset | Sensitivity | Notes |
 | --- | --- | --- |
-| Source code | Confidential (proprietary) | Private GitHub repository |
-| Ticket preview state | Low | Local ephemeral UI state |
-| Generated ticket codes | Low–Medium | Guessable format; not proof of authenticity |
-| QR payload strings | Low–Medium | Client-generated; may encode URLs |
-| Remote images | Untrusted input | Loaded over the network |
-| Fonts (google_fonts) | Low | May be fetched/cached |
-| Future auth tokens / PII | High | Not present yet; design for later |
+| Source code | Proprietary (LICENSE) | Public remotes; legal restriction ≠ access control |
+| Firebase client config | Low (public client keys) | `lib/firebase_options.dart`; restrict via Console + App Check |
+| Auth credentials (user passwords / OAuth tokens) | High | Handled by Firebase Auth; never logged or committed |
+| Firestore `users/{uid}` profiles | Medium | Owner-only rules |
+| Firestore ticket metadata | Medium | `users/{uid}/tickets/{id}` |
+| Storage ticket JPEGs | Medium | `users/{uid}/tickets/{id}.jpg` |
+| Ticket preview / QR payloads | Low–Medium | Client-generated; not admission credentials |
+| Remote images / fonts | Untrusted input | Loaded over the network |
+| CI / Chat webhook secrets | High | GitHub Actions secrets only |
 
 ---
 
 ## 2. Trust boundaries
 
 ```text
-[ Developer workstation ] --git/ssh--> [ GitHub injectGroup/ticketmaker ]
+[ Developer workstation ] --git/ssh--> [ GitHub public remotes ]
+[ App process ] --https--> [ Firebase Auth ]
+[ App process ] --https--> [ Cloud Firestore ]  (rules enforce auth.uid)
+[ App process ] --https--> [ Firebase Storage ] (rules enforce auth.uid)
 [ App process ] --https--> [ Remote image CDN / font hosts ]
-[ App process ] --(none today)--> [ Inject backend ]
+[ GitHub Actions ] --secret--> [ Google Chat webhook ] (optional notify)
 ```
 
 ---
@@ -38,10 +43,11 @@ Identify assets, trust boundaries, threats, and mitigations for Quick Ticket Mak
 
 | Entry point | Authn | Notes |
 | --- | --- | --- |
-| UI controls on Generate/Tickets | None | Local only |
-| Network image URLs | None | Attacker can influence if URL source becomes user-controlled |
-| GitHub PR / CI | Collaborator auth | Supply-chain vector |
-| Deep links / QR open actions | N/A today | Future risk if app handles arbitrary URLs |
+| UI Generate / Tickets | Optional account | Local preview + optional cloud sync |
+| Auth sheet (email / Google / Apple) | Firebase Auth | Passwords never logged |
+| Network image URLs | None | Untrusted content |
+| GitHub PR / CI | Collaborator auth | Supply-chain vector; Security CI + branch protection |
+| Deep links / QR open actions | N/A / future | Allowlist if introduced |
 
 ---
 
@@ -49,12 +55,15 @@ Identify assets, trust boundaries, threats, and mitigations for Quick Ticket Mak
 
 | Category | Example threat | Current mitigation | Residual risk |
 | --- | --- | --- | --- |
-| Spoofing | Malicious collaborator pushes code | Private repo + review expectations | Medium without enforced branch protection |
-| Tampering | Dependency compromise | Lockfile + review upgrades | Medium |
-| Repudiation | Unclear who merged risky change | GitHub audit log / PR history | Low–Medium |
-| Information disclosure | Secrets in git | Policy + `.gitignore` + disclosure process | Medium if discipline fails |
-| Denial of service | Huge image decode / UI jank | Flutter image constraints; limited surface | Low |
-| Elevation of privilege | N/A (no authz model yet) | Keep auth designs least-privilege later | N/A now |
+| Spoofing | Stolen Firebase client key abused | API key restrictions + App Check; Auth required for data | Medium until App Check enforced |
+| Spoofing | Auth bypass to another user’s tickets | Firestore/Storage `request.auth.uid == uid` | Low if rules deployed |
+| Tampering | Dependency compromise | Lockfile, Dependabot, PR review, Security CI | Medium |
+| Tampering | Malicious PR to public repo | Branch protection + required checks | Medium without reviewers |
+| Repudiation | Unclear who merged risky change | GitHub audit / PR history | Low–Medium |
+| Information disclosure | Secrets in git | `.gitignore`, gitleaks CI, push protection | Medium if discipline fails |
+| Information disclosure | Public clone of proprietary code | LICENSE (legal); not technical hiding | Accepted for public remotes |
+| Denial of service | Huge image decode / Storage abuse | JPEG size limit in Storage rules; Flutter constraints | Low–Medium |
+| Elevation of privilege | Cross-user Firestore/Storage access | Deny-by-default rules | Low if rules deployed |
 
 ---
 
@@ -62,51 +71,44 @@ Identify assets, trust boundaries, threats, and mitigations for Quick Ticket Mak
 
 ### 5.1 QR codes are not authentication
 
-Generated QR content and ticket codes are **preview artifacts**. They must not be treated as secure admission credentials without a server-side issuance and validation design.
+Generated QR content and ticket codes are **preview artifacts**. They must not be treated as secure admission credentials without server-side issuance and validation.
 
 ### 5.2 Untrusted media
 
-`Image.network` loads remote content. Risks include unexpected content and future SSRF-like issues if URLs become fully user-controlled without allowlisting.
+`Image.network` loads remote content. Prefer allowlists when URLs become user-controlled.
 
-**Controls:**
+### 5.3 Firebase Auth + cloud sync
 
-- Prefer allowlists when user-provided URLs are introduced
-- Always provide error builders / placeholders
-- Do not execute remote content as code
-
-### 5.3 Privacy of demo data
-
-Default sample content includes a third-party profile URL used historically as demo QR data. Prefer non-personal demo URLs for future defaults when practical.
+- Guest local save may work without cloud writes; cloud paths require signed-in `uid`.
+- Never treat client API keys as confidential server credentials.
+- Rotate / restrict keys if abuse is observed.
 
 ### 5.4 Supply chain
 
 Malicious or vulnerable pub.dev packages can execute at build/runtime.
 
-**Controls:**
-
-- Minimize dependencies
-- Review new packages
-- Keep Flutter/Dart updated
-- Enable Dependabot / advisory alerts when available
+**Controls:** Minimize dependencies; review upgrades; Dependabot; Security CI.
 
 ---
 
 ## 6. Abuse cases (illustrative)
 
-1. Attacker opens a PR that adds exfiltration code → mitigated by review and private collaborator model.
-2. Attacker tricks a user into scanning a malicious QR produced by a modified build → user education; code signing for distribution builds.
-3. Future feature stores PII in logs → blocked by secure coding + privacy policy updates.
+1. Attacker opens a PR that adds exfiltration code → review + required CI + branch protection.
+2. Attacker uses extracted client API key without App Check → API restrictions + App Check enforcement.
+3. Attacker guesses another uid path → Firestore/Storage rules deny.
+4. Attacker tricks a user into scanning a malicious QR from a modified build → education; code signing for distribution.
 
 ---
 
 ## 7. Security requirements derived from this model
 
-1. No secrets in repository.
-2. No public vulnerability Issues.
+1. No server secrets or webhooks in repository.
+2. No public vulnerability Issues (use private reporting / email).
 3. Network calls must use HTTPS.
-4. Ticket authenticity requires future cryptographic server design (out of scope now).
+4. Firestore and Storage must enforce owner-only access.
 5. User-generated URLs require validation/allowlisting before use.
-6. Production releases should use platform code signing and notarization where applicable.
+6. Production releases should use platform code signing where applicable.
+7. Public remotes require compensating GitHub + Firebase controls (see checklists).
 
 ---
 
@@ -114,8 +116,8 @@ Malicious or vulnerable pub.dev packages can execute at build/runtime.
 
 Update this threat model when:
 
-- Adding authentication, payments, or backends
-- Adding file export/share
+- Changing Auth providers or data models
+- Adding payments, admin backends, or shared ticket collections
 - Adding push notifications or deep links
-- Changing dependency major versions with network/crypto impact
+- Changing repository visibility
 - After a security incident

@@ -5,11 +5,12 @@
 | Field | Value |
 | --- | --- |
 | Title | Quick Ticket Maker — Information Security Policy |
-| Scope | `injectGroup/ticketmaker` repository and related development activities |
+| Scope | `injectGroup/ticketmaker`, `ejike-art/ticketmaker-gen-and-tickets-only`, and related development activities |
 | Alignment | ISO/IEC 27001:2022 Annex A themes; ISO/IEC 27002 guidance |
 | Classification | Internal |
 | Owner | Inject maintainers |
 | Effective date | 2026-07-16 |
+| Last reviewed | 2026-07-27 |
 | Review cadence | Annual, or after significant incidents / architecture changes |
 
 This policy defines **repository-level** controls. It does not replace Inject’s organization-wide ISMS documents where those exist.
@@ -57,12 +58,13 @@ Out of scope of this document:
 
 ## 4. Access control (ISO/IEC 27001 A.5 / A.8 themes)
 
-1. Repository remains **private** unless Inject leadership approves publication.
-2. Access is least-privilege (read / triage / write / maintain / admin).
+1. Remotes may be **public by explicit product decision**. Public visibility does **not** grant a license to use, copy, or commercialize the Software — see the proprietary [LICENSE](../../LICENSE). Compensating controls are mandatory: secret scanning, push protection, Security CI, branch protection, and Firebase least-privilege rules ([github-hardening-checklist.md](github-hardening-checklist.md), [firebase-console-hardening.md](firebase-console-hardening.md)).
+2. Collaborator access is least-privilege (read / triage / write / maintain / admin).
 3. Departing collaborators must have access revoked promptly.
 4. Prefer SSO / org-managed identities when available.
 5. Personal access tokens must be short-lived, scoped, and never committed.
 6. SSH keys must be individual, passphrase-protected where feasible, and revoked when lost.
+7. Automation credentials (e.g. Chat webhooks) live only in GitHub Actions secrets or local env — never in source.
 
 ---
 

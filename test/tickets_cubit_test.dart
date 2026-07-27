@@ -61,7 +61,7 @@ void main() {
 
     final saved = cubit.state.tickets.single;
     expect(saved.imagePath, missing);
-    expect(cubit.state.message, 'Ticket saved');
+    expect(cubit.state.message, 'Ticket saved successfully!');
   });
 
   test('saveTicket stores durable path when file exists', () async {
@@ -69,7 +69,7 @@ void main() {
       ..writeAsBytesSync(List<int>.filled(20, 1));
 
     await cubit.saveTicket(_sample(imagePath: source.path));
-    expect(cubit.state.message, 'Ticket saved');
+    expect(cubit.state.message, 'Ticket saved successfully!');
 
     // Image compress + local persist runs in the background.
     await Future<void>.delayed(const Duration(milliseconds: 1500));

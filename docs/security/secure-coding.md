@@ -17,11 +17,13 @@ Aligned with ISO/IEC 27002 secure coding themes and GitHub secure development gu
 
 ## 2. Secrets
 
-1. Do not hard-code credentials.
+1. Do not hard-code credentials, webhooks, or service-account JSON.
 2. Do not commit keystores with production passwords.
 3. Use CI secret stores for automation credentials.
 4. Redact secrets in logs, screenshots, and crash reports.
 5. Rotate immediately on exposure.
+6. Firebase **client** API keys in `lib/firebase_options.dart` are public-by-design for mobile/web SDKs — never treat them as server secrets; enforce Console API key restrictions and App Check ([firebase-console-hardening.md](firebase-console-hardening.md)).
+7. Auth debug logs may record password emptiness only — never raw passwords.
 
 ---
 
@@ -93,4 +95,4 @@ Contributors must answer in the PR template:
 - `http://` cleartext endpoints for new features (except local dev with documentation)
 - Copy-pasting unknown code from untrusted sources without review
 - Disabling analyzer/linter rules to hide security defects
-- Publishing proprietary source to public remotes
+- Publishing proprietary source to a **new** public remote without maintainer approval, LICENSE intact, and compensating GitHub/Firebase controls ([github-hardening-checklist.md](github-hardening-checklist.md))

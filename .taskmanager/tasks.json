@@ -21,13 +21,13 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-07-22T08:35:30.000Z",
+      "updatedAt": "2026-07-27T11:09:18.000Z",
       "lastMilestone": {
-        "message": "App update: save ticket ignores snapshot LateInitializationError",
-        "taskId": "task-fix-save-late-init-20260727",
-        "updatedAt": "2026-07-27T08:55:00.000Z",
+        "message": "Cybersecurity protocol: GitHub hardening, Security CI, Firestore/Storage rules, ISO docs",
+        "taskId": "task-cyber-verify-notify-20260727",
+        "updatedAt": "2026-07-27T11:09:18.000Z",
         "source": "local-fallback",
-        "note": "Cloud notify_milestone_reached requires Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
+        "note": "Cloud notify may require Firebase share; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
     }
   ],
@@ -1123,7 +1123,111 @@
       "status": "done",
       "createdAt": "2026-07-27T08:52:00.000Z",
       "updatedAt": "2026-07-27T08:55:00.000Z"
+    },
+    {
+      "id": "task-cyber-secrets-audit-20260727",
+      "projectId": "project-1784709204130",
+      "epicId": "epic-cybersecurity-protocol-20260727",
+      "title": "Audit secrets / tracked sensitive files",
+      "description": "Scan tree/history for .env, keystores, service accounts, webhooks; confirm google-services ignored; document firebase_options as client keys.",
+      "details": "Local TaskManager backup \u2014 cloud MCP denied for project-1784709204130.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-27T11:05:00.000Z",
+      "updatedAt": "2026-07-27T11:09:18.000Z"
+    },
+    {
+      "id": "task-cyber-github-harden-20260727",
+      "projectId": "project-1784709204130",
+      "epicId": "epic-cybersecurity-protocol-20260727",
+      "title": "GitHub security settings (public-safe)",
+      "description": "Enable secret scanning, push protection, Dependabot, private vuln reporting, branch protection on ejike-art/ticketmaker-gen-and-tickets-only.",
+      "details": "",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-27T11:05:00.000Z",
+      "updatedAt": "2026-07-27T11:09:18.000Z"
+    },
+    {
+      "id": "task-cyber-ci-security-20260727",
+      "projectId": "project-1784709204130",
+      "epicId": "epic-cybersecurity-protocol-20260727",
+      "title": "CI: analyze + test + secret scan",
+      "description": "Add .github/workflows/security-ci.yml with flutter analyze/test and gitleaks.",
+      "details": "",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-27T11:05:00.000Z",
+      "updatedAt": "2026-07-27T11:09:18.000Z"
+    },
+    {
+      "id": "task-cyber-firebase-rules-20260727",
+      "projectId": "project-1784709204130",
+      "epicId": "epic-cybersecurity-protocol-20260727",
+      "title": "Firestore + Storage security rules",
+      "description": "Add firestore.rules and storage.rules; wire firebase.json; deploy when creds available.",
+      "details": "Paths: users/{uid}, users/{uid}/tickets/{id}, storage users/{uid}/tickets/{id}.jpg Rules added in repo; firebase deploy blocked (reauth required).",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-27T11:05:00.000Z",
+      "updatedAt": "2026-07-27T11:09:18.000Z"
+    },
+    {
+      "id": "task-cyber-docs-iso-20260727",
+      "projectId": "project-1784709204130",
+      "epicId": "epic-cybersecurity-protocol-20260727",
+      "title": "Refresh threat model / ISO / info-sec for public + auth",
+      "description": "Update info-sec policy, threat model, ISO gaps, secure-coding, SECURITY.md; add github-hardening-checklist.",
+      "details": "",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-27T11:05:00.000Z",
+      "updatedAt": "2026-07-27T11:09:18.000Z"
+    },
+    {
+      "id": "task-cyber-firebase-console-20260727",
+      "projectId": "project-1784709204130",
+      "epicId": "epic-cybersecurity-protocol-20260727",
+      "title": "Firebase Console hardening checklist",
+      "description": "Document App Check + API key restrictions for quick-ticket-maker-sandbox.",
+      "details": "",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-27T11:05:00.000Z",
+      "updatedAt": "2026-07-27T11:09:18.000Z"
+    },
+    {
+      "id": "task-cyber-verify-notify-20260727",
+      "projectId": "project-1784709204130",
+      "epicId": "epic-cybersecurity-protocol-20260727",
+      "title": "Verify + sync TaskManager + notify milestone",
+      "description": "Verify GitHub settings, sync local TaskManager backup, milestone + Chat notify.",
+      "details": "",
+      "operationalPhase": "REVIEW",
+      "priority": "medium",
+      "status": "in-progress",
+      "createdAt": "2026-07-27T11:05:00.000Z",
+      "updatedAt": "2026-07-27T11:09:18.000Z"
     }
   ],
-  "lastSync": "2026-07-27T08:55:00.000Z"
+  "epics": [
+    {
+      "id": "epic-cybersecurity-protocol-20260727",
+      "projectId": "project-1784709204130",
+      "name": "Cybersecurity standard protocol",
+      "description": "Full-stack ISO-aligned cybersecurity for public remotes: GitHub hardening, Firebase rules, CI secret scanning, docs.",
+      "docPath": "docs/security/github-hardening-checklist.md",
+      "status": "active",
+      "createdAt": "2026-07-27T11:05:00.000Z",
+      "updatedAt": "2026-07-27T11:09:18.000Z",
+      "note": "Cloud epic_create denied (project not shared); local backup only."
+    }
+  ],
+  "lastSync": "2026-07-27T11:09:18.000Z"
 }

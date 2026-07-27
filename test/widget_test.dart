@@ -83,7 +83,7 @@ void main() {
     expect(find.text('Circu Du Freak'), findsNothing);
   });
 
-  testWidgets('Guest Save Ticket opens auth gate', (tester) async {
+  testWidgets('Guest Save Ticket saves without auth gate', (tester) async {
     await tester.pumpWidget(buildTestApp());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
@@ -91,11 +91,10 @@ void main() {
     await tester.ensureVisible(find.text('Save Ticket'));
     await tester.tap(find.text('Save Ticket'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 800));
+    await tester.pump(const Duration(seconds: 1));
 
-    expect(find.text('Sign in to continue'), findsOneWidget);
-    expect(find.text('Sign In'), findsWidgets);
-    expect(find.text('Sign Up'), findsWidgets);
+    expect(find.text('Sign in to continue'), findsNothing);
+    expect(find.text('Sign In'), findsNothing);
   });
 
   testWidgets('Tapping a saved ticket opens read-only detail view', (
