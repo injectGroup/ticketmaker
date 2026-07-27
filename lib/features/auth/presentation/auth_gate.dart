@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,7 +12,10 @@ import '../domain/pending_auth_action.dart';
 import 'bloc/auth_cubit.dart';
 import 'widgets/auth_flow_sheet.dart';
 
-/// Ensures authentication, then runs [action] (save ticket).
+/// Ensures authentication, then runs [action].
+///
+/// Prefer [saveTicketAsGuest] for Save Ticket — guests may persist locally
+/// without signing in.
 Future<void> requireAuthThen(
   BuildContext context,
   PendingAuthAction action,
@@ -39,14 +43,28 @@ Future<void> requireAuthThen(
   await _executePending(context, pending);
 }
 
+/// Persists the current Generate ticket locally without Sign In / Sign Up.
+Future<void> saveTicketAsGuest(
+  BuildContext context, {
+  Uint8List? capturedJpegBytes,
+}) {
+  return _executePending(
+    context,
+    const PendingSaveTicketAction(),
+    capturedJpegBytes: capturedJpegBytes,
+  );
+}
+
+@Deprecated('Use saveTicketAsGuest — Save Ticket no longer requires auth.')
 Future<void> requireAuthThenSaveTicket(BuildContext context) {
-  return requireAuthThen(context, const PendingSaveTicketAction());
+  return saveTicketAsGuest(context);
 }
 
 Future<void> _executePending(
   BuildContext context,
-  PendingAuthAction action,
-) async {
+  PendingAuthAction action, {
+  Uint8List? capturedJpegBytes,
+}) async {
   switch (action) {
     case PendingSaveTicketAction():
       final generateCubit = context.read<GenerateCubit>();
@@ -55,7 +73,8 @@ Future<void> _executePending(
             .read<TicketsCubit>()
             .saveTicket(
               generateCubit.state.ticket,
-              imageBytes: generateCubit.state.imageBytes,
+              imageBytes:
+                  capturedJpegBytes ?? generateCubit.state.imageBytes,
             )
             .timeout(
               const Duration(seconds: 10),

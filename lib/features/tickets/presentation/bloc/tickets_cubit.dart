@@ -69,7 +69,7 @@ class TicketsCubit extends Cubit<TicketsState> {
         state.copyWith(
           tickets: updated,
           imageBytesById: nextBytes,
-          message: 'Ticket saved',
+          message: 'Ticket saved successfully!',
         ),
       );
     } catch (e, st) {

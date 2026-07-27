@@ -1,8 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../auth/presentation/auth_gate.dart';
+import '../../../tickets/data/ticket_share_helper.dart';
 import '../../../tickets/presentation/bloc/tickets_cubit.dart';
 import '../bloc/generate_cubit.dart';
 import '../widgets/ticket_details_section.dart';
@@ -33,6 +36,7 @@ class _GenerateViewState extends State<_GenerateView> {
   late final TextEditingController _titleController;
   late final TextEditingController _subtitleController;
   late final TextEditingController _venueController;
+  final GlobalKey _ticketBoundaryKey = GlobalKey();
   bool _isSaving = false;
 
   /// Bumped after Save Ticket so brackets return for the next ticket.
@@ -61,7 +65,15 @@ class _GenerateViewState extends State<_GenerateView> {
     if (_isSaving) return;
     setState(() => _isSaving = true);
     try {
-      await requireAuthThenSaveTicket(context);
+      // Capture painted ticket when the RepaintBoundary is attached.
+      Uint8List? captured;
+      if (_ticketBoundaryKey.currentContext != null) {
+        captured = await TicketShareHelper.captureJpegBytes(_ticketBoundaryKey);
+      }
+      if (!mounted) return;
+
+      // Guests save locally — no Sign In / Sign Up gate.
+      await saveTicketAsGuest(context, capturedJpegBytes: captured);
       if (mounted) {
         setState(() => _ticketSession++);
       }
@@ -177,24 +189,27 @@ class _GenerateViewState extends State<_GenerateView> {
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(24),
-                            child: Column(
-                              children: [
-                                TicketHeaderSection(
-                                  ticket: ticket,
-                                  headerLabelController:
-                                      _headerLabelController,
-                                  bracketResetToken: _ticketSession,
-                                ),
-                                const TicketPerforation(),
-                                TicketDetailsSection(
-                                  ticket: ticket,
-                                  titleController: _titleController,
-                                  subtitleController: _subtitleController,
-                                  venueController: _venueController,
-                                  bracketResetToken: _ticketSession,
-                                  imageBytes: state.imageBytes,
-                                ),
-                              ],
+                            child: RepaintBoundary(
+                              key: _ticketBoundaryKey,
+                              child: Column(
+                                children: [
+                                  TicketHeaderSection(
+                                    ticket: ticket,
+                                    headerLabelController:
+                                        _headerLabelController,
+                                    bracketResetToken: _ticketSession,
+                                  ),
+                                  const TicketPerforation(),
+                                  TicketDetailsSection(
+                                    ticket: ticket,
+                                    titleController: _titleController,
+                                    subtitleController: _subtitleController,
+                                    venueController: _venueController,
+                                    bracketResetToken: _ticketSession,
+                                    imageBytes: state.imageBytes,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
