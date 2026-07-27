@@ -117,4 +117,45 @@ void main() {
       expect(find.text('1111-2222-333'), findsOneWidget);
     },
   );
+
+  test('downloadFileNameFor uses Ticket_<code>.png', () {
+    expect(
+      TicketShareHelper.downloadFileNameFor(sampleTicket),
+      'Ticket_1111-2222-333.png',
+    );
+  });
+
+  testWidgets('composeTicketPngBytes captures on-screen SavedTicketView', (
+    tester,
+  ) async {
+    final boundaryKey = GlobalKey();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: RepaintBoundary(
+              key: boundaryKey,
+              child: SavedTicketView(ticket: sampleTicket),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final BuildContext context = tester.element(find.byType(Scaffold));
+    Uint8List? png;
+    await tester.runAsync(() async {
+      png = await TicketShareHelper.composeTicketPngBytes(
+        context,
+        sampleTicket,
+        boundaryKey: boundaryKey,
+      );
+    });
+
+    expect(png, isNotNull);
+    expect(png!, isNotEmpty);
+    expect(png!.take(8).toList(), [137, 80, 78, 71, 13, 10, 26, 10]);
+  });
 }

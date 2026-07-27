@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-07-27T21:45:00.000Z",
+      "updatedAt": "2026-07-27T21:55:00.000Z",
       "lastMilestone": {
-        "message": "Web Share dialog: Download Ticket Image or Copy Share Link with clear SnackBars",
-        "taskId": "task-web-share-dialog-20260727",
-        "updatedAt": "2026-07-27T21:45:00.000Z",
+        "message": "My Tickets list Download composes off-screen PNG; Ticket_[code].png + link fallback",
+        "taskId": "task-fix-list-ticket-download-20260727",
+        "updatedAt": "2026-07-27T21:55:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify may require Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1305,6 +1305,19 @@
       "status": "done",
       "createdAt": "2026-07-27T21:40:00.000Z",
       "updatedAt": "2026-07-27T21:45:00.000Z"
+    },
+    {
+      "id": "task-fix-list-ticket-download-20260727",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Fix My Tickets list ticket image download",
+      "description": "Compose full ticket PNG off-screen/overlay/modal from saved model; web downloads Ticket_[code].png with success SnackBar; copy share link on failure.",
+      "details": "ticket_share_helper.dart; saved_ticket_card.dart; tests.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-27T21:50:00.000Z",
+      "updatedAt": "2026-07-27T21:55:00.000Z"
     }
   ],
   "epics": [

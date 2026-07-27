@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../generate/domain/entities/ticket.dart';
 import '../../data/ticket_share_helper.dart';
+import '../bloc/tickets_cubit.dart';
 import '../pages/tickets_page.dart';
 
 /// List card for a persisted ticket, with a native share action.
@@ -25,13 +27,19 @@ class SavedTicketCard extends StatelessWidget {
 
   Future<void> _share(BuildContext buttonContext) async {
     try {
-      // List rows have no full-ticket RepaintBoundary. capturePngBytes would
-      // return null — share ticket link/details only (clipboard / share sheet).
+      // List rows have no on-screen ticket RepaintBoundary. Share still
+      // composes SavedTicketView off-screen / via modal from [ticket] data
+      // (and optional event photo bytes) for Download on web.
+      final eventBytes =
+          buttonContext.read<TicketsCubit>().state.imageBytesFor(ticket.id);
       await TicketShareHelper.share(
         buttonContext,
         ticket,
         sharePositionOrigin: TicketShareHelper.shareOriginFrom(buttonContext),
-        attachTicketImage: false,
+        eventImageBytes: eventBytes,
+        // Allow compose for web Download; native list still falls back to
+        // link/text when image capture is unavailable.
+        attachTicketImage: true,
       );
     } catch (e, st) {
       debugPrint('SavedTicketCard share failed: $e\n$st');
