@@ -1208,12 +1208,12 @@
       "epicId": "epic-cybersecurity-protocol-20260727",
       "title": "Verify + sync TaskManager + notify milestone",
       "description": "Verify GitHub settings, sync local TaskManager backup, milestone + Chat notify.",
-      "details": "",
-      "operationalPhase": "REVIEW",
+      "details": "Pushed 0274d93 to gen-tickets; GitHub secret scanning/push protection/branch protection enabled; firebase deploy needs reauth.",
+      "operationalPhase": "COMPLETE",
       "priority": "medium",
-      "status": "in-progress",
+      "status": "done",
       "createdAt": "2026-07-27T11:05:00.000Z",
-      "updatedAt": "2026-07-27T11:09:18.000Z"
+      "updatedAt": "2026-07-27T11:13:27.000Z"
     }
   ],
   "epics": [
@@ -1223,11 +1223,11 @@
       "name": "Cybersecurity standard protocol",
       "description": "Full-stack ISO-aligned cybersecurity for public remotes: GitHub hardening, Firebase rules, CI secret scanning, docs.",
       "docPath": "docs/security/github-hardening-checklist.md",
-      "status": "active",
+      "status": "completed",
       "createdAt": "2026-07-27T11:05:00.000Z",
-      "updatedAt": "2026-07-27T11:09:18.000Z",
+      "updatedAt": "2026-07-27T11:13:27.000Z",
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-07-27T11:09:18.000Z"
+  "lastSync": "2026-07-27T11:13:27.000Z"
 }
