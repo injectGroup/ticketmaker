@@ -20,11 +20,19 @@ For each Browser / Android / iOS key used by the app:
 
 Also restrict each key to only the APIs the app needs (Firebase / Identity Toolkit / etc.).
 
+**Status (2026-07-27):** Applied on sandbox Firebase-auto keys:
+
+- Browser: referrers for `quick-ticket-maker-sandbox.web.app`, `*.firebaseapp.com`, `quickticketmaker.web.app`, localhost
+- Android: `com.injectgroup.ticket_maker` + debug keystore SHA-1 (add release SHA-1 before Play release)
+- iOS: `com.injectgroup.ticketMaker`
+
 ## 2. App Check
 
 1. Firebase Console → App Check → register apps (web reCAPTCHA / DeviceCheck / Play Integrity as appropriate).
-2. Enforce App Check for **Authentication**, **Cloud Firestore**, and **Storage**.
+2. Enforce App Check for **Authentication**, **Cloud Firestore**, and **Storage** only after the Flutter app integrates `firebase_app_check` (enforcing without client SDK breaks Auth/Firestore/Storage).
 3. Keep a short debug-token allowlist for local development only; rotate if leaked.
+
+**Status (2026-07-27):** `firebaseappcheck.googleapis.com` enabled. **Enforcement deferred** — app does not yet ship App Check tokens. API key application restrictions are the active compensating control.
 
 ## 3. Auth providers
 
@@ -44,6 +52,8 @@ Deploy when authenticated:
 ```bash
 firebase deploy --only firestore:rules,storage --project quick-ticket-maker-sandbox
 ```
+
+**Status (2026-07-27):** Firestore + Storage rulesets released to `quick-ticket-maker-sandbox` (Rules API).
 
 ## 5. Verification
 

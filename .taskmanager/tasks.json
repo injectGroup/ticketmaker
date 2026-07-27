@@ -21,13 +21,13 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-07-27T11:09:18.000Z",
+      "updatedAt": "2026-07-27T11:24:35.000Z",
       "lastMilestone": {
-        "message": "Cybersecurity protocol: GitHub hardening, Security CI, Firestore/Storage rules, ISO docs",
-        "taskId": "task-cyber-verify-notify-20260727",
-        "updatedAt": "2026-07-27T11:09:18.000Z",
+        "message": "Deployed Firestore/Storage rules; API key restrictions applied on sandbox",
+        "taskId": "task-cyber-firebase-console-20260727",
+        "updatedAt": "2026-07-27T11:24:35.000Z",
         "source": "local-fallback",
-        "note": "Cloud notify may require Firebase share; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
+        "note": "Cloud notify may fail without Firebase share; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
     }
   ],
@@ -1169,12 +1169,12 @@
       "epicId": "epic-cybersecurity-protocol-20260727",
       "title": "Firestore + Storage security rules",
       "description": "Add firestore.rules and storage.rules; wire firebase.json; deploy when creds available.",
-      "details": "Paths: users/{uid}, users/{uid}/tickets/{id}, storage users/{uid}/tickets/{id}.jpg Rules added in repo; firebase deploy blocked (reauth required).",
+      "details": "Released via Rules API 2026-07-27: firestore + storage owner-only rulesets.",
       "operationalPhase": "COMPLETE",
       "priority": "high",
       "status": "done",
       "createdAt": "2026-07-27T11:05:00.000Z",
-      "updatedAt": "2026-07-27T11:09:18.000Z"
+      "updatedAt": "2026-07-27T11:24:35.000Z"
     },
     {
       "id": "task-cyber-docs-iso-20260727",
@@ -1195,12 +1195,12 @@
       "epicId": "epic-cybersecurity-protocol-20260727",
       "title": "Firebase Console hardening checklist",
       "description": "Document App Check + API key restrictions for quick-ticket-maker-sandbox.",
-      "details": "",
+      "details": "API key restrictions applied (browser/android/ios). App Check API enabled; enforcement deferred (no Flutter SDK). Chat webhook unset.",
       "operationalPhase": "COMPLETE",
       "priority": "medium",
       "status": "done",
       "createdAt": "2026-07-27T11:05:00.000Z",
-      "updatedAt": "2026-07-27T11:09:18.000Z"
+      "updatedAt": "2026-07-27T11:24:35.000Z"
     },
     {
       "id": "task-cyber-verify-notify-20260727",
@@ -1213,7 +1213,7 @@
       "priority": "medium",
       "status": "done",
       "createdAt": "2026-07-27T11:05:00.000Z",
-      "updatedAt": "2026-07-27T11:13:27.000Z"
+      "updatedAt": "2026-07-27T11:24:35.000Z"
     }
   ],
   "epics": [
@@ -1229,5 +1229,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-07-27T11:13:27.000Z"
+  "lastSync": "2026-07-27T11:24:35.000Z"
 }
