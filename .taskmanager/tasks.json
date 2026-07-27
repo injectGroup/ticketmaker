@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-07-27T15:41:29.000Z",
+      "updatedAt": "2026-07-27T16:12:29.000Z",
       "lastMilestone": {
-        "message": "Firebase Hosting redeployed to quick-ticket-maker-sandbox.web.app",
-        "taskId": "task-fix-firebase-hosting-deploy-20260727",
-        "updatedAt": "2026-07-27T15:41:29.000Z",
+        "message": "List Share skips image capture; link-only fallback without LateInitializationError",
+        "taskId": "task-fix-list-share-null-capture-20260727",
+        "updatedAt": "2026-07-27T16:12:29.000Z",
         "source": "local-fallback",
         "note": "Cloud notify may require Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1240,6 +1240,19 @@
       "status": "done",
       "createdAt": "2026-07-27T15:41:29.000Z",
       "updatedAt": "2026-07-27T15:41:29.000Z"
+    },
+    {
+      "id": "task-fix-list-share-null-capture-20260727",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "List Share skips image capture without LateInitializationError",
+      "description": "capturePngBytes null-safe when RepaintBoundary missing; My Tickets Share uses attachTicketImage:false and shares link/details only; quiet LateInit logs; hosting redeployed.",
+      "details": "ticket_share_helper.dart; saved_ticket_card.dart; https://quick-ticket-maker-sandbox.web.app",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-27T16:10:00.000Z",
+      "updatedAt": "2026-07-27T16:12:29.000Z"
     }
   ],
   "epics": [
@@ -1255,5 +1268,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-07-27T15:41:29.000Z"
+  "lastSync": "2026-07-27T16:12:29.000Z"
 }

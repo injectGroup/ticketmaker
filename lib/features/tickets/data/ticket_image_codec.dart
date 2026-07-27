@@ -22,6 +22,7 @@ Future<Uint8List> compressImageToJpeg(
     }
     return await compute(_compressJpegIsolate, args);
   } catch (e, st) {
+    // Catch Exception and Error (e.g. LateInitializationError).
     debugPrint('JPEG compress failed, using original bytes: $e\n$st');
     return bytes;
   }

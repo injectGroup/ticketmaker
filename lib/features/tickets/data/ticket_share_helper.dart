@@ -62,13 +62,19 @@ class TicketShareHelper {
       return jpeg;
     } catch (e, st) {
       // Catch Exception and Error (e.g. LateInitializationError from toImage).
-      debugPrint('captureJpegBytes failed: $e\n$st');
+      final message = e.toString();
+      if (!message.contains('LateInitializationError') &&
+          !message.contains('LateInitialization')) {
+        debugPrint('captureJpegBytes failed: $e\n$st');
+      }
       return null;
     }
   }
 
   /// Encodes [boundaryKey]'s [RepaintBoundary] to PNG bytes in memory.
-  /// Returns null on any failure (including Flutter Web LateInitializationError).
+  ///
+  /// Returns `null` when the key is not attached, the boundary is missing /
+  /// still painting, or capture fails — never throws.
   ///
   /// No `late` locals — every render/image/byte reference is nullable and
   /// checked before use.
@@ -98,8 +104,13 @@ class TicketShareHelper {
       if (bytes == null || bytes.isEmpty) return null;
       return bytes;
     } catch (e, st) {
-      // Catch Exception and Error (e.g. LateInitializationError).
-      debugPrint('capturePngBytes failed: $e\n$st');
+      // Expected on Flutter Web / missing paint — return null quietly.
+      // Avoid logging LateInitializationError noise for list-item share.
+      final message = e.toString();
+      if (!message.contains('LateInitializationError') &&
+          !message.contains('LateInitialization')) {
+        debugPrint('capturePngBytes failed: $e\n$st');
+      }
       return null;
     }
   }
@@ -118,12 +129,16 @@ class TicketShareHelper {
     return renderObject;
   }
 
-  /// Shares [ticket] as a JPEG of the **full ticket** (title, QR, details +
-  /// event photo), never the raw event gallery image alone.
+  /// Shares [ticket] as a JPEG of the **full ticket** when image capture is
+  /// available; otherwise shares/copies ticket link/details only.
   ///
   /// [eventImageBytes] is only used as the photo slot inside [SavedTicketView].
   /// Prefer an on-screen [boundaryKey] (detail page); otherwise compose via a
-  /// web-safe on-screen overlay.
+  /// opaque modal when [attachTicketImage] is true.
+  ///
+  /// Set [attachTicketImage] to `false` for My Tickets **list** rows (no full
+  /// ticket [RepaintBoundary] is painted there) — skips image capture and
+  /// shares link/details only, without throwing.
   ///
   /// **Web:** tries Web Share via [SharePlus]; on failure / unsupported,
   /// falls back to an HTML blob download of `ticket.jpg`, then copying a
@@ -136,6 +151,7 @@ class TicketShareHelper {
     Uint8List? eventImageBytes,
     @Deprecated('Use eventImageBytes — never shared as the ticket file')
     Uint8List? imageBytes,
+    bool attachTicketImage = true,
   }) async {
     final messenger = ScaffoldMessenger.maybeOf(context);
     messenger
@@ -152,12 +168,14 @@ class TicketShareHelper {
     final photoBytes = eventImageBytes ?? imageBytes;
 
     try {
-      jpegBytes = await _prepareTicketJpeg(
-        context,
-        ticket,
-        boundaryKey: boundaryKey,
-        eventImageBytes: photoBytes,
-      );
+      if (attachTicketImage) {
+        jpegBytes = await _prepareTicketJpeg(
+          context,
+          ticket,
+          boundaryKey: boundaryKey,
+          eventImageBytes: photoBytes,
+        );
+      }
       if (!context.mounted) return;
 
       if (jpegBytes == null || jpegBytes.isEmpty) {
@@ -166,6 +184,7 @@ class TicketShareHelper {
           ticket,
           origin: origin,
           messenger: messenger,
+          imageCaptureSkipped: !attachTicketImage,
         );
         return;
       }
@@ -237,25 +256,30 @@ class TicketShareHelper {
   }
 
   /// List / no-image path: native share sheet with text, or clipboard on web.
+  ///
+  /// [imageCaptureSkipped] is true when the caller intentionally did not try
+  /// to build a ticket JPEG (e.g. My Tickets list has no full ticket widget).
   static Future<void> _shareTextOrCopyLink(
     BuildContext context,
     Ticket ticket, {
     required Rect origin,
     ScaffoldMessengerState? messenger,
+    bool imageCaptureSkipped = false,
   }) async {
     final text = _linkOrShareText(ticket);
 
     if (kIsWeb) {
       final copied = await _copyShareableFallback(ticket);
       if (!context.mounted) return;
+      final successMessage = imageCaptureSkipped
+          ? 'Ticket link copied to clipboard'
+          : 'Could not create ticket image — link copied instead';
       messenger
         ?..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
             content: Text(
-              copied
-                  ? 'Could not create ticket image — link copied instead'
-                  : _prepareFailedMessage,
+              copied ? successMessage : _prepareFailedMessage,
             ),
           ),
         );
