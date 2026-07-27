@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../generate/domain/entities/ticket.dart';
 import '../presentation/widgets/saved_ticket_view.dart';
+import '../presentation/widgets/web_share_options_dialog.dart';
 import 'ticket_image_codec.dart';
 import 'ticket_share_download_stub.dart'
     if (dart.library.js_interop) 'ticket_share_download_web.dart';
@@ -24,6 +25,12 @@ class TicketShareHelper {
       'Could not prepare ticket image to share.';
   static const String _shareFailedMessage =
       'Could not share ticket. Try again.';
+  static const String _downloadedMessage = 'Ticket image downloaded';
+  static const String _linkCopiedMessage = 'Share link copied to clipboard';
+  static const String _downloadFailedMessage =
+      'Could not prepare ticket image to download.';
+  static const String _copyFailedMessage =
+      'Could not copy share link. Try again.';
 
   /// Share-sheet anchor rect for iOS/iPadOS popovers.
   static Rect shareOriginFrom(BuildContext context) {
@@ -135,9 +142,8 @@ class TicketShareHelper {
   /// ticket [RepaintBoundary] is painted there) — skips image capture and
   /// shares link/details only, without throwing.
   ///
-  /// **Web:** tries Web Share via [SharePlus]; on failure / unsupported,
-  /// falls back to an HTML blob download of `ticket.jpg`, then copying a
-  /// shareable URL if composite capture fails.
+  /// **Web:** shows a dialog with **Download Ticket Image** and
+  /// **Copy Share Link**, then SnackBars that name the completed action.
   static Future<void> share(
     BuildContext context,
     Ticket ticket, {
@@ -149,6 +155,21 @@ class TicketShareHelper {
     bool attachTicketImage = true,
   }) async {
     final messenger = ScaffoldMessenger.maybeOf(context);
+    final origin = sharePositionOrigin ?? shareOriginFrom(context);
+    final photoBytes = eventImageBytes ?? imageBytes;
+
+    // Web: let the user choose download vs copy before any capture work.
+    if (kIsWeb) {
+      await _shareOnWeb(
+        context,
+        ticket,
+        boundaryKey: boundaryKey,
+        eventImageBytes: photoBytes,
+        messenger: messenger,
+      );
+      return;
+    }
+
     messenger
       ?..hideCurrentSnackBar()
       ..showSnackBar(
@@ -158,9 +179,7 @@ class TicketShareHelper {
         ),
       );
 
-    final origin = sharePositionOrigin ?? shareOriginFrom(context);
     Uint8List? jpegBytes;
-    final photoBytes = eventImageBytes ?? imageBytes;
 
     try {
       if (attachTicketImage) {
@@ -177,18 +196,6 @@ class TicketShareHelper {
         await _shareTextOrCopyLink(
           context,
           ticket,
-          origin: origin,
-          messenger: messenger,
-          imageCaptureSkipped: !attachTicketImage,
-        );
-        return;
-      }
-
-      if (kIsWeb) {
-        await _shareOrDownloadWeb(
-          context,
-          jpegBytes,
-          ticket: ticket,
           origin: origin,
           messenger: messenger,
         );
@@ -219,29 +226,6 @@ class TicketShareHelper {
       debugPrint('Share failed: $e\n$st');
       if (!context.mounted) return;
 
-      if (kIsWeb) {
-        if (jpegBytes != null && jpegBytes.isNotEmpty) {
-          try {
-            downloadBytesAsFile(jpegBytes, _webFileName);
-            messenger
-              ?..hideCurrentSnackBar()
-              ..showSnackBar(
-                const SnackBar(content: Text('Ticket image downloaded')),
-              );
-            return;
-          } catch (downloadError, downloadSt) {
-            debugPrint('Web download fallback failed: $downloadError\n$downloadSt');
-          }
-        }
-        await _shareTextOrCopyLink(
-          context,
-          ticket,
-          origin: origin,
-          messenger: messenger,
-        );
-        return;
-      }
-
       messenger
         ?..hideCurrentSnackBar()
         ..showSnackBar(
@@ -250,31 +234,96 @@ class TicketShareHelper {
     }
   }
 
+  /// Web share entry: dialog with download image or copy link.
+  static Future<void> _shareOnWeb(
+    BuildContext context,
+    Ticket ticket, {
+    GlobalKey? boundaryKey,
+    Uint8List? eventImageBytes,
+    ScaffoldMessengerState? messenger,
+  }) async {
+    final choice = await showWebShareOptionsDialog(context);
+    if (!context.mounted || choice == null) return;
+
+    switch (choice) {
+      case WebShareOption.downloadImage:
+        messenger
+          ?..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Preparing ticket image…'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        Uint8List? jpegBytes;
+        try {
+          jpegBytes = await _prepareTicketJpeg(
+            context,
+            ticket,
+            boundaryKey: boundaryKey,
+            eventImageBytes: eventImageBytes,
+          );
+        } catch (e, st) {
+          debugPrint('Web ticket image prepare failed: $e\n$st');
+        }
+        if (!context.mounted) return;
+        if (jpegBytes == null || jpegBytes.isEmpty) {
+          messenger
+            ?..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(content: Text(_downloadFailedMessage)),
+            );
+          return;
+        }
+        try {
+          downloadBytesAsFile(jpegBytes, _webFileName);
+          messenger
+            ?..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(content: Text(_downloadedMessage)),
+            );
+        } catch (e, st) {
+          debugPrint('Web ticket download failed: $e\n$st');
+          if (!context.mounted) return;
+          messenger
+            ?..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(content: Text(_downloadFailedMessage)),
+            );
+        }
+      case WebShareOption.copyLink:
+        final copied = await _copyShareableFallback(ticket);
+        if (!context.mounted) return;
+        messenger
+          ?..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                copied ? _linkCopiedMessage : _copyFailedMessage,
+              ),
+            ),
+          );
+    }
+  }
+
   /// List / no-image path: native share sheet with text, or clipboard on web.
-  ///
-  /// [imageCaptureSkipped] is true when the caller intentionally did not try
-  /// to build a ticket JPEG (e.g. My Tickets list has no full ticket widget).
   static Future<void> _shareTextOrCopyLink(
     BuildContext context,
     Ticket ticket, {
     required Rect origin,
     ScaffoldMessengerState? messenger,
-    bool imageCaptureSkipped = false,
   }) async {
     final text = _linkOrShareText(ticket);
 
     if (kIsWeb) {
       final copied = await _copyShareableFallback(ticket);
       if (!context.mounted) return;
-      final successMessage = imageCaptureSkipped
-          ? 'Ticket link copied to clipboard'
-          : 'Could not create ticket image — link copied instead';
       messenger
         ?..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
             content: Text(
-              copied ? successMessage : _prepareFailedMessage,
+              copied ? _linkCopiedMessage : _copyFailedMessage,
             ),
           ),
         );
@@ -341,72 +390,6 @@ class TicketShareHelper {
       debugPrint('Clipboard share fallback failed: $e\n$st');
       return false;
     }
-  }
-
-  /// Web: attempt share_plus file share; fall back to blob download.
-  static Future<void> _shareOrDownloadWeb(
-    BuildContext context,
-    Uint8List jpegBytes, {
-    required Ticket ticket,
-    required Rect origin,
-    ScaffoldMessengerState? messenger,
-  }) async {
-    var shared = false;
-    try {
-      final xFile = XFile.fromData(
-        jpegBytes,
-        mimeType: 'image/jpeg',
-        name: _webFileName,
-      );
-      // Web Share API when supported; may throw LateInitializationError.
-      // Equivalent to legacy Share.shareXFiles with downloadFallbackEnabled.
-      final result = await SharePlus.instance.share(
-        ShareParams(
-          files: [xFile],
-          fileNameOverrides: const [_webFileName],
-          text: _linkOrShareText(ticket),
-          subject: _subject,
-          sharePositionOrigin: origin,
-          downloadFallbackEnabled: true,
-        ),
-      );
-      shared = result.status == ShareResultStatus.success ||
-          result.status == ShareResultStatus.unavailable;
-    } catch (e, st) {
-      debugPrint('Web SharePlus.share failed, downloading: $e\n$st');
-      shared = false;
-    }
-
-    if (!context.mounted) return;
-
-    if (!shared) {
-      try {
-        downloadBytesAsFile(jpegBytes, _webFileName);
-        messenger
-          ?..hideCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(content: Text('Ticket image downloaded')),
-          );
-      } catch (e, st) {
-        debugPrint('Blob download failed: $e\n$st');
-        final copied = await _copyShareableFallback(ticket);
-        if (!context.mounted) return;
-        messenger
-          ?..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(
-                copied
-                    ? 'Could not download ticket image — link copied instead'
-                    : _prepareFailedMessage,
-              ),
-            ),
-          );
-      }
-      return;
-    }
-
-    messenger?.hideCurrentSnackBar();
   }
 
   /// Builds JPEG bytes for share: always a **full ticket** composite.

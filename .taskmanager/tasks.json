@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-07-27T21:35:00.000Z",
+      "updatedAt": "2026-07-27T21:45:00.000Z",
       "lastMilestone": {
-        "message": "Share Ticket null-safe capturePngBytes with link fallback",
-        "taskId": "task-fix-capture-png-share-null-20260727",
-        "updatedAt": "2026-07-27T21:35:00.000Z",
+        "message": "Web Share dialog: Download Ticket Image or Copy Share Link with clear SnackBars",
+        "taskId": "task-web-share-dialog-20260727",
+        "updatedAt": "2026-07-27T21:45:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify may require Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1292,6 +1292,19 @@
       "status": "done",
       "createdAt": "2026-07-27T21:30:00.000Z",
       "updatedAt": "2026-07-27T21:35:00.000Z"
+    },
+    {
+      "id": "task-web-share-dialog-20260727",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Web Share dialog Download or Copy Link",
+      "description": "On web, Share opens a dialog with Download Ticket Image and Copy Share Link; SnackBars name the completed action.",
+      "details": "web_share_options_dialog.dart; ticket_share_helper.dart; tests.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-27T21:40:00.000Z",
+      "updatedAt": "2026-07-27T21:45:00.000Z"
     }
   ],
   "epics": [
