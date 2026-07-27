@@ -25,7 +25,7 @@ class TicketShareHelper {
       'Could not prepare ticket image to share.';
   static const String _shareFailedMessage =
       'Could not share ticket. Try again.';
-  static const String _downloadedMessage = 'Ticket image downloaded!';
+  static const String _downloadedMessage = 'Ticket downloaded successfully!';
   static const String _linkCopiedMessage = 'Share link copied to clipboard';
   static const String _downloadFailedMessage =
       'Could not prepare ticket image to download.';
@@ -98,10 +98,10 @@ class TicketShareHelper {
   /// Encodes [repaintKey]'s [RepaintBoundary] to PNG bytes in memory.
   ///
   /// Returns `null` when the key is not attached, the boundary is missing /
-  /// still painting, or capture fails — never throws.
+  /// never paints, or capture fails — never throws.
   ///
   /// No `late` locals — every render/image/byte reference is nullable and
-  /// checked before use.
+  /// checked before use. Waits for [endOfFrame] when still needing paint.
   static Future<Uint8List?> capturePngBytes(
     GlobalKey repaintKey, {
     double pixelRatio = 2,
@@ -109,16 +109,39 @@ class TicketShareHelper {
     try {
       if (repaintKey.currentContext == null) return null;
 
-      final boundary = repaintKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
-      if (boundary == null || boundary.debugNeedsPaint) return null;
-      if (!boundary.hasSize ||
-          boundary.size.width <= 0 ||
-          boundary.size.height <= 0) {
+      RenderRepaintBoundary? boundary =
+          repaintKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
+      if (boundary == null) return null;
+
+      // Wait for layout/paint instead of failing immediately (list Download).
+      for (var i = 0; i < 8; i++) {
+        final current = boundary;
+        if (current == null) return null;
+        if (!current.debugNeedsPaint &&
+            current.hasSize &&
+            current.size.width > 0 &&
+            current.size.height > 0) {
+          break;
+        }
+        await WidgetsBinding.instance.endOfFrame;
+        await Future<void>.delayed(Duration(milliseconds: 40 + (i * 20)));
+        if (repaintKey.currentContext == null) return null;
+        boundary = repaintKey.currentContext?.findRenderObject()
+            as RenderRepaintBoundary?;
+      }
+
+      final ready = boundary;
+      if (ready == null ||
+          ready.debugNeedsPaint ||
+          !ready.hasSize ||
+          ready.size.width <= 0 ||
+          ready.size.height <= 0) {
         return null;
       }
 
-      final image = await boundary.toImage(pixelRatio: pixelRatio);
+      final ratio = kIsWeb ? 1.5 : pixelRatio;
+      final image = await ready.toImage(pixelRatio: ratio);
 
       final ByteData? byteData =
           await image.toByteData(format: ui.ImageByteFormat.png);
@@ -262,14 +285,23 @@ class TicketShareHelper {
               duration: Duration(seconds: 2),
             ),
           );
+        // Let the share dialog finish dismissing before painting capture UI.
+        await WidgetsBinding.instance.endOfFrame;
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        if (!context.mounted) return;
+
         Uint8List? pngBytes;
         try {
-          // Compose from ticket model via on-screen boundary or off-screen
-          // SavedTicketView — never requires a list-row RepaintBoundary.
+          // List rows have no mounted ticket RepaintBoundary — compose from
+          // ticket model via on-screen Overlay / modal SavedTicketView.
+          final mountedKey = boundaryKey != null &&
+                  boundaryKey.currentContext != null
+              ? boundaryKey
+              : null;
           pngBytes = await composeTicketPngBytes(
             context,
             ticket,
-            boundaryKey: boundaryKey,
+            boundaryKey: mountedKey,
             eventImageBytes: eventImageBytes,
           );
         } catch (e, st) {
@@ -285,7 +317,6 @@ class TicketShareHelper {
           return;
         }
         try {
-          // Web-only blob download into the browser Downloads folder.
           assert(kIsWeb, 'Download Ticket Image is web-only');
           downloadBytesAsFile(
             pngBytes,
@@ -409,9 +440,9 @@ class TicketShareHelper {
 
   /// Builds PNG bytes for a full ticket composite from [ticket] model data.
   ///
-  /// Order: on-screen [boundaryKey] → off-screen Overlay → opaque modal.
+  /// Order: on-screen [boundaryKey] → painted Overlay → opaque modal.
   /// Never requires a My Tickets list-row [RepaintBoundary].
-  /// Never throws — returns null so callers can fall back to link share.
+  /// Never throws — returns null so callers can show a failure SnackBar.
   static Future<Uint8List?> composeTicketPngBytes(
     BuildContext context,
     Ticket ticket, {
@@ -426,7 +457,9 @@ class TicketShareHelper {
 
       if (!context.mounted) return null;
 
-      final viaOverlay = await _captureViaOffscreenOverlay(
+      // Prefer a painted Overlay (visible layout) — off-screen widgets are
+      // often culled on Flutter Web and yield null captures.
+      final viaOverlay = await _captureViaPaintedOverlay(
         context,
         ticket,
         eventImageBytes: eventImageBytes,
@@ -509,8 +542,11 @@ class TicketShareHelper {
     return null;
   }
 
-  /// Paints [SavedTicketView] in an off-screen [Overlay] and captures PNG.
-  static Future<Uint8List?> _captureViaOffscreenOverlay(
+  /// Paints [SavedTicketView] in a full-screen [Overlay] (briefly), then PNG.
+  ///
+  /// On-screen layout is required on Flutter Web — off-screen / culled
+  /// widgets often fail [RenderRepaintBoundary.toImage].
+  static Future<Uint8List?> _captureViaPaintedOverlay(
     BuildContext context,
     Ticket ticket, {
     Uint8List? eventImageBytes,
@@ -525,19 +561,26 @@ class TicketShareHelper {
     try {
       entry = OverlayEntry(
         builder: (overlayContext) {
-          return Positioned(
-            left: -4000,
-            top: 0,
-            child: Material(
-              color: Colors.white,
-              elevation: 0,
-              child: SizedBox(
-                width: 400,
-                child: RepaintBoundary(
-                  key: boundaryKey,
-                  child: SavedTicketView(
-                    ticket: ticket,
-                    imageBytes: eventImageBytes,
+          final width =
+              MediaQuery.sizeOf(overlayContext).width.clamp(280.0, 420.0);
+          return Positioned.fill(
+            child: IgnorePointer(
+              child: Material(
+                color: Colors.white,
+                child: SafeArea(
+                  child: Center(
+                    child: SingleChildScrollView(
+                      child: SizedBox(
+                        width: width,
+                        child: RepaintBoundary(
+                          key: boundaryKey,
+                          child: SavedTicketView(
+                            ticket: ticket,
+                            imageBytes: eventImageBytes,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -546,6 +589,8 @@ class TicketShareHelper {
         },
       );
       overlay.insert(entry);
+      // Force a rebuild so the OverlayEntry lays out before we wait on frames.
+      entry.markNeedsBuild();
 
       await WidgetsBinding.instance.endOfFrame;
       await WidgetsBinding.instance.endOfFrame;
@@ -558,11 +603,11 @@ class TicketShareHelper {
         );
       }
       await WidgetsBinding.instance.endOfFrame;
-      await Future<void>.delayed(const Duration(milliseconds: 250));
+      await Future<void>.delayed(const Duration(milliseconds: 350));
 
-      return await _capturePngWithRetries(boundaryKey);
+      return await _capturePngWithRetries(boundaryKey, attempts: 8);
     } catch (e, st) {
-      debugPrint('Off-screen overlay ticket capture failed: $e\n$st');
+      debugPrint('Painted overlay ticket capture failed: $e\n$st');
       return null;
     } finally {
       entry?.remove();
@@ -608,11 +653,14 @@ class TicketShareHelper {
                   }
 
                   await WidgetsBinding.instance.endOfFrame;
-                  await Future<void>.delayed(const Duration(milliseconds: 300));
+                  await Future<void>.delayed(const Duration(milliseconds: 400));
 
                   Uint8List? bytes;
                   if (preferPng) {
-                    bytes = await _capturePngWithRetries(boundaryKey);
+                    bytes = await _capturePngWithRetries(
+                      boundaryKey,
+                      attempts: 8,
+                    );
                     if (bytes == null || bytes.isEmpty) {
                       bytes = await captureJpegBytes(boundaryKey);
                     }
