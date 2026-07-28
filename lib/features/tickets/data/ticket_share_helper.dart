@@ -53,6 +53,22 @@ class TicketShareHelper {
     return Rect.fromLTWH(size.width / 2 - 1, size.height / 2 - 1, 2, 2);
   }
 
+  /// Resolves a [RenderRepaintBoundary] from [key] without `late` or unsafe casts.
+  ///
+  /// Returns `null` when the key is unmounted or the render object is not a
+  /// [RenderRepaintBoundary] — never throws [LateInitializationError].
+  static RenderRepaintBoundary? _boundaryFromKey(GlobalKey key) {
+    RenderRepaintBoundary? boundary;
+    final context = key.currentContext;
+    if (context != null) {
+      final renderObject = context.findRenderObject();
+      if (renderObject is RenderRepaintBoundary) {
+        boundary = renderObject;
+      }
+    }
+    return boundary;
+  }
+
   /// Encodes [boundaryKey]'s [RepaintBoundary] to JPEG bytes in memory.
   /// Returns null on any failure (including Flutter Web LateInitializationError).
   static Future<Uint8List?> captureJpegBytes(
@@ -61,17 +77,11 @@ class TicketShareHelper {
     int quality = 72,
   }) async {
     try {
-      if (boundaryKey.currentContext == null) return null;
-
-      RenderRepaintBoundary? boundary =
-          boundaryKey.currentContext?.findRenderObject()
-              as RenderRepaintBoundary?;
+      RenderRepaintBoundary? boundary = _boundaryFromKey(boundaryKey);
       if (boundary == null) return null;
       if (boundary.debugNeedsPaint) {
         await Future<void>.delayed(const Duration(milliseconds: 50));
-        if (boundaryKey.currentContext == null) return null;
-        boundary = boundaryKey.currentContext?.findRenderObject()
-            as RenderRepaintBoundary?;
+        boundary = _boundaryFromKey(boundaryKey);
         if (boundary == null || boundary.debugNeedsPaint) return null;
       }
       if (!boundary.hasSize ||
@@ -80,11 +90,18 @@ class TicketShareHelper {
         return null;
       }
 
-      final image = await boundary.toImage(pixelRatio: pixelRatio);
-      final jpeg = await uiImageToJpeg(image, quality: quality);
+      ui.Image? image;
+      try {
+        image = await boundary.toImage(pixelRatio: pixelRatio);
+      } catch (e, st) {
+        debugPrint('captureJpegBytes toImage failed: $e\n$st');
+        return null;
+      }
+
+      final Uint8List? jpegBytes = await uiImageToJpeg(image, quality: quality);
       image.dispose();
-      if (jpeg == null || jpeg.isEmpty) return null;
-      return jpeg;
+      if (jpegBytes == null || jpegBytes.isEmpty) return null;
+      return jpegBytes;
     } catch (e, st) {
       // Catch Exception and Error (e.g. LateInitializationError from toImage).
       final message = e.toString();
@@ -99,7 +116,7 @@ class TicketShareHelper {
   /// Encodes [repaintKey]'s [RepaintBoundary] to PNG bytes in memory.
   ///
   /// Returns `null` when the key is not attached, the boundary is missing /
-  /// never paints, or capture fails — never throws.
+  /// never paints, or capture fails — never throws [LateInitializationError].
   ///
   /// No `late` locals — every render/image/byte reference is nullable and
   /// checked before use. Waits for [endOfFrame] + paint delay before [toImage].
@@ -107,13 +124,15 @@ class TicketShareHelper {
     GlobalKey repaintKey, {
     double pixelRatio = 3.0,
   }) async {
-    try {
-      if (repaintKey.currentContext == null) return null;
+    RenderRepaintBoundary? boundary;
+    Uint8List? pngBytes;
+    ui.Image? image;
 
-      RenderRepaintBoundary? boundary =
-          repaintKey.currentContext?.findRenderObject()
-              as RenderRepaintBoundary?;
-      if (boundary == null) return null;
+    try {
+      boundary = _boundaryFromKey(repaintKey);
+      if (boundary == null) {
+        return null;
+      }
 
       // Allow network image / QR / layout to paint before snapshot.
       await _awaitFrameOrTimeout();
@@ -121,7 +140,9 @@ class TicketShareHelper {
 
       for (var i = 0; i < 6; i++) {
         final current = boundary;
-        if (current == null) return null;
+        if (current == null) {
+          return null;
+        }
         if (!current.debugNeedsPaint &&
             current.hasSize &&
             current.size.width > 0 &&
@@ -130,9 +151,7 @@ class TicketShareHelper {
         }
         await _awaitFrameOrTimeout();
         await Future<void>.delayed(Duration(milliseconds: 50 + (i * 25)));
-        if (repaintKey.currentContext == null) return null;
-        boundary = repaintKey.currentContext?.findRenderObject()
-            as RenderRepaintBoundary?;
+        boundary = _boundaryFromKey(repaintKey);
       }
 
       final ready = boundary;
@@ -144,7 +163,6 @@ class TicketShareHelper {
         return null;
       }
 
-      ui.Image? image;
       try {
         image = await ready.toImage(pixelRatio: pixelRatio);
       } catch (e, st) {
@@ -152,18 +170,29 @@ class TicketShareHelper {
         debugPrint(
           'capturePngBytes toImage failed (possible CORS/SecurityError): $e\n$st',
         );
-        return null;
+        throw Exception(
+          'Ticket image capture failed (boundary toImage): $e',
+        );
       }
 
       final ByteData? byteData =
           await image.toByteData(format: ui.ImageByteFormat.png);
       image.dispose();
+      image = null;
 
-      final Uint8List? bytes = byteData?.buffer.asUint8List();
-      if (bytes == null || bytes.isEmpty) return null;
-      return bytes;
-    } catch (e, st) {
+      pngBytes = byteData?.buffer.asUint8List();
+      if (pngBytes == null || pngBytes.isEmpty) {
+        throw Exception('Ticket image capture failed: empty PNG bytes.');
+      }
+      return pngBytes;
+    } on Exception catch (e, st) {
       debugPrint('capturePngBytes failed: $e\n$st');
+      image?.dispose();
+      return null;
+    } catch (e, st) {
+      // Errors (e.g. LateInitializationError) — never rethrow to callers.
+      debugPrint('capturePngBytes failed: $e\n$st');
+      image?.dispose();
       return null;
     }
   }

@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-07-28T08:40:00.000Z",
+      "updatedAt": "2026-07-28T09:20:00.000Z",
       "lastMilestone": {
-        "message": "Web builds cache-bust main.dart.js; scripts/build_web.sh enforces flutter clean",
-        "taskId": "task-web-js-cache-bust-clean-build-20260728",
-        "updatedAt": "2026-07-28T08:40:00.000Z",
+        "message": "capturePngBytes uses nullable boundary/pngBytes — no LateInitializationError",
+        "taskId": "task-fix-late-init-capture-png-20260728",
+        "updatedAt": "2026-07-28T09:20:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify may require Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1345,6 +1345,20 @@
       "createdAt": "2026-07-28T08:35:00.000Z",
       "updatedAt": "2026-07-28T08:40:00.000Z",
       "note": "Cloud task_create denied (project not shared); local backup only."
+    },
+    {
+      "id": "task-fix-late-init-capture-png-20260728",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Fix LateInitializationError in capturePngBytes/share",
+      "description": "Replace unsafe casts with nullable RenderRepaintBoundary?/Uint8List? and is-checks in capturePngBytes/captureJpegBytes; descriptive Exception on toImage failure caught to return null — never LateInitializationError.",
+      "details": "ticket_share_helper.dart _boundaryFromKey; SavedTicketCard/web_share_options_dialog had no late; TicketCard/TicketWidget aliases not present.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-28T09:15:00.000Z",
+      "updatedAt": "2026-07-28T09:20:00.000Z",
+      "note": "Cloud task_create denied; local backup only."
     }
   ],
   "epics": [
