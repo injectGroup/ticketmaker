@@ -1,20 +1,46 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-/// Copies ticket images into a durable app-documents folder.
+/// Copies ticket images into durable storage.
 ///
-/// On web, local file I/O is skipped (returns empty) — use in-memory bytes /
-/// Firebase Storage instead.
+/// - **Native:** files under app-documents `/ticket_images`.
+/// - **Web:** JPEG/PNG bytes in SharedPreferences (base64), referenced by
+///   synthetic paths `web-bytes:<ticketId>` so tickets survive reloads without
+///   relying on ephemeral `blob:` picker URLs.
 class TicketImageStore {
-  TicketImageStore({Directory? overrideImagesDirectory})
-    : _overrideImagesDirectory = overrideImagesDirectory;
+  TicketImageStore({
+    Directory? overrideImagesDirectory,
+    SharedPreferences? preferences,
+  }) : _overrideImagesDirectory = overrideImagesDirectory,
+       _preferences = preferences;
 
   static const String folderName = 'ticket_images';
+  static const String webBytesPrefix = 'web-bytes:';
+  static const String _webPrefsPrefix = 'ticket_image_bytes_';
 
   final Directory? _overrideImagesDirectory;
+  SharedPreferences? _preferences;
+
+  /// True when [path] is a durable web-bytes preference marker.
+  static bool isWebBytesPath(String path) =>
+      path.trim().startsWith(webBytesPrefix);
+
+  /// Ticket id embedded in a `web-bytes:<id>` path, or null.
+  static String? ticketIdFromWebBytesPath(String path) {
+    final trimmed = path.trim();
+    if (!trimmed.startsWith(webBytesPrefix)) return null;
+    final id = trimmed.substring(webBytesPrefix.length).trim();
+    return id.isEmpty ? null : id;
+  }
+
+  Future<SharedPreferences> _prefs() async {
+    return _preferences ??= await SharedPreferences.getInstance();
+  }
 
   Future<Directory> _imagesDirectory() async {
     final override = _overrideImagesDirectory;
@@ -69,6 +95,34 @@ class TicketImageStore {
     }
   }
 
+  Future<String> _persistWebBytes({
+    required String ticketId,
+    required Uint8List bytes,
+  }) async {
+    final prefs = await _prefs();
+    await prefs.setString('$_webPrefsPrefix$ticketId', base64Encode(bytes));
+    return '$webBytesPrefix$ticketId';
+  }
+
+  /// Loads bytes previously stored for [ticketId] (web prefs or native file).
+  Future<Uint8List?> loadBytesForTicket(String ticketId) async {
+    if (ticketId.isEmpty) return null;
+    if (kIsWeb) {
+      final prefs = await _prefs();
+      final encoded = prefs.getString('$_webPrefsPrefix$ticketId');
+      if (encoded == null || encoded.isEmpty) return null;
+      try {
+        final decoded = base64Decode(encoded);
+        return decoded.isEmpty ? null : Uint8List.fromList(decoded);
+      } catch (_) {
+        return null;
+      }
+    }
+    final found = await findExistingForTicket(ticketId);
+    if (found == null) return null;
+    return _readBytes(found);
+  }
+
   /// Writes [bytes] (or reads from [sourcePath]) into durable storage with a
   /// unique name. Returns the durable path, or `''` on failure.
   Future<String> import({
@@ -92,17 +146,20 @@ class TicketImageStore {
     return _writeBytes(bytes: payload, fileName: name);
   }
 
-  /// Writes bytes under a stable `ticketId` filename.
-  /// Returns the durable path, or `''` on failure (never clears an existing file
-  /// unless a successful write replaces it).
+  /// Writes bytes under a stable `ticketId` filename (or web prefs key).
+  /// Returns the durable path / `web-bytes:` marker, or `''` on failure.
   Future<String> persistForTicket({
     required String ticketId,
     String sourcePath = '',
     Uint8List? bytes,
   }) async {
-    if (kIsWeb || ticketId.isEmpty) return '';
+    if (ticketId.isEmpty) return '';
     final payload = bytes ?? await _readBytes(sourcePath);
     if (payload == null || payload.isEmpty) return '';
+
+    if (kIsWeb) {
+      return _persistWebBytes(ticketId: ticketId, bytes: payload);
+    }
 
     final imagesDir = await _imagesDirectory();
     final ext = sourcePath.isEmpty ? '.jpg' : _extensionFor(sourcePath);
@@ -118,12 +175,23 @@ class TicketImageStore {
     return _writeBytes(bytes: payload, fileName: '$ticketId$ext');
   }
 
-  /// Deletes durable image files for the given [imagePaths] when they live
-  /// under the ticket images directory.
+  /// Deletes durable image files / web prefs for the given [imagePaths].
+  /// Also accepts raw ticket ids to clear web-bytes entries.
   Future<void> deleteStoredImages(Iterable<String> imagePaths) async {
-    if (kIsWeb) return;
     final paths = imagePaths.where((p) => p.isNotEmpty).toList(growable: false);
     if (paths.isEmpty) return;
+
+    if (kIsWeb) {
+      final prefs = await _prefs();
+      for (final path in paths) {
+        final id = ticketIdFromWebBytesPath(path) ??
+            (path.startsWith('ticket-') && !path.contains('/') ? path : null);
+        if (id != null) {
+          await prefs.remove('$_webPrefsPrefix$id');
+        }
+      }
+      return;
+    }
 
     final imagesDir = await _imagesDirectory();
     for (final path in paths) {
@@ -140,7 +208,14 @@ class TicketImageStore {
 
   /// Finds an existing durable file for [ticketId] (any extension).
   Future<String?> findExistingForTicket(String ticketId) async {
-    if (kIsWeb || ticketId.isEmpty) return null;
+    if (ticketId.isEmpty) return null;
+    if (kIsWeb) {
+      final prefs = await _prefs();
+      if (prefs.containsKey('$_webPrefsPrefix$ticketId')) {
+        return '$webBytesPrefix$ticketId';
+      }
+      return null;
+    }
     final imagesDir = await _imagesDirectory();
     if (!imagesDir.existsSync()) return null;
 
@@ -159,4 +234,23 @@ class TicketImageStore {
     }
     return null;
   }
+}
+
+/// Returns true when [path] can be used as a durable ticket photo reference.
+bool isDurableTicketImagePath(String path) {
+  final p = path.trim();
+  if (p.isEmpty) return false;
+  if (p.startsWith('blob:')) return false;
+  if (TicketImageStore.isWebBytesPath(p)) return true;
+  if (p.startsWith('data:')) return true;
+  if (p.startsWith('http://') || p.startsWith('https://')) return true;
+  if (p.startsWith('gs://')) return true;
+  if (kIsWeb) return false;
+  return true;
+}
+
+/// Strips ephemeral picker paths (`blob:`, empty) before persisting tickets.
+String sanitizeTicketImagePath(String path) {
+  final trimmed = path.trim();
+  return isDurableTicketImagePath(trimmed) ? trimmed : '';
 }

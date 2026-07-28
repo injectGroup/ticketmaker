@@ -9,6 +9,7 @@ import '../../../generate/domain/entities/ticket.dart';
 import '../../../generate/presentation/widgets/generate_qr_code.dart';
 import '../../../generate/presentation/widgets/ticket_code_badge.dart';
 import '../../../generate/presentation/widgets/ticket_perforation.dart';
+import '../../data/ticket_image_store.dart';
 import '../../data/ticket_network_image.dart';
 
 /// Read-only visual of a saved ticket (mirrors Generate layout without editors).
@@ -42,9 +43,36 @@ class SavedTicketView extends StatelessWidget {
       );
     }
 
-    final path = ticket.imagePath;
-    if (path.isEmpty) {
+    final path = ticket.photoUrl.trim();
+    if (path.isEmpty ||
+        path.startsWith('blob:') ||
+        TicketImageStore.isWebBytesPath(path)) {
+      // Empty / ephemeral / web-bytes marker without session bytes → placeholder.
+      // Never hit the network for these (keeps RepaintBoundary capture stable).
       return const TicketPhotoPlaceholder(width: width, height: height);
+    }
+
+    if (path.startsWith('data:')) {
+      final decoded = decodeDataUrlBytes(path);
+      if (decoded == null || decoded.isEmpty) {
+        return const TicketPhotoPlaceholder(
+          width: width,
+          height: height,
+          broken: true,
+        );
+      }
+      return Image.memory(
+        decoded,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
+          width: width,
+          height: height,
+          broken: true,
+        ),
+      );
     }
 
     if (path.startsWith('http://') || path.startsWith('https://')) {

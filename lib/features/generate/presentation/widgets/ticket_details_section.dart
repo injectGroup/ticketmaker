@@ -54,7 +54,12 @@ class TicketDetailsSection extends StatelessWidget {
         return;
       }
 
-      context.read<GenerateCubit>().setPickedImage(path: file.path, bytes: bytes);
+      // On web, file.path is an ephemeral blob: URL — keep bytes only until save
+      // persists web-bytes: / Firebase Storage URL.
+      final pathForState = kIsWeb ? '' : file.path;
+      context
+          .read<GenerateCubit>()
+          .setPickedImage(path: pathForState, bytes: bytes);
 
       if (!kIsWeb) {
         final store = imageStore ?? TicketImageStore();
@@ -109,11 +114,31 @@ class TicketDetailsSection extends StatelessWidget {
     const width = 300.0;
     const height = 200.0;
     final bytes = imageBytes;
-    final path = ticket.imagePath;
+    final path = ticket.photoUrl.trim();
 
     if (bytes != null && bytes.isNotEmpty) {
       return Image.memory(
         bytes,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
+          width: width,
+          height: height,
+          broken: true,
+        ),
+      );
+    }
+
+    if (!kIsWeb &&
+        path.isNotEmpty &&
+        !path.startsWith('http') &&
+        !path.startsWith('blob:') &&
+        !path.startsWith('data:') &&
+        File(path).existsSync()) {
+      return Image.file(
+        File(path),
         width: width,
         height: height,
         fit: BoxFit.cover,
@@ -125,12 +150,21 @@ class TicketDetailsSection extends StatelessWidget {
       );
     }
 
-    if (!kIsWeb && path.isNotEmpty && File(path).existsSync()) {
-      return Image.file(
-        File(path),
+    if (path.startsWith('data:')) {
+      final decoded = decodeDataUrlBytes(path);
+      if (decoded == null || decoded.isEmpty) {
+        return const TicketPhotoPlaceholder(
+          width: width,
+          height: height,
+          broken: true,
+        );
+      }
+      return Image.memory(
+        decoded,
         width: width,
         height: height,
         fit: BoxFit.cover,
+        gaplessPlayback: true,
         errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
           width: width,
           height: height,

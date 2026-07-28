@@ -1,31 +1,66 @@
+import 'dart:convert';
+
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../core/widgets/ticket_photo_placeholder.dart';
+import 'ticket_image_store.dart';
 
 /// In-memory cache so ticket photos are not re-fetched every rebuild.
 final Map<String, Uint8List> _networkImageBytesCache = {};
+
+/// True when [url] is a fetchable http(s) / gs / data URL (not blob: / empty).
+bool isFetchableTicketPhotoUrl(String url) {
+  final trimmed = url.trim();
+  if (trimmed.isEmpty) return false;
+  if (trimmed.startsWith('blob:')) return false;
+  if (TicketImageStore.isWebBytesPath(trimmed)) return false;
+  if (trimmed.startsWith('data:')) return true;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return true;
+  }
+  if (trimmed.startsWith('gs://')) return true;
+  return false;
+}
+
+/// Decodes a `data:image/...;base64,...` URL into bytes.
+Uint8List? decodeDataUrlBytes(String dataUrl) {
+  final trimmed = dataUrl.trim();
+  if (!trimmed.startsWith('data:')) return null;
+  final comma = trimmed.indexOf(',');
+  if (comma < 0) return null;
+  final meta = trimmed.substring(0, comma);
+  if (!meta.contains(';base64')) return null;
+  try {
+    final decoded = base64Decode(trimmed.substring(comma + 1));
+    return decoded.isEmpty ? null : Uint8List.fromList(decoded);
+  } catch (_) {
+    return null;
+  }
+}
 
 /// Fetches image bytes so tickets can paint with [MemoryImage] on web.
 ///
 /// Avoids CORS-tainted canvases from [Image.network]/[NetworkImage] during
 /// [RepaintBoundary.toImage] on Flutter Web / CanvasKit.
 ///
-/// Order: cache → `http.get` → Firebase Storage [Reference.getData] for
-/// `firebasestorage.googleapis.com` / `gs://` URLs.
+/// Order: cache → data URL → `http.get` → Firebase Storage [Reference.getData].
 Future<Uint8List?> fetchImageBytesCorsSafe(String url) async {
   final trimmed = url.trim();
-  if (trimmed.isEmpty) return null;
-  if (!trimmed.startsWith('http://') &&
-      !trimmed.startsWith('https://') &&
-      !trimmed.startsWith('gs://')) {
-    return null;
-  }
+  if (!isFetchableTicketPhotoUrl(trimmed)) return null;
 
   final cached = _networkImageBytesCache[trimmed];
   if (cached != null && cached.isNotEmpty) return cached;
+
+  if (trimmed.startsWith('data:')) {
+    final decoded = decodeDataUrlBytes(trimmed);
+    if (decoded != null && decoded.isNotEmpty) {
+      _networkImageBytesCache[trimmed] = decoded;
+    }
+    return decoded;
+  }
 
   Uint8List? bytes = await _fetchViaHttp(trimmed);
   bytes ??= await _fetchViaFirebaseStorage(trimmed);
@@ -75,7 +110,7 @@ Future<Uint8List?> _fetchViaFirebaseStorage(String url) async {
   }
 }
 
-/// Loads a remote ticket photo as bytes, then paints [Image.memory].
+/// Loads a remote / data-URL ticket photo as bytes, then paints [Image.memory].
 ///
 /// On Flutter Web this is required so [RepaintBoundary.toImage] is not
 /// blocked by a CORS-tainted canvas from [Image.network].
@@ -104,21 +139,35 @@ class _TicketCorsSafeNetworkImageState extends State<TicketCorsSafeNetworkImage>
   @override
   void initState() {
     super.initState();
-    _bytesFuture = fetchImageBytesCorsSafe(widget.url);
+    _bytesFuture = _load();
   }
 
   @override
   void didUpdateWidget(covariant TicketCorsSafeNetworkImage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.url != widget.url) {
-      _bytesFuture = fetchImageBytesCorsSafe(widget.url);
+      _bytesFuture = _load();
     }
+  }
+
+  Future<Uint8List?> _load() {
+    if (!isFetchableTicketPhotoUrl(widget.url)) {
+      return Future<Uint8List?>.value(null);
+    }
+    return fetchImageBytesCorsSafe(widget.url);
   }
 
   @override
   Widget build(BuildContext context) {
     final width = widget.width;
     final height = widget.height;
+
+    if (!isFetchableTicketPhotoUrl(widget.url)) {
+      return TicketPhotoPlaceholder(
+        width: width ?? 300,
+        height: height ?? 200,
+      );
+    }
 
     return FutureBuilder<Uint8List?>(
       future: _bytesFuture,

@@ -52,6 +52,9 @@ class TicketCloudSync {
     if (doc == null) return;
     await doc.set({
       ...ticket.toJson(),
+      'imagePath': ticket.imagePath,
+      'imageUrl': ticket.imagePath,
+      'photoUrl': ticket.imagePath,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
@@ -74,6 +77,7 @@ class TicketCloudSync {
     await doc.set({
       'imagePath': url,
       'imageUrl': url,
+      'photoUrl': url,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
     debugPrint('Ticket image uploaded: $ticketId');

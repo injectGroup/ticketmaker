@@ -38,7 +38,14 @@ class TicketsCubit extends Cubit<TicketsState> {
       if (changed) {
         await _repository.saveTickets(repaired);
       }
-      emit(state.copyWith(tickets: repaired, isLoading: false));
+      final restoredBytes = await _restorePersistedEventPhotos(repaired);
+      emit(
+        state.copyWith(
+          tickets: repaired,
+          isLoading: false,
+          imageBytesById: restoredBytes,
+        ),
+      );
       // Warm MemoryImage cache for http(s) event photos (CORS-safe capture).
       unawaited(_prefetchNetworkEventPhotos(repaired));
     } catch (_) {
@@ -51,6 +58,32 @@ class TicketsCubit extends Cubit<TicketsState> {
     }
   }
 
+  /// Reloads durable event photos (web SharedPreferences / native files) into
+  /// [TicketsState.imageBytesById] so widgets paint [Image.memory].
+  Future<Map<String, Uint8List>> _restorePersistedEventPhotos(
+    List<Ticket> tickets,
+  ) async {
+    final next = Map<String, Uint8List>.from(state.imageBytesById);
+    for (final ticket in tickets) {
+      if (next[ticket.id]?.isNotEmpty == true) continue;
+      final fromStore = await _imageStore.loadBytesForTicket(ticket.id);
+      if (fromStore != null && fromStore.isNotEmpty) {
+        next[ticket.id] = fromStore;
+        continue;
+      }
+      final path = ticket.photoUrl.trim();
+      if (TicketImageStore.isWebBytesPath(path)) {
+        final id =
+            TicketImageStore.ticketIdFromWebBytesPath(path) ?? ticket.id;
+        final bytes = await _imageStore.loadBytesForTicket(id);
+        if (bytes != null && bytes.isNotEmpty) {
+          next[ticket.id] = bytes;
+        }
+      }
+    }
+    return next;
+  }
+
   /// Fetches remote event photos into [TicketsState.imageBytesById] so ticket
   /// widgets paint [Image.memory] instead of CORS-tainted [Image.network].
   Future<void> _prefetchNetworkEventPhotos(List<Ticket> tickets) async {
@@ -58,7 +91,7 @@ class TicketsCubit extends Cubit<TicketsState> {
     var changed = false;
     for (final ticket in tickets) {
       if (next[ticket.id]?.isNotEmpty == true) continue;
-      final path = ticket.imagePath.trim();
+      final path = ticket.photoUrl.trim();
       if (!path.startsWith('http://') && !path.startsWith('https://')) {
         continue;
       }
@@ -66,6 +99,14 @@ class TicketsCubit extends Cubit<TicketsState> {
       if (bytes == null || bytes.isEmpty) continue;
       next[ticket.id] = bytes;
       changed = true;
+      // Keep a local web copy so reload works even if Storage CORS flakes.
+      try {
+        await _imageStore.persistForTicket(
+          ticketId: ticket.id,
+          sourcePath: 'ticket.jpg',
+          bytes: bytes,
+        );
+      } catch (_) {}
     }
     if (!changed || isClosed) return;
     emit(state.copyWith(imageBytesById: next));
@@ -82,13 +123,32 @@ class TicketsCubit extends Cubit<TicketsState> {
     Uint8List? imageBytes,
   }) async {
     final id = 'ticket-${DateTime.now().millisecondsSinceEpoch}';
-    final saved = ticket.copyWith(id: id);
-    final updated = [saved, ...state.tickets];
+    // Never persist ephemeral web blob: picker URLs.
+    var saved = ticket.copyWith(
+      id: id,
+      imagePath: sanitizeTicketImagePath(ticket.imagePath),
+    );
 
     final nextBytes = Map<String, Uint8List>.from(state.imageBytesById);
     if (imageBytes != null && imageBytes.isNotEmpty) {
       nextBytes[id] = imageBytes;
+      try {
+        final jpeg = await compressImageToJpeg(imageBytes);
+        final durable = await _imageStore.persistForTicket(
+          ticketId: id,
+          sourcePath: 'ticket.jpg',
+          bytes: jpeg,
+        );
+        if (durable.isNotEmpty) {
+          saved = saved.copyWith(imagePath: durable);
+          nextBytes[id] = jpeg;
+        }
+      } catch (e, st) {
+        debugPrint('Could not persist ticket photo locally: $e\n$st');
+      }
     }
+
+    final updated = [saved, ...state.tickets];
 
     try {
       await _repository.saveTickets(updated);
@@ -105,9 +165,14 @@ class TicketsCubit extends Cubit<TicketsState> {
       rethrow;
     }
 
-    // Firestore doc + JPEG compress + Storage upload (non-blocking).
-    // Guests / web: failures here must never fail the local save above.
-    unawaited(_persistImageAndCloudInBackground(saved, imageBytes));
+    // Firestore doc + Storage upload (non-blocking). Guests / web: failures
+    // here must never fail the local save above.
+    unawaited(
+      _persistImageAndCloudInBackground(
+        saved,
+        nextBytes[id] ?? imageBytes,
+      ),
+    );
   }
 
   /// Compresses/uploads the event photo (not a full-ticket composite).
@@ -128,7 +193,8 @@ class TicketsCubit extends Cubit<TicketsState> {
     if ((payload == null || payload.isEmpty) &&
         ticket.imagePath.isNotEmpty &&
         !kIsWeb &&
-        !ticket.imagePath.startsWith('http')) {
+        !ticket.imagePath.startsWith('http') &&
+        !TicketImageStore.isWebBytesPath(ticket.imagePath)) {
       try {
         final file = File(ticket.imagePath);
         if (file.existsSync()) {
@@ -146,15 +212,17 @@ class TicketsCubit extends Cubit<TicketsState> {
 
     try {
       final jpeg = await compressImageToJpeg(payload);
-      if (!kIsWeb) {
-        final durable = await _imageStore.persistForTicket(
-          ticketId: ticket.id,
-          sourcePath: 'ticket.jpg',
-          bytes: jpeg,
-        );
-        if (durable.isNotEmpty) {
-          await _patchLocalImagePath(ticket.id, durable);
-        }
+
+      // Ensure durable local / web-bytes copy even if Storage upload fails.
+      final durable = await _imageStore.persistForTicket(
+        ticketId: ticket.id,
+        sourcePath: 'ticket.jpg',
+        bytes: jpeg,
+      );
+      if (durable.isNotEmpty &&
+          durable != ticket.imagePath &&
+          !ticket.imagePath.startsWith('http')) {
+        await _patchLocalImagePath(ticket.id, durable);
       }
 
       final url = await _cloudSync.uploadTicketImageJpeg(
@@ -191,7 +259,7 @@ class TicketsCubit extends Cubit<TicketsState> {
       return;
     }
     final imagePaths = state.tickets
-        .map((t) => t.imagePath)
+        .expand((t) => [t.imagePath, t.id])
         .where((p) => p.isNotEmpty);
     try {
       await _imageStore.deleteStoredImages(imagePaths);
@@ -229,7 +297,7 @@ class TicketsCubit extends Cubit<TicketsState> {
 
     if (deleteImages) {
       final imagePaths = removed
-          .map((t) => t.imagePath)
+          .expand((t) => [t.imagePath, t.id])
           .where((p) => p.isNotEmpty);
       try {
         await _imageStore.deleteStoredImages(imagePaths);
@@ -287,7 +355,7 @@ class TicketsCubit extends Cubit<TicketsState> {
   /// Deletes durable images for tickets previously soft-removed (after undo window).
   Future<void> discardTicketImages(Iterable<Ticket> tickets) async {
     final imagePaths = tickets
-        .map((t) => t.imagePath)
+        .expand((t) => [t.imagePath, t.id])
         .where((p) => p.isNotEmpty);
     if (imagePaths.isEmpty) return;
     try {
@@ -304,11 +372,26 @@ class TicketsCubit extends Cubit<TicketsState> {
   }
 
   Future<List<Ticket>> _repairMissingImagePaths(List<Ticket> tickets) async {
-    if (kIsWeb) return tickets;
     final result = <Ticket>[];
     for (final ticket in tickets) {
-      final path = ticket.imagePath;
+      final path = ticket.imagePath.trim();
+      // Drop ephemeral blob: picker URLs left from older web saves.
+      if (path.startsWith('blob:')) {
+        final found = await _imageStore.findExistingForTicket(ticket.id);
+        result.add(
+          ticket.copyWith(imagePath: found ?? ''),
+        );
+        continue;
+      }
+      if (kIsWeb) {
+        result.add(ticket);
+        continue;
+      }
       if (path.isEmpty || path.startsWith('http')) {
+        result.add(ticket);
+        continue;
+      }
+      if (TicketImageStore.isWebBytesPath(path)) {
         result.add(ticket);
         continue;
       }

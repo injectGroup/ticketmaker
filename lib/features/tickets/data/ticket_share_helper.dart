@@ -11,6 +11,7 @@ import '../../generate/domain/entities/ticket.dart';
 import '../presentation/widgets/saved_ticket_view.dart';
 import '../presentation/widgets/web_share_options_dialog.dart';
 import 'ticket_image_codec.dart';
+import 'ticket_image_store.dart';
 import 'ticket_network_image.dart';
 import 'ticket_share_download_stub.dart'
     if (dart.library.js_interop) 'ticket_share_download_web.dart';
@@ -526,7 +527,15 @@ class TicketShareHelper {
     if (eventImageBytes != null && eventImageBytes.isNotEmpty) {
       return eventImageBytes;
     }
-    final path = ticket.imagePath.trim();
+    final path = ticket.photoUrl.trim();
+    if (path.isEmpty ||
+        path.startsWith('blob:') ||
+        TicketImageStore.isWebBytesPath(path)) {
+      return null;
+    }
+    if (path.startsWith('data:')) {
+      return decodeDataUrlBytes(path);
+    }
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return fetchImageBytesCorsSafe(path);
     }
@@ -775,7 +784,9 @@ class TicketShareHelper {
     }
 
     final path = ticket.imagePath;
-    if (path.startsWith('http://') || path.startsWith('https://')) {
+    if (path.startsWith('http://') ||
+        path.startsWith('https://') ||
+        path.startsWith('data:')) {
       // Prefer bytes → MemoryImage to avoid CORS-tainted NetworkImage on web.
       final fetched = await fetchImageBytesCorsSafe(path);
       if (!context.mounted) return;
@@ -821,21 +832,28 @@ class _TicketCaptureOverlayHostState extends State<_TicketCaptureOverlayHost> {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width.clamp(280.0, 420.0);
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: Material(
-          color: Colors.white,
-          child: SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                child: SizedBox(
-                  width: width,
-                  child: RepaintBoundary(
-                    key: widget.boundaryKey,
-                    child: SavedTicketView(
-                      ticket: widget.ticket,
-                      imageBytes: widget.eventImageBytes,
+    try {
+      final width = MediaQuery.sizeOf(context).width.clamp(280.0, 420.0);
+      final photoBytes = widget.eventImageBytes;
+      final hasPhoto = photoBytes != null && photoBytes.isNotEmpty;
+
+      return Positioned.fill(
+        child: IgnorePointer(
+          child: Material(
+            color: Colors.white,
+            child: SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  child: SizedBox(
+                    width: width,
+                    child: RepaintBoundary(
+                      key: widget.boundaryKey,
+                      child: SavedTicketView(
+                        ticket: widget.ticket,
+                        // Explicit null when empty so placeholder paints without
+                        // network / blob attempts during export.
+                        imageBytes: hasPhoto ? photoBytes : null,
+                      ),
                     ),
                   ),
                 ),
@@ -843,7 +861,10 @@ class _TicketCaptureOverlayHostState extends State<_TicketCaptureOverlayHost> {
             ),
           ),
         ),
-      ),
-    );
+      );
+    } catch (e, st) {
+      debugPrint('Ticket capture overlay build failed: $e\n$st');
+      return const SizedBox.shrink();
+    }
   }
 }

@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-07-28T10:10:18.000Z",
+      "updatedAt": "2026-07-28T10:25:35.000Z",
       "lastMilestone": {
-        "message": "Ticket photos use MemoryImage (CORS-safe web capture)",
-        "taskId": "task-fix-storage-cors-memoryimage-20260728",
-        "updatedAt": "2026-07-28T10:10:18.000Z",
+        "message": "Photo save + web MemoryImage rendering for ticket create/download",
+        "taskId": "task-fix-photo-save-web-render-20260728",
+        "updatedAt": "2026-07-28T10:25:35.000Z",
         "source": "local-fallback",
         "note": "Cloud notify may require Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1386,6 +1386,20 @@
       "status": "done",
       "createdAt": "2026-07-28T10:08:22.000Z",
       "updatedAt": "2026-07-28T10:10:18.000Z",
+      "note": "Cloud task_create denied; local backup only."
+    },
+    {
+      "id": "task-fix-photo-save-web-render-20260728",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Fix photo save + web MemoryImage rendering for ticket create/download",
+      "description": "Web picks no longer store blob: paths; photo bytes persist as web-bytes via SharedPreferences; Save patches imagePath/imageUrl/photoUrl to Firestore after Storage upload; SavedTicketView uses MemoryImage/data URL/placeholder; overlay safe with/without photo.",
+      "details": "",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-28T10:20:00.000Z",
+      "updatedAt": "2026-07-28T10:25:35.000Z",
       "note": "Cloud task_create denied; local backup only."
     }
   ],

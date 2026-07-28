@@ -34,8 +34,13 @@ class Ticket extends Equatable {
   final String code;
   final String qrData;
 
-  /// Local gallery file path. Empty → show bundled placeholder asset.
+  /// Local file path, Firebase download URL, `data:` URL, or `web-bytes:<id>`.
+  /// Empty → show placeholder (no network fetch).
   final String imagePath;
+
+  /// Alias for [imagePath] (Firestore may also store `imageUrl` / `photoUrl`).
+  String get photoUrl => imagePath;
+
   final Color eyeColor;
   final Color dataModuleColor;
   final bool isSquare;
@@ -56,6 +61,8 @@ class Ticket extends Equatable {
     'code': code,
     'qrData': qrData,
     'imagePath': imagePath,
+    'imageUrl': imagePath,
+    'photoUrl': imagePath,
     'eyeColor': eyeColor.toARGB32(),
     'dataModuleColor': dataModuleColor.toARGB32(),
     'isSquare': isSquare,
@@ -66,6 +73,7 @@ class Ticket extends Equatable {
   };
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
+    final path = _readImagePath(json);
     return Ticket(
       id: json['id'] as String,
       headerLabel: json['headerLabel'] as String? ?? 'My Ticket',
@@ -77,7 +85,7 @@ class Ticket extends Equatable {
       eventAt: DateTime.parse(json['eventAt'] as String),
       code: json['code'] as String,
       qrData: json['qrData'] as String,
-      imagePath: json['imagePath'] as String? ?? '',
+      imagePath: path,
       eyeColor: Color(json['eyeColor'] as int),
       dataModuleColor: Color(json['dataModuleColor'] as int),
       isSquare: json['isSquare'] as bool? ?? false,
@@ -86,6 +94,16 @@ class Ticket extends Equatable {
       bottomGradientStart: Color(json['bottomGradientStart'] as int),
       bottomGradientEnd: Color(json['bottomGradientEnd'] as int),
     );
+  }
+
+  static String _readImagePath(Map<String, dynamic> json) {
+    for (final key in ['imagePath', 'imageUrl', 'photoUrl']) {
+      final value = json[key];
+      if (value is String && value.trim().isNotEmpty) {
+        return value.trim();
+      }
+    }
+    return '';
   }
 
   /// Plain-text summary for the native share sheet.
