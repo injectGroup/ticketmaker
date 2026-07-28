@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-07-27T22:05:00.000Z",
+      "updatedAt": "2026-07-28T08:40:00.000Z",
       "lastMilestone": {
-        "message": "Web Download Ticket Image saves Ticket_<id>.png; SnackBar Ticket image downloaded!",
-        "taskId": "task-web-png-blob-download-20260727",
-        "updatedAt": "2026-07-27T22:05:00.000Z",
+        "message": "Web builds cache-bust main.dart.js; scripts/build_web.sh enforces flutter clean",
+        "taskId": "task-web-js-cache-bust-clean-build-20260728",
+        "updatedAt": "2026-07-28T08:40:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify may require Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1331,6 +1331,20 @@
       "status": "done",
       "createdAt": "2026-07-27T22:00:00.000Z",
       "updatedAt": "2026-07-27T22:05:00.000Z"
+    },
+    {
+      "id": "task-web-js-cache-bust-clean-build-20260728",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Cache-bust web JS and enforce clean flutter web builds",
+      "description": "Prevent browsers from serving stale main.dart.js: no-cache meta + BUILD_ID in web/index.html; post-build ?v= stamps; scripts/build_web.sh runs flutter clean before release web compile.",
+      "details": "web/index.html; scripts/build_web.sh; scripts/patch_web_bootstrap.sh; CONTRIBUTING.md; docs/getting-started.md; commit 569e5cf",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-28T08:35:00.000Z",
+      "updatedAt": "2026-07-28T08:40:00.000Z",
+      "note": "Cloud task_create denied (project not shared); local backup only."
     }
   ],
   "epics": [

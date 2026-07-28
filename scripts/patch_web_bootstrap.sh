@@ -41,14 +41,6 @@ web = Path("build/web")
 
 def cache_bust_js_urls(text: str) -> str:
     """Append ?v=<build_id> to Flutter entrypoint / loader JS references."""
-    def bust(match: re.Match[str]) -> str:
-        url = match.group(1)
-        if "v=" in url:
-            return match.group(0)
-        sep = "&" if "?" in url else "?"
-        return match.group(0).replace(url, f"{url}{sep}v={build_id}")
-
-    # Quoted paths in bootstrap / buildConfig JSON and HTML attributes.
     patterns = (
         r'(["\'])(main\.dart\.js(?:\?[^"\']*)?)(["\'])',
         r'(["\'])(flutter\.js(?:\?[^"\']*)?)(["\'])',
@@ -57,7 +49,7 @@ def cache_bust_js_urls(text: str) -> str:
     )
     out = text
     for pat in patterns:
-        def repl(m: re.Match[str], _pat=pat) -> str:
+        def repl(m: re.Match[str]) -> str:
             q1, url, q2 = m.group(1), m.group(2), m.group(3)
             if "v=" in url:
                 return m.group(0)
