@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-07-28T10:42:11.000Z",
+      "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "CORS-safe MemoryImage export; no late in capturePngBytes",
-        "taskId": "task-fix-cors-late-export-20260728b",
-        "updatedAt": "2026-07-28T10:42:11.000Z",
+        "message": "Web ticket PNG: raster fallback when CanvasKit toImage LateInits",
+        "taskId": "task-fix-web-raster-export-lateinit-20260728",
+        "updatedAt": "2026-07-28T10:56:36.000Z",
         "source": "local-fallback",
         "note": "Cloud notify may require Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1414,6 +1414,20 @@
       "status": "done",
       "createdAt": "2026-07-28T10:40:19.000Z",
       "updatedAt": "2026-07-28T10:42:11.000Z",
+      "note": "Cloud task_create denied; local backup only."
+    },
+    {
+      "id": "task-fix-web-raster-export-lateinit-20260728",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Web PNG download: fail-fast toImage + raster fallback",
+      "description": "Web PNG download: pixelRatio 1.0 + fail-fast on CanvasKit LateInit; TicketRasterExport (image+qr) fallback in composeTicketPngBytes so downloads succeed without toImage.",
+      "details": "",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-28T10:52:08.000Z",
+      "updatedAt": "2026-07-28T10:56:36.000Z",
       "note": "Cloud task_create denied; local backup only."
     }
   ],

@@ -13,6 +13,7 @@ import '../presentation/widgets/web_share_options_dialog.dart';
 import 'ticket_image_codec.dart';
 import 'ticket_image_store.dart';
 import 'ticket_network_image.dart';
+import 'ticket_raster_export.dart';
 import 'ticket_share_download_stub.dart'
     if (dart.library.js_interop) 'ticket_share_download_web.dart';
 
@@ -77,9 +78,10 @@ class TicketShareHelper {
   /// Returns null on any failure (including Flutter Web LateInitializationError).
   static Future<Uint8List?> captureJpegBytes(
     GlobalKey boundaryKey, {
-    double pixelRatio = 1.5,
+    double? pixelRatio,
     int quality = 72,
   }) async {
+    final ratio = pixelRatio ?? (kIsWeb ? 1.0 : 1.5);
     try {
       RenderRepaintBoundary? boundary = _boundaryFromKey(boundaryKey);
       if (boundary == null) return null;
@@ -96,9 +98,12 @@ class TicketShareHelper {
 
       ui.Image? image;
       try {
-        image = await boundary.toImage(pixelRatio: pixelRatio);
+        image = await boundary.toImage(pixelRatio: ratio);
       } catch (e, st) {
-        debugPrint('captureJpegBytes toImage failed: $e\n$st');
+        final message = e.toString();
+        if (!_isEngineLateInit(message)) {
+          debugPrint('captureJpegBytes toImage failed: $e\n$st');
+        }
         return null;
       }
 
@@ -107,10 +112,8 @@ class TicketShareHelper {
       if (jpegBytes == null || jpegBytes.isEmpty) return null;
       return jpegBytes;
     } catch (e, st) {
-      // Catch Exception and Error (e.g. LateInitializationError from toImage).
       final message = e.toString();
-      if (!message.contains('LateInitializationError') &&
-          !message.contains('LateInitialization')) {
+      if (!_isEngineLateInit(message)) {
         debugPrint('captureJpegBytes failed: $e\n$st');
       }
       return null;
@@ -123,25 +126,32 @@ class TicketShareHelper {
   /// never paints, or capture fails — never throws [LateInitializationError].
   ///
   /// No `late` locals — every render/image/byte reference is nullable and
-  /// checked before use. Waits for frames + paint delay before [toImage].
+  /// checked before use. On web, default [pixelRatio] is 1.0 to reduce
+  /// CanvasKit OffscreenCanvas pressure.
+  ///
+  /// When CanvasKit throws LateInitializationError, [lastCaptureHitEngineLateInit]
+  /// is set so callers can fail-fast instead of retrying.
+  static bool lastCaptureHitEngineLateInit = false;
+
   static Future<Uint8List?> capturePngBytes(
     GlobalKey repaintKey, {
-    double pixelRatio = 3.0,
+    double? pixelRatio,
   }) async {
+    lastCaptureHitEngineLateInit = false;
+    final effectiveRatio = pixelRatio ?? (kIsWeb ? 1.0 : 3.0);
+
     RenderRepaintBoundary? boundary;
     Uint8List? pngBytes;
     ui.Image? image;
     ByteData? byteData;
 
     try {
-      // Settle layout/paint before resolving the boundary.
       await Future<void>.delayed(const Duration(milliseconds: 300));
       await _awaitFrameOrTimeout();
 
       final BuildContext? keyContext = repaintKey.currentContext;
       if (keyContext == null) return null;
 
-      // Force a build pass on the capture element when available.
       final Element? element =
           keyContext is Element ? keyContext : null;
       if (element != null) {
@@ -165,7 +175,7 @@ class TicketShareHelper {
       }
 
       try {
-        image = await boundary.toImage(pixelRatio: pixelRatio);
+        image = await boundary.toImage(pixelRatio: effectiveRatio);
         byteData = await image.toByteData(format: ui.ImageByteFormat.png);
         image.dispose();
         image = null;
@@ -174,17 +184,34 @@ class TicketShareHelper {
         if (pngBytes == null || pngBytes.isEmpty) return null;
         return pngBytes;
       } catch (e, st) {
-        debugPrint('Failed to capture ticket image: $e\n$st');
+        final message = e.toString();
+        if (_isEngineLateInit(message)) {
+          lastCaptureHitEngineLateInit = true;
+          debugPrint(
+            'capturePngBytes: CanvasKit toImage LateInitializationError '
+            '(pixelRatio=$effectiveRatio) — skip retries / use raster fallback',
+          );
+        } else {
+          debugPrint('Failed to capture ticket image: $e\n$st');
+        }
         image?.dispose();
         return null;
       }
     } catch (e, st) {
-      // Errors (e.g. LateInitializationError) — never rethrow to callers.
-      debugPrint('capturePngBytes failed: $e\n$st');
+      final message = e.toString();
+      if (_isEngineLateInit(message)) {
+        lastCaptureHitEngineLateInit = true;
+      } else {
+        debugPrint('capturePngBytes failed: $e\n$st');
+      }
       image?.dispose();
       return null;
     }
   }
+
+  static bool _isEngineLateInit(String message) =>
+      message.contains('LateInitializationError') ||
+      message.contains('LateInitialization');
 
   /// [endOfFrame] can hang in widget tests; bound the wait.
   static Future<void> _awaitFrameOrTimeout() async {
@@ -474,8 +501,9 @@ class TicketShareHelper {
 
   /// Builds PNG bytes for a full ticket composite from [ticket] model data.
   ///
-  /// Order: on-screen [boundaryKey] → painted Overlay → opaque modal.
-  /// Network photos are fetched to [MemoryImage] bytes first (CORS-safe).
+  /// **Web:** one low-ratio widget capture attempt, then [TicketRasterExport]
+  /// (no CanvasKit `toImage`). **Native:** on-screen → overlay → modal.
+  /// Network photos are fetched to memory first (CORS-safe).
   /// Never throws — returns null so callers can show a failure SnackBar.
   static Future<Uint8List?> composeTicketPngBytes(
     BuildContext context,
@@ -489,6 +517,32 @@ class TicketShareHelper {
         eventImageBytes: eventImageBytes,
       );
 
+      if (kIsWeb) {
+        if (boundaryKey != null && boundaryKey.currentContext != null) {
+          final onScreen = await capturePngBytes(
+            boundaryKey,
+            pixelRatio: 1.0,
+          );
+          if (onScreen != null && onScreen.isNotEmpty) return onScreen;
+        }
+
+        if (context.mounted && !lastCaptureHitEngineLateInit) {
+          final viaOverlay = await _captureViaPaintedOverlay(
+            context,
+            ticket,
+            eventImageBytes: photoBytes,
+          );
+          if (viaOverlay != null && viaOverlay.isNotEmpty) return viaOverlay;
+        }
+
+        final raster = await TicketRasterExport.toPngBytes(
+          ticket,
+          eventImageBytes: photoBytes,
+        );
+        if (raster != null && raster.isNotEmpty) return raster;
+        return null;
+      }
+
       if (boundaryKey != null && boundaryKey.currentContext != null) {
         final onScreen = await _capturePngWithRetries(boundaryKey);
         if (onScreen != null && onScreen.isNotEmpty) return onScreen;
@@ -496,8 +550,6 @@ class TicketShareHelper {
 
       if (!context.mounted) return null;
 
-      // Prefer a painted Overlay (visible layout) — off-screen widgets are
-      // often culled on Flutter Web and yield null captures.
       final viaOverlay = await _captureViaPaintedOverlay(
         context,
         ticket,
@@ -595,11 +647,20 @@ class TicketShareHelper {
   static Future<Uint8List?> _capturePngWithRetries(
     GlobalKey boundaryKey, {
     int attempts = 5,
+    double? pixelRatio,
   }) async {
-    for (var i = 0; i < attempts; i++) {
-      final png = await capturePngBytes(boundaryKey);
+    final maxAttempts = kIsWeb ? 1 : attempts;
+    for (var i = 0; i < maxAttempts; i++) {
+      final png = await capturePngBytes(
+        boundaryKey,
+        pixelRatio: pixelRatio ?? (kIsWeb ? 1.0 : null),
+      );
       if (png != null && png.isNotEmpty) return png;
-      await Future<void>.delayed(Duration(milliseconds: 80 + (i * 40)));
+      // CanvasKit OffscreenCanvas LateInit will not recover on retry.
+      if (lastCaptureHitEngineLateInit) return null;
+      if (i + 1 < maxAttempts) {
+        await Future<void>.delayed(Duration(milliseconds: 80 + (i * 40)));
+      }
     }
     return null;
   }
@@ -672,7 +733,11 @@ class TicketShareHelper {
       await _awaitFrameOrTimeout();
       await Future<void>.delayed(const Duration(milliseconds: 100));
 
-      return await _capturePngWithRetries(boundaryKey, attempts: 8);
+      return await _capturePngWithRetries(
+        boundaryKey,
+        attempts: kIsWeb ? 1 : 8,
+        pixelRatio: kIsWeb ? 1.0 : null,
+      );
     } catch (e, st) {
       debugPrint('Painted overlay ticket capture failed: $e\n$st');
       return null;
@@ -726,15 +791,28 @@ class TicketShareHelper {
                   if (preferPng) {
                     bytes = await _capturePngWithRetries(
                       boundaryKey,
-                      attempts: 8,
+                      attempts: kIsWeb ? 1 : 8,
+                      pixelRatio: kIsWeb ? 1.0 : null,
                     );
                     if (bytes == null || bytes.isEmpty) {
-                      bytes = await captureJpegBytes(boundaryKey);
+                      if (!lastCaptureHitEngineLateInit) {
+                        bytes = await captureJpegBytes(
+                          boundaryKey,
+                          pixelRatio: kIsWeb ? 1.0 : null,
+                        );
+                      }
                     }
                   } else {
-                    bytes = await captureJpegBytes(boundaryKey);
+                    bytes = await captureJpegBytes(
+                      boundaryKey,
+                      pixelRatio: kIsWeb ? 1.0 : null,
+                    );
                     if (bytes == null || bytes.isEmpty) {
-                      final png = await _capturePngWithRetries(boundaryKey);
+                      final png = await _capturePngWithRetries(
+                        boundaryKey,
+                        attempts: kIsWeb ? 1 : 5,
+                        pixelRatio: kIsWeb ? 1.0 : null,
+                      );
                       if (png != null && png.isNotEmpty) {
                         bytes = await compressImageToJpeg(png);
                       }
