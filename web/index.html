@@ -20,6 +20,11 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="A new Flutter project.">
 
+  <!-- Never serve a stale shell HTML that points at an old main.dart.js. -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -38,8 +43,12 @@
     Event photos are fetched as bytes → MemoryImage in Dart to avoid
     CORS-tainted canvases from cross-origin HTML <img> elements.
     See: https://docs.flutter.dev/platform-integration/web/initialization
+
+    __TICKETMAKER_BUILD_ID__ is rewritten by scripts/build_web.sh /
+    scripts/patch_web_bootstrap.sh so browsers fetch a fresh main.dart.js.
   -->
   <script>
+    window.__TICKETMAKER_BUILD_ID__ = "{{TICKETMAKER_BUILD_ID}}";
     {{flutter_js}}
     {{flutter_build_config}}
     _flutter.loader.load({

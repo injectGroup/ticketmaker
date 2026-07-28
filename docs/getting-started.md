@@ -91,7 +91,8 @@ Hot reload: `r` · Hot restart: `R` · Quit: `q`
 | `flutter pub outdated` | Review dependency updates |
 | `flutter build apk` | Android release/debug build |
 | `flutter build ios --no-codesign` | iOS compile check without signing |
-| `flutter build web` | Web build output under `build/web` |
+| `./scripts/build_web.sh` | Clean web release build + cache-bust JS under `build/web` |
+| `flutter build web` | Web build only (prefer `./scripts/build_web.sh` for Hosting deploys) |
 | `flutter clean` | Clear build caches when tooling is inconsistent |
 
 ---
