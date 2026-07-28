@@ -10,6 +10,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/color_contrast.dart';
 import '../../../../core/widgets/ticket_photo_placeholder.dart';
 import '../../../tickets/data/ticket_image_store.dart';
+import '../../../tickets/data/ticket_network_image.dart';
 import '../../domain/entities/ticket.dart';
 import '../bloc/generate_cubit.dart';
 import 'bracketed_ticket_field.dart';
@@ -139,16 +140,10 @@ class TicketDetailsSection extends StatelessWidget {
     }
 
     if (path.startsWith('http://') || path.startsWith('https://')) {
-      return Image.network(
-        path,
+      return TicketCorsSafeNetworkImage(
+        url: path,
         width: width,
         height: height,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
-          width: width,
-          height: height,
-          broken: true,
-        ),
       );
     }
 

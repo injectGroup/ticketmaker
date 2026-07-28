@@ -11,6 +11,7 @@ import '../../data/ticket_cloud_sync.dart';
 import '../../data/ticket_image_codec.dart';
 import '../../data/ticket_image_store.dart';
 import '../../data/ticket_local_repository.dart';
+import '../../data/ticket_network_image.dart';
 
 part 'tickets_state.dart';
 
@@ -38,6 +39,8 @@ class TicketsCubit extends Cubit<TicketsState> {
         await _repository.saveTickets(repaired);
       }
       emit(state.copyWith(tickets: repaired, isLoading: false));
+      // Warm MemoryImage cache for http(s) event photos (CORS-safe capture).
+      unawaited(_prefetchNetworkEventPhotos(repaired));
     } catch (_) {
       emit(
         state.copyWith(
@@ -46,6 +49,26 @@ class TicketsCubit extends Cubit<TicketsState> {
         ),
       );
     }
+  }
+
+  /// Fetches remote event photos into [TicketsState.imageBytesById] so ticket
+  /// widgets paint [Image.memory] instead of CORS-tainted [Image.network].
+  Future<void> _prefetchNetworkEventPhotos(List<Ticket> tickets) async {
+    final next = Map<String, Uint8List>.from(state.imageBytesById);
+    var changed = false;
+    for (final ticket in tickets) {
+      if (next[ticket.id]?.isNotEmpty == true) continue;
+      final path = ticket.imagePath.trim();
+      if (!path.startsWith('http://') && !path.startsWith('https://')) {
+        continue;
+      }
+      final bytes = await fetchImageBytesCorsSafe(path);
+      if (bytes == null || bytes.isEmpty) continue;
+      next[ticket.id] = bytes;
+      changed = true;
+    }
+    if (!changed || isClosed) return;
+    emit(state.copyWith(imageBytesById: next));
   }
 
   /// Saves ticket metadata immediately, then compresses/uploads the **event

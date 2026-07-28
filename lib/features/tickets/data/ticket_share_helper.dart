@@ -783,11 +783,8 @@ class TicketShareHelper {
         try {
           await precacheImage(MemoryImage(fetched), context);
         } catch (_) {}
-        return;
       }
-      try {
-        await precacheImage(NetworkImage(path), context);
-      } catch (_) {}
+      // Never precache NetworkImage — it can CORS-taint Flutter Web canvases.
     }
   }
 }

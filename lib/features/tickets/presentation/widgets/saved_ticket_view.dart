@@ -9,6 +9,7 @@ import '../../../generate/domain/entities/ticket.dart';
 import '../../../generate/presentation/widgets/generate_qr_code.dart';
 import '../../../generate/presentation/widgets/ticket_code_badge.dart';
 import '../../../generate/presentation/widgets/ticket_perforation.dart';
+import '../../data/ticket_network_image.dart';
 
 /// Read-only visual of a saved ticket (mirrors Generate layout without editors).
 class SavedTicketView extends StatelessWidget {
@@ -32,6 +33,7 @@ class SavedTicketView extends StatelessWidget {
         width: width,
         height: height,
         fit: BoxFit.cover,
+        gaplessPlayback: true,
         errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
           width: width,
           height: height,
@@ -46,20 +48,12 @@ class SavedTicketView extends StatelessWidget {
     }
 
     if (path.startsWith('http://') || path.startsWith('https://')) {
-      // Prefer CORS-safe MemoryImage when bytes are supplied by the share
-      // pipeline. Direct NetworkImage can taint CanvasKit snapshots on web.
-      return Image.network(
-        path,
+      // Fetch bytes → MemoryImage so Flutter Web CanvasKit snapshots are not
+      // CORS-tainted by Image.network / NetworkImage.
+      return TicketCorsSafeNetworkImage(
+        url: path,
         width: width,
         height: height,
-        fit: BoxFit.cover,
-        // Force Flutter decoding path when possible (avoids HTML element CORS).
-        webHtmlElementStrategy: WebHtmlElementStrategy.never,
-        errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
-          width: width,
-          height: height,
-          broken: true,
-        ),
       );
     }
 
