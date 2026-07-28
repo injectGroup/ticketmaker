@@ -62,8 +62,18 @@ Future<Uint8List?> fetchImageBytesCorsSafe(String url) async {
     return decoded;
   }
 
-  Uint8List? bytes = await _fetchViaHttp(trimmed);
-  bytes ??= await _fetchViaFirebaseStorage(trimmed);
+  Uint8List? bytes;
+  if (kIsWeb &&
+      (trimmed.startsWith('gs://') ||
+          trimmed.contains('firebasestorage.googleapis.com') ||
+          trimmed.contains('firebasestorage.app'))) {
+    // Prefer authenticated SDK download on web — plain http.get is CORS-bound.
+    bytes = await _fetchViaFirebaseStorage(trimmed);
+    bytes ??= await _fetchViaHttp(trimmed);
+  } else {
+    bytes = await _fetchViaHttp(trimmed);
+    bytes ??= await _fetchViaFirebaseStorage(trimmed);
+  }
 
   if (bytes != null && bytes.isNotEmpty) {
     _networkImageBytesCache[trimmed] = bytes;

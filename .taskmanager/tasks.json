@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-07-28T10:25:35.000Z",
+      "updatedAt": "2026-07-28T10:42:11.000Z",
       "lastMilestone": {
-        "message": "Photo save + web MemoryImage rendering for ticket create/download",
-        "taskId": "task-fix-photo-save-web-render-20260728",
-        "updatedAt": "2026-07-28T10:25:35.000Z",
+        "message": "CORS-safe MemoryImage export; no late in capturePngBytes",
+        "taskId": "task-fix-cors-late-export-20260728b",
+        "updatedAt": "2026-07-28T10:42:11.000Z",
         "source": "local-fallback",
         "note": "Cloud notify may require Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1400,6 +1400,20 @@
       "status": "done",
       "createdAt": "2026-07-28T10:20:00.000Z",
       "updatedAt": "2026-07-28T10:25:35.000Z",
+      "note": "Cloud task_create denied; local backup only."
+    },
+    {
+      "id": "task-fix-cors-late-export-20260728b",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Eliminate Image.network + late in web PNG export path",
+      "description": "capturePngBytes uses nullable boundary/pngBytes/image only (no late); Firebase web photos prefer Storage getData then MemoryImage; capture overlay/modal never mounts live network FutureBuilder inside RepaintBoundary.",
+      "details": "",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-28T10:40:19.000Z",
+      "updatedAt": "2026-07-28T10:42:11.000Z",
       "note": "Cloud task_create denied; local backup only."
     }
   ],

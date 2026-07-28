@@ -129,7 +129,9 @@ class TicketShareHelper {
     double pixelRatio = 3.0,
   }) async {
     RenderRepaintBoundary? boundary;
+    Uint8List? pngBytes;
     ui.Image? image;
+    ByteData? byteData;
 
     try {
       // Settle layout/paint before resolving the boundary.
@@ -164,15 +166,15 @@ class TicketShareHelper {
 
       try {
         image = await boundary.toImage(pixelRatio: pixelRatio);
-        final ByteData? byteData =
-            await image.toByteData(format: ui.ImageByteFormat.png);
+        byteData = await image.toByteData(format: ui.ImageByteFormat.png);
         image.dispose();
         image = null;
-        final Uint8List? pngBytes = byteData?.buffer.asUint8List();
+        pngBytes = byteData?.buffer.asUint8List();
+        byteData = null;
         if (pngBytes == null || pngBytes.isEmpty) return null;
         return pngBytes;
-      } catch (e) {
-        debugPrint('Failed to capture ticket image: $e');
+      } catch (e, st) {
+        debugPrint('Failed to capture ticket image: $e\n$st');
         image?.dispose();
         return null;
       }
@@ -602,6 +604,20 @@ class TicketShareHelper {
     return null;
   }
 
+  /// Clears remote photo URLs when bytes were not prefetched so capture
+  /// boundaries never mount a live network FutureBuilder.
+  static Ticket _ticketForCapture(Ticket ticket, Uint8List? eventImageBytes) {
+    if (eventImageBytes != null && eventImageBytes.isNotEmpty) return ticket;
+    final path = ticket.photoUrl.trim();
+    if (path.startsWith('http://') ||
+        path.startsWith('https://') ||
+        path.startsWith('gs://') ||
+        path.startsWith('data:')) {
+      return ticket.copyWith(imagePath: '');
+    }
+    return ticket;
+  }
+
   /// Paints [SavedTicketView] in a Stateful overlay host, then captures PNG.
   ///
   /// On-screen layout is required on Flutter Web — off-screen / culled
@@ -739,6 +755,8 @@ class TicketShareHelper {
 
             final width =
                 MediaQuery.sizeOf(routeContext).width.clamp(280.0, 420.0);
+            final hasPhoto =
+                eventImageBytes != null && eventImageBytes.isNotEmpty;
             return Material(
               color: Colors.white,
               child: SafeArea(
@@ -749,8 +767,8 @@ class TicketShareHelper {
                       child: RepaintBoundary(
                         key: boundaryKey,
                         child: SavedTicketView(
-                          ticket: ticket,
-                          imageBytes: eventImageBytes,
+                          ticket: _ticketForCapture(ticket, eventImageBytes),
+                          imageBytes: hasPhoto ? eventImageBytes : null,
                         ),
                       ),
                     ),
@@ -830,6 +848,12 @@ class _TicketCaptureOverlayHostState extends State<_TicketCaptureOverlayHost> {
     });
   }
 
+  /// Ticket used inside the capture boundary. Clears remote photo URLs when
+  /// bytes were not prefetched so the boundary never mounts a live network
+  /// FutureBuilder (avoids mid-capture loads / CORS taint races).
+  Ticket get _captureTicket =>
+      TicketShareHelper._ticketForCapture(widget.ticket, widget.eventImageBytes);
+
   @override
   Widget build(BuildContext context) {
     try {
@@ -849,9 +873,8 @@ class _TicketCaptureOverlayHostState extends State<_TicketCaptureOverlayHost> {
                     child: RepaintBoundary(
                       key: widget.boundaryKey,
                       child: SavedTicketView(
-                        ticket: widget.ticket,
-                        // Explicit null when empty so placeholder paints without
-                        // network / blob attempts during export.
+                        ticket: _captureTicket,
+                        // Explicit null when empty → placeholder, no network.
                         imageBytes: hasPhoto ? photoBytes : null,
                       ),
                     ),
