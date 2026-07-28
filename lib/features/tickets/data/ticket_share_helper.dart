@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -30,6 +31,8 @@ class TicketShareHelper {
   static const String _linkCopiedMessage = 'Share link copied to clipboard';
   static const String _downloadFailedMessage =
       'Could not prepare ticket image to download.';
+  static const String _downloadRetryMessage =
+      'Preparing ticket image... please try again.';
   static const String _copyFailedMessage =
       'Could not copy share link. Try again.';
 
@@ -119,76 +122,59 @@ class TicketShareHelper {
   /// never paints, or capture fails — never throws [LateInitializationError].
   ///
   /// No `late` locals — every render/image/byte reference is nullable and
-  /// checked before use. Waits for [endOfFrame] + paint delay before [toImage].
+  /// checked before use. Waits for frames + paint delay before [toImage].
   static Future<Uint8List?> capturePngBytes(
     GlobalKey repaintKey, {
     double pixelRatio = 3.0,
   }) async {
     RenderRepaintBoundary? boundary;
-    Uint8List? pngBytes;
     ui.Image? image;
 
     try {
-      boundary = _boundaryFromKey(repaintKey);
-      if (boundary == null) {
-        return null;
-      }
-
-      // Allow network image / QR / layout to paint before snapshot.
-      await _awaitFrameOrTimeout();
+      // Settle layout/paint before resolving the boundary.
       await Future<void>.delayed(const Duration(milliseconds: 300));
+      await _awaitFrameOrTimeout();
 
-      for (var i = 0; i < 6; i++) {
-        final current = boundary;
-        if (current == null) {
-          return null;
-        }
-        if (!current.debugNeedsPaint &&
-            current.hasSize &&
-            current.size.width > 0 &&
-            current.size.height > 0) {
-          break;
-        }
+      final BuildContext? keyContext = repaintKey.currentContext;
+      if (keyContext == null) return null;
+
+      // Force a build pass on the capture element when available.
+      final Element? element =
+          keyContext is Element ? keyContext : null;
+      if (element != null) {
+        WidgetsBinding.instance.buildOwner?.buildScope(element);
+      }
+      await _awaitFrameOrTimeout();
+
+      boundary = _boundaryFromKey(repaintKey);
+      if (boundary == null || boundary.debugNeedsPaint) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
         await _awaitFrameOrTimeout();
-        await Future<void>.delayed(Duration(milliseconds: 50 + (i * 25)));
         boundary = _boundaryFromKey(repaintKey);
       }
 
-      final ready = boundary;
-      if (ready == null ||
-          ready.debugNeedsPaint ||
-          !ready.hasSize ||
-          ready.size.width <= 0 ||
-          ready.size.height <= 0) {
+      if (boundary == null ||
+          boundary.debugNeedsPaint ||
+          !boundary.hasSize ||
+          boundary.size.width <= 0 ||
+          boundary.size.height <= 0) {
         return null;
       }
 
       try {
-        image = await ready.toImage(pixelRatio: pixelRatio);
-      } catch (e, st) {
-        // Canvas/SecurityError often means a CORS-tainted network image.
-        debugPrint(
-          'capturePngBytes toImage failed (possible CORS/SecurityError): $e\n$st',
-        );
-        throw Exception(
-          'Ticket image capture failed (boundary toImage): $e',
-        );
+        image = await boundary.toImage(pixelRatio: pixelRatio);
+        final ByteData? byteData =
+            await image.toByteData(format: ui.ImageByteFormat.png);
+        image.dispose();
+        image = null;
+        final Uint8List? pngBytes = byteData?.buffer.asUint8List();
+        if (pngBytes == null || pngBytes.isEmpty) return null;
+        return pngBytes;
+      } catch (e) {
+        debugPrint('Failed to capture ticket image: $e');
+        image?.dispose();
+        return null;
       }
-
-      final ByteData? byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
-      image.dispose();
-      image = null;
-
-      pngBytes = byteData?.buffer.asUint8List();
-      if (pngBytes == null || pngBytes.isEmpty) {
-        throw Exception('Ticket image capture failed: empty PNG bytes.');
-      }
-      return pngBytes;
-    } on Exception catch (e, st) {
-      debugPrint('capturePngBytes failed: $e\n$st');
-      image?.dispose();
-      return null;
     } catch (e, st) {
       // Errors (e.g. LateInitializationError) — never rethrow to callers.
       debugPrint('capturePngBytes failed: $e\n$st');
@@ -357,7 +343,7 @@ class TicketShareHelper {
           messenger
             ?..hideCurrentSnackBar()
             ..showSnackBar(
-              const SnackBar(content: Text(_downloadFailedMessage)),
+              const SnackBar(content: Text(_downloadRetryMessage)),
             );
           return;
         }
@@ -607,7 +593,7 @@ class TicketShareHelper {
     return null;
   }
 
-  /// Paints [SavedTicketView] in a full-screen [Overlay] (briefly), then PNG.
+  /// Paints [SavedTicketView] in a Stateful overlay host, then captures PNG.
   ///
   /// On-screen layout is required on Flutter Web — off-screen / culled
   /// widgets often fail [RenderRepaintBoundary.toImage].
@@ -621,54 +607,45 @@ class TicketShareHelper {
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return null;
 
-    final boundaryKey = GlobalKey();
+    final GlobalKey boundaryKey = GlobalKey();
+    final mountedCompleter = Completer<void>();
     OverlayEntry? entry;
     try {
       entry = OverlayEntry(
         builder: (overlayContext) {
-          final width =
-              MediaQuery.sizeOf(overlayContext).width.clamp(280.0, 420.0);
-          return Positioned.fill(
-            child: IgnorePointer(
-              child: Material(
-                color: Colors.white,
-                child: SafeArea(
-                  child: Center(
-                    child: SingleChildScrollView(
-                      child: SizedBox(
-                        width: width,
-                        child: RepaintBoundary(
-                          key: boundaryKey,
-                          child: SavedTicketView(
-                            ticket: ticket,
-                            imageBytes: eventImageBytes,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          return _TicketCaptureOverlayHost(
+            boundaryKey: boundaryKey,
+            ticket: ticket,
+            eventImageBytes: eventImageBytes,
+            onMounted: () {
+              if (!mountedCompleter.isCompleted) {
+                mountedCompleter.complete();
+              }
+            },
           );
         },
       );
       overlay.insert(entry);
-      // Force a rebuild so the OverlayEntry lays out before we wait on frames.
-      entry.markNeedsBuild();
 
+      // Wait until the Stateful host reports first frame, then settle paint.
+      await mountedCompleter.future.timeout(
+        const Duration(seconds: 2),
+        onTimeout: () {},
+      );
       await _awaitFrameOrTimeout();
+      await Future<void>.delayed(const Duration(milliseconds: 300));
       await _awaitFrameOrTimeout();
-      if (boundaryKey.currentContext != null &&
-          boundaryKey.currentContext!.mounted) {
+
+      final captureContext = boundaryKey.currentContext;
+      if (captureContext != null && captureContext.mounted) {
         await _precacheTicketImages(
-          boundaryKey.currentContext!,
+          captureContext,
           ticket,
           eventImageBytes: eventImageBytes,
         );
       }
       await _awaitFrameOrTimeout();
-      await Future<void>.delayed(const Duration(milliseconds: 350));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
 
       return await _capturePngWithRetries(boundaryKey, attempts: 8);
     } catch (e, st) {
@@ -812,5 +789,64 @@ class TicketShareHelper {
         await precacheImage(NetworkImage(path), context);
       } catch (_) {}
     }
+  }
+}
+
+/// Stateful overlay host that mounts [SavedTicketView] under a [RepaintBoundary]
+/// and signals [onMounted] after the first frame — used for web PNG capture.
+class _TicketCaptureOverlayHost extends StatefulWidget {
+  const _TicketCaptureOverlayHost({
+    required this.boundaryKey,
+    required this.ticket,
+    required this.eventImageBytes,
+    required this.onMounted,
+  });
+
+  final GlobalKey boundaryKey;
+  final Ticket ticket;
+  final Uint8List? eventImageBytes;
+  final VoidCallback onMounted;
+
+  @override
+  State<_TicketCaptureOverlayHost> createState() =>
+      _TicketCaptureOverlayHostState();
+}
+
+class _TicketCaptureOverlayHostState extends State<_TicketCaptureOverlayHost> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.onMounted();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width.clamp(280.0, 420.0);
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Material(
+          color: Colors.white,
+          child: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                child: SizedBox(
+                  width: width,
+                  child: RepaintBoundary(
+                    key: widget.boundaryKey,
+                    child: SavedTicketView(
+                      ticket: widget.ticket,
+                      imageBytes: widget.eventImageBytes,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-07-28T09:20:00.000Z",
+      "updatedAt": "2026-07-28T09:45:00.000Z",
       "lastMilestone": {
-        "message": "capturePngBytes uses nullable boundary/pngBytes — no LateInitializationError",
-        "taskId": "task-fix-late-init-capture-png-20260728",
-        "updatedAt": "2026-07-28T09:20:00.000Z",
+        "message": "Stateful overlay ticket PNG capture — no late, SnackBar retry on null",
+        "taskId": "task-fix-stateful-overlay-capture-20260728",
+        "updatedAt": "2026-07-28T09:45:00.000Z",
         "source": "local-fallback",
         "note": "Cloud notify may require Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1359,6 +1359,20 @@
       "createdAt": "2026-07-28T09:15:00.000Z",
       "updatedAt": "2026-07-28T09:20:00.000Z",
       "note": "Cloud task_create denied; local backup only."
+    },
+    {
+      "id": "task-fix-stateful-overlay-capture-20260728",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Fix LateInitializationError in ticket PNG capture (Stateful overlay)",
+      "description": "Rewrote capturePngBytes with nullable RenderRepaintBoundary only (no late); Stateful _TicketCaptureOverlayHost mounts RepaintBoundary; multi-frame wait + buildScope before toImage; null capture shows Preparing ticket image... please try again.",
+      "details": "ticket_share_helper.dart: capturePngBytes, _captureViaPaintedOverlay, _TicketCaptureOverlayHost; web download SnackBar _downloadRetryMessage.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-28T09:40:00.000Z",
+      "updatedAt": "2026-07-28T09:45:00.000Z",
+      "note": "Cloud task_create denied (project not shared); local backup only."
     }
   ],
   "epics": [
