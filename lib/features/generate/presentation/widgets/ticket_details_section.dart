@@ -306,6 +306,7 @@ class TicketDetailsSection extends StatelessWidget {
               maxLines: 4,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: onText,
+                fontWeight: FontWeight.w700,
                 height: 1.35,
               ),
               cursorColor: onText,
@@ -331,7 +332,7 @@ class TicketDetailsSection extends StatelessWidget {
                           ticket.dateLabel,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: onText,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -344,7 +345,7 @@ class TicketDetailsSection extends StatelessWidget {
                           ticket.timeLabel,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: onText,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -362,7 +363,10 @@ class TicketDetailsSection extends StatelessWidget {
               resetToken: bracketResetToken,
               minLines: 1,
               maxLines: 3,
-              style: theme.textTheme.bodyMedium?.copyWith(color: onText),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: onText,
+                fontWeight: FontWeight.w700,
+              ),
               cursorColor: onText,
               hintText: 'Home, restaurant, or private venue',
               onChanged: cubit.updateVenue,

@@ -86,13 +86,26 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
   @override
   Widget build(BuildContext context) {
     final baseStyle = widget.style;
-    final hintStyle = baseStyle?.copyWith(
-      color: baseStyle.color?.withValues(alpha: 0.45),
-      fontWeight: FontWeight.w400,
+    // Pink pills sit on light blush — use dark, heavier type for legibility.
+    // When the badge is dismissed, keep the caller style for the dark card.
+    final fieldStyle = _showBadge
+        ? baseStyle?.copyWith(
+            color: AppColors.primaryText,
+            fontWeight: FontWeight.w800,
+          )
+        : baseStyle;
+    final hintStyle = fieldStyle?.copyWith(
+      color: (_showBadge
+              ? AppColors.primaryText
+              : baseStyle?.color)
+          ?.withValues(alpha: _showBadge ? 0.55 : 0.45),
+      fontWeight: _showBadge ? FontWeight.w600 : FontWeight.w400,
     );
-    final bulletStyle = baseStyle?.copyWith(
-      color: AppColors.primary.withValues(alpha: 0.85),
-      fontWeight: FontWeight.w700,
+    final bulletStyle = TextStyle(
+      color: AppColors.primary,
+      fontWeight: FontWeight.w800,
+      fontSize: baseStyle?.fontSize,
+      height: baseStyle?.height,
       letterSpacing: 0,
     );
 
@@ -103,8 +116,8 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
       textAlignVertical: TextAlignVertical.center,
       minLines: widget.minLines,
       maxLines: widget.maxLines,
-      style: baseStyle,
-      cursorColor: widget.cursorColor,
+      style: fieldStyle,
+      cursorColor: _showBadge ? AppColors.primary : widget.cursorColor,
       decoration: BracketedTicketField.plainDecoration.copyWith(
         hintText: widget.hintText,
         hintStyle: hintStyle,
@@ -119,7 +132,7 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
               color: const Color(0xFFFCE7EC),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.18),
+                color: AppColors.primary.withValues(alpha: 0.28),
               ),
             ),
             child: Row(

@@ -5,7 +5,7 @@
     {
       "id": "S48ODI73lfsZJSn8Kke2",
       "name": "ticketmaker",
-      "description": "Quick Ticket Maker \u2014 generate styled event tickets with customizable QR codes.",
+      "description": "Quick Ticket Maker — generate styled event tickets with customizable QR codes.",
       "ownerEmail": "abdulkadirhaldu@gmail.com",
       "proposedOwnerEmail": "abdulkadirhaldu@gmail.com",
       "ownershipStatus": "needs_owner_claim",
@@ -23,10 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "Fixed QR verify NOT FOUND (stable code + publish)",
-        "taskId": "task-fix-verify-not-found-stable-code-20260729",
-        "updatedAt": "2026-07-29T13:08:45.000Z",
-        "source": "local-fallback"
+        "message": "Generate screen visual polish: pill contrast, photo placeholder, Bg Color FAB, Save Ticket bottom padding",
+        "taskId": "task-polish-generate-visuals-20260729",
+        "updatedAt": "2026-07-29T15:05:29.000Z"
       }
     }
   ],
@@ -179,7 +178,7 @@
       "projectId": "S48ODI73lfsZJSn8Kke2",
       "epicId": null,
       "title": "Task 2.4 Bottom-Half Enhancements",
-      "description": "Branch feature/bottom-half-upgrades from main (FF Task 2.3). image_picker gallery \u2192 Ticket.imagePath + Image.file with asset fallback; date then time pickers; bottom BoxDecoration uses shared topGradient colors; cubit syncs both halves.",
+      "description": "Branch feature/bottom-half-upgrades from main (FF Task 2.3). image_picker gallery → Ticket.imagePath + Image.file with asset fallback; date then time pickers; bottom BoxDecoration uses shared topGradient colors; cubit syncs both halves.",
       "details": "Also added placeholder asset, iOS/macOS photo usage strings and macOS photo entitlements.",
       "operationalPhase": "COMPLETE",
       "priority": "high",
@@ -284,7 +283,7 @@
       "epicId": null,
       "title": "Live-update bg color preview from hex input",
       "description": "Hex typing updates the solid/gradient display bar and ticket background as soon as #RRGGBB is valid; Apply still dismisses the sheet.",
-      "details": "top_bg_color_customizer_sheet.dart \u2014 local preview + live cubit apply on valid parse.",
+      "details": "top_bg_color_customizer_sheet.dart — local preview + live cubit apply on valid parse.",
       "operationalPhase": "COMPLETE",
       "priority": "medium",
       "status": "done",
@@ -478,7 +477,7 @@
       "projectId": "S48ODI73lfsZJSn8Kke2",
       "epicId": null,
       "title": "Interactive Seating Map",
-      "description": "Auth-gated Book Spot \u2192 seating map (rows A\u2013C, seats 1\u201310) \u2192 Proceed to Checkout prefills Generate with selected seats.",
+      "description": "Auth-gated Book Spot → seating map (rows A–C, seats 1–10) → Proceed to Checkout prefills Generate with selected seats.",
       "details": "InteractiveSeatingCubit; seating layout factory; /seating route; sticky summary drawer; cubit + widget tests",
       "operationalPhase": "COMPLETE",
       "priority": "high",
@@ -569,7 +568,7 @@
       "projectId": "S48ODI73lfsZJSn8Kke2",
       "epicId": null,
       "title": "Fix ColorContrast for low-alpha background washes",
-      "description": "Prefer alpha-blended luminance for ticket text; opaque-dark\u2192white only when stop alpha \u2265 0.30 (graduation-style fills).",
+      "description": "Prefer alpha-blended luminance for ticket text; opaque-dark→white only when stop alpha ≥ 0.30 (graduation-style fills).",
       "details": "color_contrast.dart; color_contrast_test.dart",
       "operationalPhase": "COMPLETE",
       "priority": "high",
@@ -777,7 +776,7 @@
       "projectId": "S48ODI73lfsZJSn8Kke2",
       "epicId": null,
       "title": "Web photo MemoryImage + keep Generate edits after Save",
-      "description": "Gallery picks always readAsBytes and preview via MemoryImage; Save Ticket no longer resets to Circu Du Freak \u2014 navigates to Tickets instead.",
+      "description": "Gallery picks always readAsBytes and preview via MemoryImage; Save Ticket no longer resets to Circu Du Freak — navigates to Tickets instead.",
       "details": "ticket_details_section; ticket_customize_toolbar; generate_cubit/state; auth_gate; generate_page",
       "operationalPhase": "COMPLETE",
       "priority": "high",
@@ -1129,7 +1128,7 @@
       "epicId": "epic-cybersecurity-protocol-20260727",
       "title": "Audit secrets / tracked sensitive files",
       "description": "Scan tree/history for .env, keystores, service accounts, webhooks; confirm google-services ignored; document firebase_options as client keys.",
-      "details": "Local TaskManager backup \u2014 cloud MCP denied for project-1784709204130.",
+      "details": "Local TaskManager backup — cloud MCP denied for project-1784709204130.",
       "operationalPhase": "COMPLETE",
       "priority": "high",
       "status": "done",
@@ -1350,7 +1349,7 @@
       "projectId": "project-1784709204130",
       "epicId": null,
       "title": "Fix LateInitializationError in capturePngBytes/share",
-      "description": "Replace unsafe casts with nullable RenderRepaintBoundary?/Uint8List? and is-checks in capturePngBytes/captureJpegBytes; descriptive Exception on toImage failure caught to return null \u2014 never LateInitializationError.",
+      "description": "Replace unsafe casts with nullable RenderRepaintBoundary?/Uint8List? and is-checks in capturePngBytes/captureJpegBytes; descriptive Exception on toImage failure caught to return null — never LateInitializationError.",
       "details": "ticket_share_helper.dart _boundaryFromKey; SavedTicketCard/web_share_options_dialog had no late; TicketCard/TicketWidget aliases not present.",
       "operationalPhase": "COMPLETE",
       "priority": "high",
@@ -1511,7 +1510,7 @@
       "status": "done",
       "createdAt": "2026-07-29T12:14:30.000Z",
       "updatedAt": "2026-07-29T12:18:06.000Z",
-      "note": "Publish tickets/{code} on save; verify status valid\u2192checked_in; rules+hosting deployed."
+      "note": "Publish tickets/{code} on save; verify status valid→checked_in; rules+hosting deployed."
     },
     {
       "id": "task-explicit-tickets-collection-write-deploy-20260729",
@@ -1540,6 +1539,20 @@
       "createdAt": "2026-07-29T13:08:45.000Z",
       "updatedAt": "2026-07-29T13:08:45.000Z",
       "note": "Implemented plan fix_verify_not-found."
+    },
+    {
+      "id": "task-polish-generate-visuals-20260729",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Polish Generate screen visual styles",
+      "description": "Pink pill contrast, photo placeholder tint, Bg Color FAB border/shadow, Save Ticket 24px bottom padding.",
+      "details": "",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-29T15:03:55.000Z",
+      "updatedAt": "2026-07-29T15:05:29.000Z",
+      "note": "Cloud MCP denied; local backup only."
     }
   ],
   "epics": [
@@ -1555,5 +1568,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-07-27T16:12:29.000Z"
+  "lastSync": "2026-07-29T15:05:39.223Z"
 }

@@ -187,11 +187,18 @@ class _BgColorFab extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 18,
-                offset: const Offset(0, 6),
+                color: Colors.black.withValues(alpha: 0.28),
+                blurRadius: 20,
+                spreadRadius: 0.5,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.14),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -199,11 +206,9 @@ class _BgColorFab extends StatelessWidget {
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
               child: Material(
-                color: Colors.white.withValues(alpha: 0.85),
-                shape: CircleBorder(
-                  side: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.6),
-                  ),
+                color: Colors.white.withValues(alpha: 0.92),
+                shape: const CircleBorder(
+                  side: BorderSide(color: Colors.white, width: 1.5),
                 ),
                 child: InkWell(
                   customBorder: const CircleBorder(),

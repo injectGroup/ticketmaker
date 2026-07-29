@@ -20,9 +20,16 @@ class TicketPhotoPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final borderColor = broken
+        ? AppColors.secondaryText.withValues(alpha: 0.5)
+        : AppColors.primary.withValues(alpha: 0.45);
+    final iconColor = broken
+        ? AppColors.secondaryText.withValues(alpha: 0.9)
+        : AppColors.primary.withValues(alpha: 0.85);
+
     return CustomPaint(
       painter: _DottedBorderPainter(
-        color: AppColors.secondaryText.withValues(alpha: 0.45),
+        color: borderColor,
         radius: 16,
       ),
       child: Container(
@@ -41,14 +48,16 @@ class TicketPhotoPlaceholder extends StatelessWidget {
                   ? Icons.broken_image_outlined
                   : Icons.add_photo_alternate_outlined,
               size: 40,
-              color: AppColors.secondaryText.withValues(alpha: 0.85),
+              color: iconColor,
             ),
             const SizedBox(height: 10),
             Text(
               broken ? 'Photo unavailable' : 'Add event photo',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.secondaryText,
-                fontWeight: FontWeight.w500,
+                color: broken
+                    ? AppColors.secondaryText
+                    : AppColors.primary.withValues(alpha: 0.9),
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -68,7 +77,7 @@ class _DottedBorderPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
-      ..strokeWidth = 1.5
+      ..strokeWidth = 1.75
       ..style = PaintingStyle.stroke;
 
     final path = Path()

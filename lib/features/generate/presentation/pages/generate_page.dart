@@ -160,7 +160,7 @@ class _GenerateViewState extends State<_GenerateView> {
                       left: 16,
                       right: 16,
                       top: 12,
-                      bottom: keyboardInset > 0 ? keyboardInset + 24 : 28,
+                      bottom: keyboardInset > 0 ? keyboardInset + 24 : 0,
                     ),
                     keyboardDismissBehavior:
                         ScrollViewKeyboardDismissBehavior.onDrag,
@@ -240,6 +240,8 @@ class _GenerateViewState extends State<_GenerateView> {
                             ),
                           ),
                         ),
+                        // Keeps Save Ticket clear of the bottom navigation bar.
+                        const SizedBox(height: 24),
                       ],
                     ),
                   );
