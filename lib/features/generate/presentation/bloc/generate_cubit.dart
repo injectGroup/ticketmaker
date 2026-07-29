@@ -262,15 +262,22 @@ class GenerateCubit extends Cubit<GenerateState> {
     );
   }
 
-  /// Assigns a fresh ticket code + Hosting `/verify/<code>` payload URL.
-  /// Called on Save so Share Ticket has a unique link (no Generate button).
+  /// Ensures a valid guest code + Hosting `/verify/<code>` URL for Save/Share.
+  ///
+  /// Reuses the current code when it already matches the guest-code pattern so
+  /// the Generate QR matches the published Firestore doc.
   void ensureTicketPayload() {
-    final code = _makeCode(_random);
+    final existing = state.ticket.code.trim();
+    final code = TicketPayload.codePattern.hasMatch(existing)
+        ? existing
+        : _makeCode(_random);
+    final qrData = ticketPayloadUrl(code);
+    if (state.ticket.code == code && state.ticket.qrData == qrData) return;
     emit(
       state.copyWith(
         ticket: state.ticket.copyWith(
           code: code,
-          qrData: ticketPayloadUrl(code),
+          qrData: qrData,
         ),
       ),
     );

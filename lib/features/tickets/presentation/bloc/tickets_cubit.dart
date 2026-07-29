@@ -195,19 +195,27 @@ class TicketsCubit extends Cubit<TicketsState> {
 
     // Public verify doc must exist before the QR is scannable.
     final published = await _cloudSync.publishPublicTicket(saved);
-    if (!published && !isClosed) {
+    if (!published) {
+      var firebaseReady = false;
       try {
-        if (Firebase.apps.isNotEmpty) {
-          emit(
-            state.copyWith(
-              message:
-                  'Ticket saved locally, but cloud verify link failed. Check connection and try Save again.',
-            ),
-          );
-        }
+        firebaseReady = Firebase.apps.isNotEmpty;
       } catch (_) {
-        // Firebase not available (tests) — keep local success message.
+        firebaseReady = false;
       }
+      if (firebaseReady && !isClosed) {
+        emit(
+          state.copyWith(
+            message:
+                'Could not publish ticket for door verify. Check connection and try Save again.',
+          ),
+        );
+      }
+    } else if (!isClosed) {
+      emit(
+        state.copyWith(
+          message: 'Ticket saved — door scan link is ready.',
+        ),
+      );
     }
 
     // Owner photo embed / private doc (non-blocking).
@@ -217,6 +225,29 @@ class TicketsCubit extends Cubit<TicketsState> {
         nextBytes[id] ?? imageBytes,
       ),
     );
+  }
+
+  /// Re-publishes one local ticket to `tickets/{code}` for door verify.
+  Future<bool> republishForDoorScan(String ticketId) async {
+    Ticket? match;
+    for (final ticket in state.tickets) {
+      if (ticket.id == ticketId) {
+        match = ticket;
+        break;
+      }
+    }
+    if (match == null) return false;
+    final ok = await _cloudSync.publishPublicTicket(match);
+    if (!isClosed) {
+      emit(
+        state.copyWith(
+          message: ok
+              ? 'Door scan link published for ${match.code}'
+              : 'Could not publish door scan link. Try again.',
+        ),
+      );
+    }
+    return ok;
   }
 
   /// Door entrance: decode QR/manual payload, verify against host tickets,

@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "Explicit tickets/{code} write on save + web deploy",
-        "taskId": "task-explicit-tickets-collection-write-deploy-20260729",
-        "updatedAt": "2026-07-29T12:43:46.000Z",
+        "message": "Fixed QR verify NOT FOUND (stable code + publish)",
+        "taskId": "task-fix-verify-not-found-stable-code-20260729",
+        "updatedAt": "2026-07-29T13:08:45.000Z",
         "source": "local-fallback"
       }
     }
@@ -1526,6 +1526,20 @@
       "createdAt": "2026-07-29T12:42:58.000Z",
       "updatedAt": "2026-07-29T12:43:46.000Z",
       "note": "Explicit tickets.doc(code).set; clean build + hosting deploy."
+    },
+    {
+      "id": "task-fix-verify-not-found-stable-code-20260729",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Fix verify NOT FOUND: stable code + publish gate",
+      "description": "Reuse Generate QR code on save; require public tickets publish; honest check-in errors; deploy.",
+      "details": "",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-29T13:08:45.000Z",
+      "updatedAt": "2026-07-29T13:08:45.000Z",
+      "note": "Implemented plan fix_verify_not-found."
     }
   ],
   "epics": [

@@ -95,7 +95,28 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
           appBar: AppBar(
             title: Text(ticket?.title ?? 'Ticket'),
             actions: [
-              if (ticket != null)
+              if (ticket != null) ...[
+                IconButton(
+                  tooltip: 'Publish for door scan',
+                  onPressed: () async {
+                    final ok = await context
+                        .read<TicketsCubit>()
+                        .republishForDoorScan(ticket!.id);
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            ok
+                                ? 'Door scan ready: ${ticket.code}'
+                                : 'Could not publish door scan link.',
+                          ),
+                        ),
+                      );
+                  },
+                  icon: const Icon(Icons.qr_code_2_outlined),
+                ),
                 Builder(
                   builder: (buttonContext) {
                     return IconButton(
@@ -105,6 +126,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                     );
                   },
                 ),
+              ],
             ],
           ),
           body: ticket == null
@@ -137,14 +159,25 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                   ),
                 )
               : SingleChildScrollView(
-                  child: RepaintBoundary(
-                    key: _ticketBoundaryKey,
-                    child: SavedTicketView(
-                      ticket: ticket,
-                      // Prefetched MemoryImage bytes when available — avoids
-                      // Storage CORS / network failures breaking the detail UI.
-                      imageBytes: imageBytes,
-                    ),
+                  child: Column(
+                    children: [
+                      RepaintBoundary(
+                        key: _ticketBoundaryKey,
+                        child: SavedTicketView(
+                          ticket: ticket,
+                          imageBytes: imageBytes,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                        child: Text(
+                          'Door scan: ${ticket.qrData}',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.secondaryText),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
         );

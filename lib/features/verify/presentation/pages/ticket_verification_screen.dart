@@ -101,7 +101,27 @@ class _VerificationResultScaffold extends StatelessWidget {
                           TicketVerifyStatus.alreadyCheckedIn &&
                       result.ticket != null)
                     _AlreadyUsedCard(ticket: result.ticket!)
-                  else if (result.code != null)
+                  else if (result.status == TicketVerifyStatus.checkInFailed) ...[
+                    Text(
+                      result.detail,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                    ),
+                    if (result.code != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        result.code!,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ] else if (result.code != null)
                     Text(
                       result.code!,
                       style: const TextStyle(
@@ -132,6 +152,12 @@ class _VerificationResultScaffold extends StatelessWidget {
           background: Color(0xFFEA580C),
           icon: Icons.warning_amber_rounded,
           headline: 'WARNING: TICKET ALREADY USED',
+        );
+      case TicketVerifyStatus.checkInFailed:
+        return const _VerifyScheme(
+          background: Color(0xFFB45309),
+          icon: Icons.error_outline,
+          headline: 'CHECK-IN FAILED — TRY AGAIN',
         );
       case TicketVerifyStatus.notFound:
       case TicketVerifyStatus.invalidPayload:

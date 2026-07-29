@@ -23,13 +23,13 @@ void main() {
     cubit.close();
   });
 
-  test('ensureTicketPayload writes Hosting verify URL with new code', () {
+  test('ensureTicketPayload reuses existing valid code', () {
     final cubit = GenerateCubit();
     final before = cubit.state.ticket.code;
     cubit.ensureTicketPayload();
     final ticket = cubit.state.ticket;
 
-    expect(ticket.code, isNot(equals(before)));
+    expect(ticket.code, before);
     expect(
       ticket.qrData,
       'https://quick-ticket-maker-sandbox.web.app/verify/${ticket.code}',

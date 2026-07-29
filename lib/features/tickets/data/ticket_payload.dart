@@ -13,6 +13,9 @@ enum TicketVerifyStatus {
 
   /// Scanned text is not a ticketmaker payload.
   invalidPayload,
+
+  /// Ticket exists but the check-in write failed (permissions/network).
+  checkInFailed,
 }
 
 /// Outcome of door / web verification.
@@ -39,6 +42,8 @@ class TicketVerifyResult {
         return 'INVALID';
       case TicketVerifyStatus.invalidPayload:
         return 'INVALID';
+      case TicketVerifyStatus.checkInFailed:
+        return 'CHECK-IN FAILED';
     }
   }
 
@@ -58,6 +63,8 @@ class TicketVerifyResult {
             : 'No ticket for $code';
       case TicketVerifyStatus.invalidPayload:
         return 'Unrecognized ticket code';
+      case TicketVerifyStatus.checkInFailed:
+        return 'Ticket found, but check-in could not be saved. Try again.';
     }
   }
 }

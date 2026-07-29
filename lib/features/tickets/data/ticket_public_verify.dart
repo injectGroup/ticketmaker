@@ -26,68 +26,81 @@ class TicketPublicVerify {
       );
     }
 
+    final ref = _ticketsDoc(code);
+
+    late final DocumentSnapshot<Map<String, dynamic>> snap;
     try {
-      return await _firestore.runTransaction((tx) async {
-        final ref = _ticketsDoc(code);
-        final snap = await tx.get(ref);
+      snap = await ref.get();
+    } catch (e, st) {
+      debugPrint('Public verify read failed: $e\n$st');
+      return TicketVerifyResult(
+        status: TicketVerifyStatus.checkInFailed,
+        code: code,
+      );
+    }
 
-        // Red INVALID only when the public doc is missing.
-        if (!snap.exists) {
-          return TicketVerifyResult(
-            status: TicketVerifyStatus.notFound,
-            code: code,
-          );
-        }
+    if (!snap.exists) {
+      return TicketVerifyResult(
+        status: TicketVerifyStatus.notFound,
+        code: code,
+      );
+    }
 
-        final data = Map<String, dynamic>.from(snap.data() ?? {});
-        final ticket = _ticketFromData(code: code, data: data);
-        final status = (data['status'] as String?)?.trim().toLowerCase() ?? '';
+    final data = Map<String, dynamic>.from(snap.data() ?? {});
+    final ticket = _ticketFromData(code: code, data: data);
+    final status = (data['status'] as String?)?.trim().toLowerCase() ?? '';
 
-        if (status == 'checked_in' || data['checkedIn'] == true) {
-          return TicketVerifyResult(
-            status: TicketVerifyStatus.alreadyCheckedIn,
-            ticket: ticket,
-            code: code,
-          );
-        }
+    if (status == 'checked_in' || data['checkedIn'] == true) {
+      return TicketVerifyResult(
+        status: TicketVerifyStatus.alreadyCheckedIn,
+        ticket: ticket,
+        code: code,
+      );
+    }
 
-        // Treat missing/unknown status as valid so older docs still admit once.
-        if (status.isNotEmpty && status != 'valid') {
-          return TicketVerifyResult(
-            status: TicketVerifyStatus.alreadyCheckedIn,
-            ticket: ticket,
-            code: code,
-          );
-        }
+    if (status.isNotEmpty && status != 'valid') {
+      return TicketVerifyResult(
+        status: TicketVerifyStatus.alreadyCheckedIn,
+        ticket: ticket,
+        code: code,
+      );
+    }
 
-        final checkedInAt = DateTime.now();
-        final iso = checkedInAt.toIso8601String();
-        tx.set(
-          ref,
-          {
-            'checkedIn': true,
-            'checkedInAt': iso,
-            'status': 'checked_in',
-            'updatedAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true),
-        );
+    final checkedInAt = DateTime.now();
+    final iso = checkedInAt.toIso8601String();
+    try {
+      await ref.set(
+        {
+          'checkedIn': true,
+          'checkedInAt': iso,
+          'status': 'checked_in',
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+    } catch (e, st) {
+      debugPrint('Public verify check-in write failed: $e\n$st');
+      return TicketVerifyResult(
+        status: TicketVerifyStatus.checkInFailed,
+        ticket: ticket,
+        code: code,
+      );
+    }
 
-        final hostUid = data['hostUid'] as String?;
-        final internalId = data['internalTicketId'] as String?;
-        if (hostUid != null &&
-            hostUid.isNotEmpty &&
-            internalId != null &&
-            internalId.isNotEmpty) {
-          final ownerRef = _firestore
-              .collection('users')
-              .doc(hostUid)
-              .collection('tickets')
-              .doc(internalId);
-          final ownerSnap = await tx.get(ownerRef);
-          if (ownerSnap.exists) {
-            tx.set(
-              ownerRef,
+    // Best-effort owner doc sync — must not fail the public admit.
+    final hostUid = data['hostUid'] as String?;
+    final internalId = data['internalTicketId'] as String?;
+    if (hostUid != null &&
+        hostUid.isNotEmpty &&
+        internalId != null &&
+        internalId.isNotEmpty) {
+      try {
+        await _firestore
+            .collection('users')
+            .doc(hostUid)
+            .collection('tickets')
+            .doc(internalId)
+            .set(
               {
                 'checkedIn': true,
                 'checkedInAt': iso,
@@ -96,24 +109,16 @@ class TicketPublicVerify {
               },
               SetOptions(merge: true),
             );
-          }
-        }
-
-        return TicketVerifyResult(
-          status: TicketVerifyStatus.success,
-          ticket: ticket.copyWith(checkedInAt: checkedInAt),
-          code: code,
-        );
-      });
-    } catch (e, st) {
-      debugPrint('Public verify failed: $e\n$st');
-      // Permission / network errors — surface as invalid so the gatekeeper
-      // does not falsely admit.
-      return TicketVerifyResult(
-        status: TicketVerifyStatus.notFound,
-        code: code,
-      );
+      } catch (e, st) {
+        debugPrint('Owner check-in sync skipped: $e\n$st');
+      }
     }
+
+    return TicketVerifyResult(
+      status: TicketVerifyStatus.success,
+      ticket: ticket.copyWith(checkedInAt: checkedInAt),
+      code: code,
+    );
   }
 
   Ticket _ticketFromData({
