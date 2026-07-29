@@ -44,7 +44,7 @@ void main() {
     await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('Personal Tickets'), findsOneWidget);
+    expect(find.text('My Tickets'), findsOneWidget);
     expect(find.text("Ejike's Birthday Bash"), findsOneWidget);
     expect(find.text('Change color'), findsOneWidget);
     expect(find.text('Change shape'), findsOneWidget);
@@ -61,7 +61,7 @@ void main() {
     await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('Personal Tickets'), findsOneWidget);
+    expect(find.text('My Tickets'), findsOneWidget);
     expect(find.text('GUEST PASS'), findsOneWidget);
     expect(find.text("Ejike's Birthday Bash"), findsOneWidget);
     expect(find.text('VIP Guest Pass'), findsOneWidget);

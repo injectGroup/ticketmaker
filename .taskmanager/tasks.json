@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "Final Generate polish: dark pill accents, 20px card bottom pad, 32px Save spacing",
-        "taskId": "task-final-pill-contrast-padding-20260729",
-        "updatedAt": "2026-07-29T16:16:03.000Z"
+        "message": "Generate AppBar title renamed to My Tickets",
+        "taskId": "task-rename-header-my-tickets-20260729",
+        "updatedAt": "2026-07-29T20:16:27.000Z"
       }
     }
   ],
@@ -1637,6 +1637,20 @@
       "createdAt": "2026-07-29T16:15:18.000Z",
       "updatedAt": "2026-07-29T16:16:03.000Z",
       "note": "Cloud MCP denied; local backup only."
+    },
+    {
+      "id": "task-rename-header-my-tickets-20260729",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Rename Generate AppBar to My Tickets",
+      "description": "Change AppBar title Personal Tickets → My Tickets; keep styling.",
+      "details": "",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "low",
+      "status": "done",
+      "createdAt": "2026-07-29T20:16:09.000Z",
+      "updatedAt": "2026-07-29T20:16:27.000Z",
+      "note": "Cloud MCP denied; local backup only."
     }
   ],
   "epics": [
@@ -1652,5 +1666,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-07-29T16:16:04.658Z"
+  "lastSync": "2026-07-29T20:16:28.390Z"
 }

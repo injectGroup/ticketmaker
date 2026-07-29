@@ -101,7 +101,7 @@ class _GenerateViewState extends State<_GenerateView> {
         extendBody: false,
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
-          title: const Text('Personal Tickets'),
+          title: const Text('My Tickets'),
           automaticallyImplyLeading: false,
         ),
         body: MultiBlocListener(
