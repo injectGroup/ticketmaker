@@ -35,8 +35,8 @@ class Ticket extends Equatable {
   final String code;
   final String qrData;
 
-  /// Local file path, Firebase download URL, `data:` URL, or `web-bytes:<id>`.
-  /// Empty → show placeholder (no network fetch).
+  /// Local file path, `data:` URL, `web-bytes:<id>`, or non-Storage http(s) URL.
+  /// Empty → show placeholder (no Firebase Storage).
   final String imagePath;
 
   /// Alias for [imagePath] (Firestore may also store `imageUrl` / `photoUrl`).

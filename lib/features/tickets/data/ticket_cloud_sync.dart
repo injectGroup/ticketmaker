@@ -1,39 +1,41 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 
 import '../../generate/domain/entities/ticket.dart';
+import 'ticket_image_codec.dart';
 import 'ticket_payload.dart';
 
-/// Firestore metadata + Firebase Storage image sync for saved tickets.
+/// Firestore-only ticket sync (no Firebase Storage — Spark / no bucket).
+///
+/// Event flyers are stored as local files / `web-bytes:` / `data:` URLs.
+/// When a flyer fits under the Firestore size budget, the owner ticket doc
+/// embeds a Base64 `data:image/jpeg;base64,...` string.
 class TicketCloudSync {
   TicketCloudSync({
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
-    FirebaseStorage? storage,
   }) : _authOverride = auth,
-       _firestoreOverride = firestore,
-       _storageOverride = storage;
+       _firestoreOverride = firestore;
 
   final FirebaseAuth? _authOverride;
   final FirebaseFirestore? _firestoreOverride;
-  final FirebaseStorage? _storageOverride;
 
-  // Lazy so constructing TicketsCubit in tests does not require Firebase init.
+  /// Soft cap so owner ticket docs stay under Firestore's 1 MiB limit.
+  static const int maxEmbeddedPhotoDataUrlChars = 700000;
+
   FirebaseAuth get _auth => _authOverride ?? FirebaseAuth.instance;
   FirebaseFirestore get _firestore =>
       _firestoreOverride ?? FirebaseFirestore.instance;
-  FirebaseStorage get _storage => _storageOverride ?? FirebaseStorage.instance;
 
   String? get _uid {
     try {
       return _auth.currentUser?.uid;
     } catch (_) {
-      // Firebase not initialized (unit tests / early boot).
       return null;
     }
   }
@@ -48,7 +50,6 @@ class TicketCloudSync {
         .doc(ticketId);
   }
 
-  /// Public verify doc id = guest [code] (`tickets/{code}`).
   DocumentReference<Map<String, dynamic>>? _publicTicketDoc(String code) {
     final uid = _uid;
     final normalized = code.trim();
@@ -56,7 +57,6 @@ class TicketCloudSync {
     return _firestore.collection('tickets').doc(normalized);
   }
 
-  /// Legacy code index (kept in sync for older verify clients).
   DocumentReference<Map<String, dynamic>>? _indexDoc(String code) {
     final uid = _uid;
     final normalized = code.trim();
@@ -64,19 +64,76 @@ class TicketCloudSync {
     return _firestore.collection('ticketIndex').doc(normalized);
   }
 
-  /// Writes ticket metadata immediately (does not wait on image upload).
-  Future<void> upsertTicketDocument(Ticket ticket) async {
+  /// True when [url] points at Firebase Storage (disabled on Spark).
+  static bool isFirebaseStorageUrl(String url) {
+    final u = url.trim().toLowerCase();
+    return u.contains('firebasestorage.googleapis.com') ||
+        u.contains('firebasestorage.app') ||
+        u.startsWith('gs://');
+  }
+
+  /// Builds a `data:image/jpeg;base64,...` URL if it fits the Firestore budget.
+  static String? jpegBytesToDataUrl(Uint8List jpegBytes) {
+    if (jpegBytes.isEmpty) return null;
+    final encoded = base64Encode(jpegBytes);
+    final dataUrl = 'data:image/jpeg;base64,$encoded';
+    if (dataUrl.length > maxEmbeddedPhotoDataUrlChars) return null;
+    return dataUrl;
+  }
+
+  /// Compresses flyer bytes for Firestore embedding (smaller than local cache).
+  static Future<Uint8List> compressForFirestore(Uint8List bytes) {
+    return compressImageToJpeg(bytes, quality: 55, maxWidth: 720);
+  }
+
+  /// Writes ticket metadata (+ optional embedded flyer) to Firestore.
+  ///
+  /// [photoBytes] are compressed and stored as a Base64 data URL when small
+  /// enough. Never calls Firebase Storage.
+  Future<void> upsertTicketDocument(
+    Ticket ticket, {
+    Uint8List? photoBytes,
+  }) async {
     final doc = _ticketDoc(ticket.id);
     if (doc == null) return;
+
+    var photoField = ticket.imagePath.trim();
+    if (isFirebaseStorageUrl(photoField)) {
+      photoField = '';
+    }
+
+    if (photoBytes != null && photoBytes.isNotEmpty) {
+      try {
+        final jpeg = await compressForFirestore(photoBytes);
+        final dataUrl = jpegBytesToDataUrl(jpeg);
+        if (dataUrl != null) {
+          photoField = dataUrl;
+        }
+      } catch (e, st) {
+        debugPrint('Firestore photo embed compress failed: $e\n$st');
+      }
+    } else if (photoField.startsWith('data:image/')) {
+      // Already embedded.
+    } else if (photoField.startsWith('http://') ||
+        photoField.startsWith('https://')) {
+      // Allow non-Storage http(s) flyer URLs only.
+      if (isFirebaseStorageUrl(photoField)) photoField = '';
+    } else {
+      // Local / web-bytes paths are device-only — don't push them to Firestore.
+      photoField = '';
+    }
+
+    final forCloud = ticket.copyWith(imagePath: photoField);
     final payload = {
-      ...ticket.toJson(),
-      'imagePath': ticket.imagePath,
-      'imageUrl': ticket.imagePath,
-      'photoUrl': ticket.imagePath,
+      ...forCloud.toJson(),
+      'imagePath': photoField,
+      'imageUrl': photoField,
+      'photoUrl': photoField,
+      'storageProvider': 'firestore_base64',
       'updatedAt': FieldValue.serverTimestamp(),
     };
     await doc.set(payload, SetOptions(merge: true));
-    await _upsertIndex(ticket);
+    await _upsertIndex(forCloud);
   }
 
   Future<void> _upsertIndex(Ticket ticket) async {
@@ -85,6 +142,7 @@ class TicketCloudSync {
     final index = _indexDoc(ticket.code);
     if (uid == null || publicDoc == null) return;
 
+    // Public verify docs stay lean — no flyer Base64 (check-in only).
     final payload = <String, dynamic>{
       'hostUid': uid,
       'ticketId': ticket.id,
@@ -121,7 +179,6 @@ class TicketCloudSync {
     }
   }
 
-  /// Marks a ticket checked in on the owner doc + code index.
   Future<void> markCheckedIn({
     required Ticket ticket,
     required DateTime checkedInAt,
@@ -140,12 +197,9 @@ class TicketCloudSync {
         debugPrint('Ticket check-in cloud write failed: $e\n$st');
       }
     }
-    await _upsertIndex(
-      ticket.copyWith(checkedInAt: checkedInAt),
-    );
+    await _upsertIndex(ticket.copyWith(checkedInAt: checkedInAt));
   }
 
-  /// Looks up a ticket by guest [code] for the signed-in host (cross-device).
   Future<Ticket?> findTicketByCode(String code) async {
     final uid = _uid;
     final normalized = code.trim();
@@ -204,36 +258,15 @@ class TicketCloudSync {
     }
   }
 
-  /// Uploads a JPEG ticket/event image and patches the Firestore doc with URL.
-  ///
-  /// Returns null on any failure (CORS, auth, network) so callers can keep the
-  /// local ticket UI intact.
+  /// Storage uploads are disabled (Spark / no bucket). Always returns null.
+  @Deprecated('Firebase Storage disabled — use Firestore Base64 embedding.')
   Future<String?> uploadTicketImageJpeg({
     required String ticketId,
     required Uint8List jpegBytes,
   }) async {
-    final uid = _uid;
-    final doc = _ticketDoc(ticketId);
-    if (uid == null || doc == null || jpegBytes.isEmpty) return null;
-
-    try {
-      final ref = _storage.ref('users/$uid/tickets/$ticketId.jpg');
-      await ref.putData(
-        jpegBytes,
-        SettableMetadata(contentType: 'image/jpeg'),
-      );
-      final url = await ref.getDownloadURL();
-      await doc.set({
-        'imagePath': url,
-        'imageUrl': url,
-        'photoUrl': url,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      debugPrint('Ticket image uploaded: $ticketId');
-      return url;
-    } catch (e, st) {
-      debugPrint('uploadTicketImageJpeg failed (UI continues): $e\n$st');
-      return null;
-    }
+    debugPrint(
+      'uploadTicketImageJpeg skipped (Storage disabled) for $ticketId',
+    );
+    return null;
   }
 }

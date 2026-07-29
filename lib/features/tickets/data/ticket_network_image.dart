@@ -1,27 +1,27 @@
 import 'dart:convert';
 
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../core/widgets/ticket_photo_placeholder.dart';
+import 'ticket_cloud_sync.dart';
 import 'ticket_image_store.dart';
 
 /// In-memory cache so ticket photos are not re-fetched every rebuild.
 final Map<String, Uint8List> _networkImageBytesCache = {};
 
-/// True when [url] is a fetchable http(s) / gs / data URL (not blob: / empty).
+/// True when [url] is a fetchable http(s) / data URL (not Storage / blob / empty).
 bool isFetchableTicketPhotoUrl(String url) {
   final trimmed = url.trim();
   if (trimmed.isEmpty) return false;
   if (trimmed.startsWith('blob:')) return false;
   if (TicketImageStore.isWebBytesPath(trimmed)) return false;
+  if (TicketCloudSync.isFirebaseStorageUrl(trimmed)) return false;
   if (trimmed.startsWith('data:')) return true;
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
     return true;
   }
-  if (trimmed.startsWith('gs://')) return true;
   return false;
 }
 
@@ -41,12 +41,10 @@ Uint8List? decodeDataUrlBytes(String dataUrl) {
   }
 }
 
-/// Fetches image bytes so tickets can paint with [MemoryImage] on web.
+/// Fetches image bytes so tickets can paint with [MemoryImage].
 ///
-/// Avoids CORS-tainted canvases from [Image.network]/[NetworkImage] during
-/// [RepaintBoundary.toImage] on Flutter Web / CanvasKit.
-///
-/// Order: cache → data URL → `http.get` → Firebase Storage [Reference.getData].
+/// Never calls Firebase Storage (Spark plan / no bucket). Order:
+/// cache → data URL → optional non-Storage `http.get`.
 Future<Uint8List?> fetchImageBytesCorsSafe(String url) async {
   final trimmed = url.trim();
   if (!isFetchableTicketPhotoUrl(trimmed)) return null;
@@ -62,19 +60,7 @@ Future<Uint8List?> fetchImageBytesCorsSafe(String url) async {
     return decoded;
   }
 
-  Uint8List? bytes;
-  if (kIsWeb &&
-      (trimmed.startsWith('gs://') ||
-          trimmed.contains('firebasestorage.googleapis.com') ||
-          trimmed.contains('firebasestorage.app'))) {
-    // Prefer authenticated SDK download on web — plain http.get is CORS-bound.
-    bytes = await _fetchViaFirebaseStorage(trimmed);
-    bytes ??= await _fetchViaHttp(trimmed);
-  } else {
-    bytes = await _fetchViaHttp(trimmed);
-    bytes ??= await _fetchViaFirebaseStorage(trimmed);
-  }
-
+  final bytes = await _fetchViaHttp(trimmed);
   if (bytes != null && bytes.isNotEmpty) {
     _networkImageBytesCache[trimmed] = bytes;
   }
@@ -82,7 +68,7 @@ Future<Uint8List?> fetchImageBytesCorsSafe(String url) async {
 }
 
 Future<Uint8List?> _fetchViaHttp(String url) async {
-  if (url.startsWith('gs://')) return null;
+  if (TicketCloudSync.isFirebaseStorageUrl(url)) return null;
   try {
     final response = await http
         .get(Uri.parse(url))
@@ -101,29 +87,7 @@ Future<Uint8List?> _fetchViaHttp(String url) async {
   }
 }
 
-Future<Uint8List?> _fetchViaFirebaseStorage(String url) async {
-  final isFirebaseUrl = url.startsWith('gs://') ||
-      url.contains('firebasestorage.googleapis.com') ||
-      url.contains('firebasestorage.app');
-  if (!isFirebaseUrl) return null;
-
-  try {
-    final data = await FirebaseStorage.instance
-        .refFromURL(url)
-        .getData(15 * 1024 * 1024)
-        .timeout(const Duration(seconds: 20));
-    if (data == null || data.isEmpty) return null;
-    return data;
-  } catch (e, st) {
-    debugPrint('fetchImageBytesCorsSafe Storage getData failed: $e\n$st');
-    return null;
-  }
-}
-
 /// Loads a remote / data-URL ticket photo as bytes, then paints [Image.memory].
-///
-/// On Flutter Web this is required so [RepaintBoundary.toImage] is not
-/// blocked by a CORS-tainted canvas from [Image.network].
 class TicketCorsSafeNetworkImage extends StatefulWidget {
   const TicketCorsSafeNetworkImage({
     super.key,

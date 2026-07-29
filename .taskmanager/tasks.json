@@ -23,11 +23,10 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "Storage CORS config + graceful image fallbacks",
-        "taskId": "task-firebase-storage-cors-fallback-20260729",
-        "updatedAt": "2026-07-29T11:37:59.000Z",
-        "source": "local-fallback",
-        "note": "gsutil blocked until billing/bucket exist."
+        "message": "Spark-safe tickets: no Storage, Firestore Base64 flyers",
+        "taskId": "task-disable-storage-use-firestore-base64-20260729",
+        "updatedAt": "2026-07-29T11:58:14.000Z",
+        "source": "local-fallback"
       }
     }
   ],
@@ -1485,6 +1484,20 @@
       "createdAt": "2026-07-29T11:35:36.000Z",
       "updatedAt": "2026-07-29T11:37:59.000Z",
       "note": "cors.json + set_storage_cors.sh; UI soft-fail. Bucket apply blocked: billing absent / bucket 404."
+    },
+    {
+      "id": "task-disable-storage-use-firestore-base64-20260729",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Disable Storage uploads; Firestore/Base64 flyers",
+      "description": "Spark plan: no Firebase Storage; tickets use Base64/local paths; verify/QR Firestore-only.",
+      "details": "",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-29T11:49:51.000Z",
+      "updatedAt": "2026-07-29T11:58:14.000Z",
+      "note": "Removed firebase_storage; flyers local/Base64 in Firestore; verify metadata-only."
     }
   ],
   "epics": [

@@ -36,6 +36,7 @@ class TicketsCubit extends Cubit<TicketsState> {
       final repaired = await _repairMissingImagePaths(loaded);
       final withVerifyUrls = repaired
           .map(_withCanonicalVerifyUrl)
+          .map(_withoutStorageUrls)
           .toList(growable: false);
       final changed = withVerifyUrls.length == loaded.length &&
           (!_sameImagePaths(loaded, withVerifyUrls) ||
@@ -89,22 +90,28 @@ class TicketsCubit extends Cubit<TicketsState> {
     return next;
   }
 
-  /// Fetches remote event photos into [TicketsState.imageBytesById] so ticket
-  /// widgets paint [Image.memory] instead of CORS-tainted [Image.network].
+  /// Fetches data-URL / non-Storage http photos into [TicketsState.imageBytesById].
   Future<void> _prefetchNetworkEventPhotos(List<Ticket> tickets) async {
     final next = Map<String, Uint8List>.from(state.imageBytesById);
     var changed = false;
     for (final ticket in tickets) {
       if (next[ticket.id]?.isNotEmpty == true) continue;
       final path = ticket.photoUrl.trim();
+      if (path.startsWith('data:')) {
+        final decoded = decodeDataUrlBytes(path);
+        if (decoded == null || decoded.isEmpty) continue;
+        next[ticket.id] = decoded;
+        changed = true;
+        continue;
+      }
       if (!path.startsWith('http://') && !path.startsWith('https://')) {
         continue;
       }
+      if (TicketCloudSync.isFirebaseStorageUrl(path)) continue;
       final bytes = await fetchImageBytesCorsSafe(path);
       if (bytes == null || bytes.isEmpty) continue;
       next[ticket.id] = bytes;
       changed = true;
-      // Keep a local web copy so reload works even if Storage CORS flakes.
       try {
         await _imageStore.persistForTicket(
           ticketId: ticket.id,
@@ -244,21 +251,18 @@ class TicketsCubit extends Cubit<TicketsState> {
     );
   }
 
-  /// Compresses/uploads the event photo (not a full-ticket composite).
-  /// Falls back to reading a local [Ticket.imagePath] file when bytes are
-  /// missing. Share/download always re-renders [SavedTicketView] instead of
-  /// using these bytes as the ticket file.
+  /// Compresses the event photo locally and syncs metadata (+ optional Base64
+  /// flyer) to Firestore. Never uploads to Firebase Storage.
   Future<void> _persistImageAndCloudInBackground(
     Ticket ticket,
     Uint8List? imageBytes,
   ) async {
-    try {
-      await _cloudSync.upsertTicketDocument(ticket);
-    } catch (e, st) {
-      debugPrint('Ticket Firestore upsert failed: $e\n$st');
-    }
-
     Uint8List? payload = imageBytes ?? state.imageBytesById[ticket.id];
+    if ((payload == null || payload.isEmpty) &&
+        ticket.imagePath.isNotEmpty &&
+        ticket.imagePath.startsWith('data:')) {
+      payload = decodeDataUrlBytes(ticket.imagePath);
+    }
     if ((payload == null || payload.isEmpty) &&
         ticket.imagePath.isNotEmpty &&
         !kIsWeb &&
@@ -270,39 +274,34 @@ class TicketsCubit extends Cubit<TicketsState> {
           payload = await file.readAsBytes();
         }
       } catch (e, st) {
-        debugPrint('Could not read ticket image for upload: $e\n$st');
+        debugPrint('Could not read ticket image for sync: $e\n$st');
       }
-    }
-
-    if (payload == null || payload.isEmpty) {
-      debugPrint('No ticket image bytes to upload for ${ticket.id}');
-      return;
     }
 
     try {
-      final jpeg = await compressImageToJpeg(payload);
+      if (payload != null && payload.isNotEmpty) {
+        final jpeg = await compressImageToJpeg(payload);
 
-      // Ensure durable local / web-bytes copy even if Storage upload fails.
-      final durable = await _imageStore.persistForTicket(
-        ticketId: ticket.id,
-        sourcePath: 'ticket.jpg',
-        bytes: jpeg,
-      );
-      if (durable.isNotEmpty &&
-          durable != ticket.imagePath &&
-          !ticket.imagePath.startsWith('http')) {
-        await _patchLocalImagePath(ticket.id, durable);
-      }
+        // Durable local / web-bytes copy for offline ticket rendering.
+        final durable = await _imageStore.persistForTicket(
+          ticketId: ticket.id,
+          sourcePath: 'ticket.jpg',
+          bytes: jpeg,
+        );
+        if (durable.isNotEmpty &&
+            durable != ticket.imagePath &&
+            !ticket.imagePath.startsWith('data:') &&
+            !ticket.imagePath.startsWith('http')) {
+          await _patchLocalImagePath(ticket.id, durable);
+        }
 
-      final url = await _cloudSync.uploadTicketImageJpeg(
-        ticketId: ticket.id,
-        jpegBytes: jpeg,
-      );
-      if (url != null && url.isNotEmpty) {
-        await _patchLocalImagePath(ticket.id, url);
+        await _cloudSync.upsertTicketDocument(ticket, photoBytes: jpeg);
+      } else {
+        debugPrint('No ticket image bytes to sync for ${ticket.id}');
+        await _cloudSync.upsertTicketDocument(ticket);
       }
     } catch (e, st) {
-      debugPrint('Ticket image compress/upload failed: $e\n$st');
+      debugPrint('Ticket image / Firestore sync failed: $e\n$st');
     }
   }
 
@@ -499,5 +498,11 @@ class TicketsCubit extends Cubit<TicketsState> {
     final expected = TicketPayload.verificationUrl(ticket.code);
     if (ticket.qrData == expected) return ticket;
     return ticket.copyWith(qrData: expected);
+  }
+
+  Ticket _withoutStorageUrls(Ticket ticket) {
+    final path = ticket.imagePath.trim();
+    if (!TicketCloudSync.isFirebaseStorageUrl(path)) return ticket;
+    return ticket.copyWith(imagePath: '');
   }
 }

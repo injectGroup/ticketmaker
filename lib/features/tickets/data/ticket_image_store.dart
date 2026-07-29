@@ -241,15 +241,20 @@ bool isDurableTicketImagePath(String path) {
   final p = path.trim();
   if (p.isEmpty) return false;
   if (p.startsWith('blob:')) return false;
+  // Spark plan: never persist Firebase Storage URLs / gs:// refs.
+  if (p.startsWith('gs://')) return false;
+  if (p.contains('firebasestorage.googleapis.com') ||
+      p.contains('firebasestorage.app')) {
+    return false;
+  }
   if (TicketImageStore.isWebBytesPath(p)) return true;
   if (p.startsWith('data:')) return true;
   if (p.startsWith('http://') || p.startsWith('https://')) return true;
-  if (p.startsWith('gs://')) return true;
   if (kIsWeb) return false;
   return true;
 }
 
-/// Strips ephemeral picker paths (`blob:`, empty) before persisting tickets.
+/// Strips ephemeral picker paths and Storage URLs before persisting tickets.
 String sanitizeTicketImagePath(String path) {
   final trimmed = path.trim();
   return isDurableTicketImagePath(trimmed) ? trimmed : '';
