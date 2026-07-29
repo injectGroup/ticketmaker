@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -187,7 +185,6 @@ class _BgColorFab extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 2),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.28),
@@ -202,63 +199,21 @@ class _BgColorFab extends StatelessWidget {
               ),
             ],
           ),
-          child: ClipOval(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Material(
-                color: Colors.white.withValues(alpha: 0.92),
-                shape: const CircleBorder(
-                  side: BorderSide(color: Colors.white, width: 1.5),
-                ),
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: onPressed,
-                  child: SizedBox(
-                    width: 52,
-                    height: 52,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      clipBehavior: Clip.none,
-                      children: [
-                        ClipOval(
-                          child: Image.asset(
-                            'assets/images/app_logo_mark.png',
-                            width: 28,
-                            height: 28,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => const Icon(
-                              Icons.confirmation_number_rounded,
-                              color: AppColors.primary,
-                              size: 26,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          right: 2,
-                          bottom: 2,
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.95),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.palette_rounded,
-                              size: 12,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+          child: Material(
+            color: AppColors.fabNeutral,
+            shape: const CircleBorder(
+              side: BorderSide(color: AppColors.primary, width: 1.5),
+            ),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: onPressed,
+              child: const SizedBox(
+                width: 52,
+                height: 52,
+                child: Icon(
+                  Icons.palette_rounded,
+                  size: 24,
+                  color: AppColors.primary,
                 ),
               ),
             ),

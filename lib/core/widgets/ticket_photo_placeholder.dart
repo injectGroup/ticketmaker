@@ -17,15 +17,20 @@ class TicketPhotoPlaceholder extends StatelessWidget {
   /// When true, shows a broken-image affordance instead of "add photo".
   final bool broken;
 
+  static const Color _onDark = Color(0xFFF8FAFC);
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final borderColor = broken
-        ? AppColors.secondaryText.withValues(alpha: 0.5)
-        : AppColors.primary.withValues(alpha: 0.45);
+        ? _onDark.withValues(alpha: 0.35)
+        : _onDark.withValues(alpha: 0.55);
     final iconColor = broken
-        ? AppColors.secondaryText.withValues(alpha: 0.9)
-        : AppColors.primary.withValues(alpha: 0.85);
+        ? _onDark.withValues(alpha: 0.7)
+        : _onDark;
+    final labelColor = broken
+        ? _onDark.withValues(alpha: 0.7)
+        : _onDark;
 
     return CustomPaint(
       painter: _DottedBorderPainter(
@@ -54,9 +59,7 @@ class TicketPhotoPlaceholder extends StatelessWidget {
             Text(
               broken ? 'Photo unavailable' : 'Add event photo',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: broken
-                    ? AppColors.secondaryText
-                    : AppColors.primary.withValues(alpha: 0.9),
+                color: labelColor,
                 fontWeight: FontWeight.w600,
               ),
             ),

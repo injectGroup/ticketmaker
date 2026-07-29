@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 
-/// Ticket text field in a pink capsule so it reads as an editable input.
-/// Capsule returns to a fresh session when [resetToken] changes (e.g. Save).
+/// Ticket text field in an off-white capsule so it reads as an editable input.
 class BracketedTicketField extends StatefulWidget {
   const BracketedTicketField({
     super.key,
@@ -23,7 +22,7 @@ class BracketedTicketField extends StatefulWidget {
   final TextStyle? style;
   final ValueChanged<String> onChanged;
 
-  /// When this value changes (e.g. after Save Ticket), field can re-hint.
+  /// Kept for call-site compatibility after Save Ticket.
   final Object? resetToken;
 
   final TextAlign textAlign;
@@ -80,13 +79,12 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
   @override
   Widget build(BuildContext context) {
     final baseStyle = widget.style;
-    // Pink pills sit on light blush — dark, heavy type for legibility.
     final fieldStyle = baseStyle?.copyWith(
-      color: AppColors.primaryText,
+      color: AppColors.pillText,
       fontWeight: FontWeight.w800,
     );
     final hintStyle = fieldStyle?.copyWith(
-      color: AppColors.primaryText.withValues(alpha: 0.45),
+      color: AppColors.pillText.withValues(alpha: 0.45),
       fontWeight: FontWeight.w600,
     );
     final bulletStyle = TextStyle(
@@ -105,7 +103,7 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
       minLines: widget.minLines,
       maxLines: widget.maxLines,
       style: fieldStyle,
-      cursorColor: widget.cursorColor ?? AppColors.primary,
+      cursorColor: AppColors.primary,
       cursorWidth: 2,
       decoration: BracketedTicketField.plainDecoration.copyWith(
         hintText: widget.hintText ?? 'Tap to edit…',
@@ -117,10 +115,10 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
     final pill = Container(
       padding: const EdgeInsets.fromLTRB(12, 6, 10, 6),
       decoration: BoxDecoration(
-        color: const Color(0xFFFCE7EC),
+        color: AppColors.pillBackground,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.pinkAccent.withValues(alpha: 0.4),
+          color: AppColors.primary.withValues(alpha: 0.35),
           width: 1.5,
         ),
       ),
@@ -139,7 +137,7 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
                 Icons.edit_outlined,
                 size: 16,
                 color: AppColors.primary.withValues(
-                  alpha: _focusNode.hasFocus ? 0.95 : 0.55,
+                  alpha: _focusNode.hasFocus ? 1 : 0.75,
                 ),
               ),
             ),
