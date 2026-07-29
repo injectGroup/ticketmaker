@@ -203,6 +203,8 @@ class TicketDetailsSection extends StatelessWidget {
           end: Alignment.bottomCenter,
         ),
       ),
+      // Keeps the location pill clear of the rounded card clip edge.
+      padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         children: [
           const SizedBox(height: 28),
@@ -363,7 +365,7 @@ class TicketDetailsSection extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(28, 8, 28, 28),
+            padding: const EdgeInsets.fromLTRB(28, 8, 28, 8),
             child: BracketedTicketField(
               controller: venueController,
               resetToken: bracketResetToken,

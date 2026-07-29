@@ -88,7 +88,7 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
       fontWeight: FontWeight.w600,
     );
     final bulletStyle = TextStyle(
-      color: AppColors.primary,
+      color: AppColors.pillText,
       fontWeight: FontWeight.w800,
       fontSize: baseStyle?.fontSize,
       height: baseStyle?.height,
@@ -136,8 +136,8 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
               child: Icon(
                 Icons.edit_outlined,
                 size: 16,
-                color: AppColors.primary.withValues(
-                  alpha: _focusNode.hasFocus ? 1 : 0.75,
+                color: AppColors.pillText.withValues(
+                  alpha: _focusNode.hasFocus ? 1 : 0.72,
                 ),
               ),
             ),
