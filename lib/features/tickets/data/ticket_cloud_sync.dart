@@ -87,6 +87,7 @@ class TicketCloudSync {
             ? ticket.qrData
             : TicketPayload.verificationUrl(ticket.code),
         'checkedIn': ticket.isCheckedIn,
+        'status': ticket.isCheckedIn ? 'checked_in' : 'valid',
         if (ticket.checkedInAt != null)
           'checkedInAt': ticket.checkedInAt!.toIso8601String(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -114,7 +115,9 @@ class TicketCloudSync {
         debugPrint('Ticket check-in cloud write failed: $e\n$st');
       }
     }
-    await _upsertIndex(ticket.copyWith(checkedInAt: checkedInAt));
+    await _upsertIndex(
+      ticket.copyWith(checkedInAt: checkedInAt),
+    );
   }
 
   /// Looks up a ticket by guest [code] for the signed-in host (cross-device).

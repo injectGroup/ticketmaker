@@ -98,7 +98,7 @@ class Ticket extends Equatable {
       eventAt: DateTime.parse(json['eventAt'] as String),
       code: json['code'] as String,
       qrData: json['qrData'] as String? ??
-          'https://ticketmaker.app/t/${json['code'] as String? ?? ''}',
+          'https://quick-ticket-maker-sandbox.web.app/verify/${json['code'] as String? ?? ''}',
       imagePath: path,
       eyeColor: Color(json['eyeColor'] as int),
       dataModuleColor: Color(json['dataModuleColor'] as int),

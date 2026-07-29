@@ -4,7 +4,7 @@ rules_version = '2';
 // Paths used by the app:
 //   users/{uid}                      — Auth profile documents
 //   users/{uid}/tickets/{ticketId}   — Saved ticket metadata
-//   ticketIndex/{code}               — Host-owned code index for door check-in
+//   ticketIndex/{code}               — Public door verify + host-owned create
 service cloud.firestore {
   match /databases/{database}/documents {
     function isSignedIn() {
@@ -15,21 +15,47 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
+    function checkInOnlyKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['checkedIn', 'checkedInAt', 'status', 'updatedAt']);
+    }
+
+    function isCheckInTransition() {
+      return resource.data.get('checkedIn', false) != true
+        && request.resource.data.checkedIn == true
+        && request.resource.data.status == 'checked_in'
+        && request.resource.data.hostUid == resource.data.hostUid
+        && request.resource.data.ticketId == resource.data.ticketId
+        && request.resource.data.code == resource.data.code;
+    }
+
+    function isTicketDocCheckIn() {
+      return resource.data.get('checkedIn', false) != true
+        && request.resource.data.checkedIn == true
+        && checkInOnlyKeys();
+    }
+
     match /users/{userId} {
       allow read, write: if isOwner(userId);
 
       match /tickets/{ticketId} {
         allow read, write: if isOwner(userId);
+        // Public gatekeeper check-in via /verify (limited fields only).
+        allow update: if isTicketDocCheckIn();
       }
     }
 
-    // Door verification index: only the host who created the code may read/write.
+    // Door verification index: hosts create/update; anyone may read + check in.
     match /ticketIndex/{code} {
       allow create: if isSignedIn()
         && request.resource.data.hostUid == request.auth.uid
         && request.resource.data.code is string;
-      allow read, update, delete: if isSignedIn()
+      allow delete: if isSignedIn()
         && resource.data.hostUid == request.auth.uid;
+      allow read: if true;
+      allow update: if isSignedIn()
+          && resource.data.hostUid == request.auth.uid
+        || (checkInOnlyKeys() && isCheckInTransition());
     }
 
     // Deny everything else by default.

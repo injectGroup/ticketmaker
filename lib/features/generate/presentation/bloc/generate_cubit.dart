@@ -262,7 +262,7 @@ class GenerateCubit extends Cubit<GenerateState> {
     );
   }
 
-  /// Assigns a fresh ticket code + `ticketmaker.app` payload URL.
+  /// Assigns a fresh ticket code + Hosting `/verify/<code>` payload URL.
   /// Called on Save so Share Ticket has a unique link (no Generate button).
   void ensureTicketPayload() {
     final code = _makeCode(_random);

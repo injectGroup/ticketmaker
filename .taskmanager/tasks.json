@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "Door QR scanner + check-in verification flow",
-        "taskId": "task-door-qr-scanner-checkin-20260729",
-        "updatedAt": "2026-07-29T10:47:51.000Z",
+        "message": "Public web /verify check-in + Scan tab removed",
+        "taskId": "task-public-web-verify-remove-scan-20260729",
+        "updatedAt": "2026-07-29T11:07:03.000Z",
         "source": "local-fallback",
         "note": "Cloud notify needs Firebase; Chat needs GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1443,6 +1443,20 @@
       "createdAt": "2026-07-29T10:41:09.000Z",
       "updatedAt": "2026-07-29T10:47:51.000Z",
       "note": "Door Scan tab: payload parse, verify/check-in, torch, Firestore ticketIndex. Cloud MCP update denied; local backup."
+    },
+    {
+      "id": "task-public-web-verify-remove-scan-20260729",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Public web /verify check-in + remove Scan tab",
+      "description": "Remove Scan tab; QR uses Hosting /verify/<code>; public page Firestore confirm + checked_in.",
+      "details": "",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-29T11:03:42.000Z",
+      "updatedAt": "2026-07-29T11:07:03.000Z",
+      "note": "Removed Scan tab; QR=Hosting /verify/<code>; public TicketVerifyPage + Firestore public check-in rules. Cloud MCP denied; local backup."
     }
   ],
   "epics": [

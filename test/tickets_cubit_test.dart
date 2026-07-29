@@ -20,7 +20,7 @@ Ticket _sample({required String imagePath}) {
     timeLabel: '8:00 PM',
     eventAt: DateTime(2026, 7, 18, 20),
     code: '1111-2222-333',
-    qrData: 'https://ticketmaker.app/t/1111-2222-333',
+    qrData: 'https://quick-ticket-maker-sandbox.web.app/verify/1111-2222-333',
     imagePath: imagePath,
     eyeColor: const Color(0xFFF44336),
     dataModuleColor: const Color(0xFFFF9800),
@@ -165,12 +165,13 @@ void main() {
     await cubit.saveTicket(
       _sample(imagePath: '').copyWith(
         code: '1234-5678-910',
-        qrData: 'https://ticketmaker.app/t/1234-5678-910',
+        qrData:
+            'https://quick-ticket-maker-sandbox.web.app/verify/1234-5678-910',
       ),
     );
 
     final ok = await cubit.verifyAndCheckIn(
-      'https://ticketmaker.app/t/1234-5678-910',
+      'https://quick-ticket-maker-sandbox.web.app/verify/1234-5678-910',
     );
     expect(ok.status, TicketVerifyStatus.success);
     expect(cubit.state.tickets.single.isCheckedIn, isTrue);

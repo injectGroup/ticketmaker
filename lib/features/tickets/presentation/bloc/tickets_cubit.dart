@@ -34,21 +34,25 @@ class TicketsCubit extends Cubit<TicketsState> {
     try {
       final loaded = await _repository.loadTickets();
       final repaired = await _repairMissingImagePaths(loaded);
-      final changed = repaired.length == loaded.length &&
-          !_sameImagePaths(loaded, repaired);
+      final withVerifyUrls = repaired
+          .map(_withCanonicalVerifyUrl)
+          .toList(growable: false);
+      final changed = withVerifyUrls.length == loaded.length &&
+          (!_sameImagePaths(loaded, withVerifyUrls) ||
+              !_sameQrData(loaded, withVerifyUrls));
       if (changed) {
-        await _repository.saveTickets(repaired);
+        await _repository.saveTickets(withVerifyUrls);
       }
-      final restoredBytes = await _restorePersistedEventPhotos(repaired);
+      final restoredBytes = await _restorePersistedEventPhotos(withVerifyUrls);
       emit(
         state.copyWith(
-          tickets: repaired,
+          tickets: withVerifyUrls,
           isLoading: false,
           imageBytesById: restoredBytes,
         ),
       );
       // Warm MemoryImage cache for http(s) event photos (CORS-safe capture).
-      unawaited(_prefetchNetworkEventPhotos(repaired));
+      unawaited(_prefetchNetworkEventPhotos(withVerifyUrls));
     } catch (_) {
       emit(
         state.copyWith(
@@ -128,6 +132,7 @@ class TicketsCubit extends Cubit<TicketsState> {
     var saved = ticket.copyWith(
       id: id,
       imagePath: sanitizeTicketImagePath(ticket.imagePath),
+      qrData: TicketPayload.verificationUrl(ticket.code),
     );
 
     final nextBytes = Map<String, Uint8List>.from(state.imageBytesById);
@@ -479,5 +484,20 @@ class TicketsCubit extends Cubit<TicketsState> {
       if (a[i].imagePath != b[i].imagePath) return false;
     }
     return true;
+  }
+
+  bool _sameQrData(List<Ticket> a, List<Ticket> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].qrData != b[i].qrData) return false;
+    }
+    return true;
+  }
+
+  Ticket _withCanonicalVerifyUrl(Ticket ticket) {
+    if (!TicketPayload.codePattern.hasMatch(ticket.code)) return ticket;
+    final expected = TicketPayload.verificationUrl(ticket.code);
+    if (ticket.qrData == expected) return ticket;
+    return ticket.copyWith(qrData: expected);
   }
 }

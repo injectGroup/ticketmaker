@@ -15,19 +15,25 @@ void main() {
     expect(ticket.eventAt.month, now.month);
     expect(ticket.eventAt.day, now.day);
     expect(ticket.dateLabel, GenerateCubit.formatDateLabel(now));
-    expect(ticket.qrData, startsWith('https://ticketmaker.app/t/'));
+    expect(
+      ticket.qrData,
+      startsWith('https://quick-ticket-maker-sandbox.web.app/verify/'),
+    );
     expect(ticket.code, matches(RegExp(r'^\d{4}-\d{4}-\d{3}$')));
     cubit.close();
   });
 
-  test('ensureTicketPayload writes ticketmaker.app URL with new code', () {
+  test('ensureTicketPayload writes Hosting verify URL with new code', () {
     final cubit = GenerateCubit();
     final before = cubit.state.ticket.code;
     cubit.ensureTicketPayload();
     final ticket = cubit.state.ticket;
 
     expect(ticket.code, isNot(equals(before)));
-    expect(ticket.qrData, 'https://ticketmaker.app/t/${ticket.code}');
+    expect(
+      ticket.qrData,
+      'https://quick-ticket-maker-sandbox.web.app/verify/${ticket.code}',
+    );
     cubit.close();
   });
 
@@ -42,7 +48,8 @@ void main() {
       timeLabel: '8:00 PM',
       eventAt: DateTime(2026, 7, 18, 20),
       code: '1234-5678-910',
-      qrData: 'https://ticketmaker.app/t/1234-5678-910',
+      qrData:
+          'https://quick-ticket-maker-sandbox.web.app/verify/1234-5678-910',
       imagePath: '',
       eyeColor: const Color(0xFFFF5963),
       dataModuleColor: const Color(0xFFFFFFFF),
@@ -56,6 +63,11 @@ void main() {
     expect(text, contains("Ejike's Birthday Bash"));
     expect(text, contains('Private gathering'));
     expect(text, contains('VIP Guest Pass'));
-    expect(text, contains('https://ticketmaker.app/t/1234-5678-910'));
+    expect(
+      text,
+      contains(
+        'https://quick-ticket-maker-sandbox.web.app/verify/1234-5678-910',
+      ),
+    );
   });
 }
