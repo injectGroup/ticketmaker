@@ -32,22 +32,29 @@ class GenerateQrCode extends StatelessWidget {
     final pad =
         backgroundColor ?? ColorContrast.qrPadForPattern(dataModuleStyleColor);
 
+    // Nearest-neighbor / high filter quality keeps module edges crisp when
+    // the QR layer is composited or scaled (avoids soft blur).
     return SizedBox(
       width: size,
       height: size,
-      child: QrImageView(
-        data: data,
-        size: size,
-        backgroundColor: pad,
-        eyeStyle: QrEyeStyle(
-          color: eyeStyleColor,
-          eyeShape: isSquare ? QrEyeShape.square : QrEyeShape.circle,
-        ),
-        dataModuleStyle: QrDataModuleStyle(
-          color: dataModuleStyleColor,
-          dataModuleShape: isSquare
-              ? QrDataModuleShape.square
-              : QrDataModuleShape.circle,
+      child: Transform.scale(
+        scale: 1,
+        filterQuality: FilterQuality.none,
+        child: QrImageView(
+          data: data,
+          size: size,
+          gapless: true,
+          backgroundColor: pad,
+          eyeStyle: QrEyeStyle(
+            color: eyeStyleColor,
+            eyeShape: isSquare ? QrEyeShape.square : QrEyeShape.circle,
+          ),
+          dataModuleStyle: QrDataModuleStyle(
+            color: dataModuleStyleColor,
+            dataModuleShape: isSquare
+                ? QrDataModuleShape.square
+                : QrDataModuleShape.circle,
+          ),
         ),
       ),
     );

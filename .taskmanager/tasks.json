@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "Generate color hierarchy: #E0405B brand, off-white pills, dark Bg FAB, light photo placeholder",
-        "taskId": "task-generate-color-hierarchy-20260729",
-        "updatedAt": "2026-07-29T15:31:52.000Z"
+        "message": "Micro-polish: pill edit padding, #E0405B nav selection, crisp QR FilterQuality.none",
+        "taskId": "task-micro-polish-nav-qr-20260729",
+        "updatedAt": "2026-07-29T15:39:32.000Z"
       }
     }
   ],
@@ -1581,6 +1581,20 @@
       "createdAt": "2026-07-29T15:30:21.000Z",
       "updatedAt": "2026-07-29T15:31:52.000Z",
       "note": "Cloud MCP denied; local backup only."
+    },
+    {
+      "id": "task-micro-polish-nav-qr-20260729",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Micro-polish: pill edit padding, nav brand color, sharp QR",
+      "description": "Right pad edit icon; bottom nav selected #E0405B; QR FilterQuality for crisp modules.",
+      "details": "",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-29T15:37:55.000Z",
+      "updatedAt": "2026-07-29T15:39:32.000Z",
+      "note": "Cloud MCP denied; local backup only."
     }
   ],
   "epics": [
@@ -1596,5 +1610,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-07-29T15:31:53.352Z"
+  "lastSync": "2026-07-29T15:39:33.194Z"
 }

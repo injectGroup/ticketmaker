@@ -113,7 +113,7 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
     );
 
     final pill = Container(
-      padding: const EdgeInsets.fromLTRB(12, 6, 10, 6),
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
       decoration: BoxDecoration(
         color: AppColors.pillBackground,
         borderRadius: BorderRadius.circular(20),
