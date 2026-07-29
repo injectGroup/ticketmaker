@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "Generate typography: extra-bold titles, centered chip baseline, Space Mono code/date",
-        "taskId": "task-generate-typography-align-20260729",
-        "updatedAt": "2026-07-29T15:51:50.000Z"
+        "message": "Fixed Generate bottom overlap (scroll clearance) and chip letterSpacing 0.3",
+        "taskId": "task-fix-generate-overlap-spacing-20260729",
+        "updatedAt": "2026-07-29T16:06:23.000Z"
       }
     }
   ],
@@ -1609,6 +1609,20 @@
       "createdAt": "2026-07-29T15:50:46.000Z",
       "updatedAt": "2026-07-29T15:51:50.000Z",
       "note": "Cloud MCP denied; local backup only."
+    },
+    {
+      "id": "task-fix-generate-overlap-spacing-20260729",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Fix Generate bottom overlap + chip letterSpacing",
+      "description": "Clear VIP Guest Pass from bottom nav overlap with scroll padding; lock Change color/shape letterSpacing 0.3.",
+      "details": "",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-29T16:05:47.000Z",
+      "updatedAt": "2026-07-29T16:06:23.000Z",
+      "note": "Cloud MCP denied; local backup only."
     }
   ],
   "epics": [
@@ -1624,5 +1638,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-07-29T15:51:51.214Z"
+  "lastSync": "2026-07-29T16:06:23.933Z"
 }

@@ -81,9 +81,11 @@ class HomeShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: false,
       body: navigationShell,
       bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
+          backgroundColor: AppColors.secondaryBackground,
           indicatorColor: AppColors.primary.withValues(alpha: 0.15),
           iconTheme: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
@@ -112,6 +114,9 @@ class HomeShell extends StatelessWidget {
         child: NavigationBar(
           selectedIndex: navigationShell.currentIndex,
           onDestinationSelected: navigationShell.goBranch,
+          backgroundColor: AppColors.secondaryBackground,
+          elevation: 3,
+          shadowColor: Colors.black.withValues(alpha: 0.08),
           indicatorColor: AppColors.primary.withValues(alpha: 0.15),
           destinations: const [
             NavigationDestination(

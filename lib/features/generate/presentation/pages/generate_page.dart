@@ -98,6 +98,7 @@ class _GenerateViewState extends State<_GenerateView> {
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
+        extendBody: false,
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
           title: const Text('Personal Tickets'),
@@ -146,8 +147,7 @@ class _GenerateViewState extends State<_GenerateView> {
               },
             ),
           ],
-          child: SafeArea(
-            child: ColoredBox(
+          child: ColoredBox(
               color: const Color(0xFFF8FAFC),
               child: BlocBuilder<GenerateCubit, GenerateState>(
                 buildWhen: (previous, current) =>
@@ -155,12 +155,15 @@ class _GenerateViewState extends State<_GenerateView> {
                     previous.imageBytes != current.imageBytes,
                 builder: (context, state) {
                   final ticket = state.ticket;
+                  // Shell already owns the bottom NavigationBar — avoid a second
+                  // SafeArea bottom inset that can leave card content flush with
+                  // the grey "Generate" nav destination.
                   return SingleChildScrollView(
                     padding: EdgeInsets.only(
                       left: 16,
                       right: 16,
                       top: 12,
-                      bottom: keyboardInset > 0 ? keyboardInset + 24 : 0,
+                      bottom: keyboardInset > 0 ? keyboardInset + 24 : 8,
                     ),
                     keyboardDismissBehavior:
                         ScrollViewKeyboardDismissBehavior.onDrag,
@@ -240,15 +243,14 @@ class _GenerateViewState extends State<_GenerateView> {
                             ),
                           ),
                         ),
-                        // Keeps Save Ticket clear of the bottom navigation bar.
-                        const SizedBox(height: 24),
+                        // Keep Save Ticket / VIP Guest Pass clear of bottom nav.
+                        const SizedBox(height: 32),
                       ],
                     ),
                   );
                 },
               ),
             ),
-          ),
         ),
       ),
     );
