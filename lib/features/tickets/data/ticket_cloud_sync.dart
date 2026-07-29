@@ -205,6 +205,9 @@ class TicketCloudSync {
   }
 
   /// Uploads a JPEG ticket/event image and patches the Firestore doc with URL.
+  ///
+  /// Returns null on any failure (CORS, auth, network) so callers can keep the
+  /// local ticket UI intact.
   Future<String?> uploadTicketImageJpeg({
     required String ticketId,
     required Uint8List jpegBytes,
@@ -213,19 +216,24 @@ class TicketCloudSync {
     final doc = _ticketDoc(ticketId);
     if (uid == null || doc == null || jpegBytes.isEmpty) return null;
 
-    final ref = _storage.ref('users/$uid/tickets/$ticketId.jpg');
-    await ref.putData(
-      jpegBytes,
-      SettableMetadata(contentType: 'image/jpeg'),
-    );
-    final url = await ref.getDownloadURL();
-    await doc.set({
-      'imagePath': url,
-      'imageUrl': url,
-      'photoUrl': url,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-    debugPrint('Ticket image uploaded: $ticketId');
-    return url;
+    try {
+      final ref = _storage.ref('users/$uid/tickets/$ticketId.jpg');
+      await ref.putData(
+        jpegBytes,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+      final url = await ref.getDownloadURL();
+      await doc.set({
+        'imagePath': url,
+        'imageUrl': url,
+        'photoUrl': url,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      debugPrint('Ticket image uploaded: $ticketId');
+      return url;
+    } catch (e, st) {
+      debugPrint('uploadTicketImageJpeg failed (UI continues): $e\n$st');
+      return null;
+    }
   }
 }

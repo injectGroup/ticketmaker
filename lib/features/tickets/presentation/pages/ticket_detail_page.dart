@@ -141,6 +141,8 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                     key: _ticketBoundaryKey,
                     child: SavedTicketView(
                       ticket: ticket,
+                      // Prefetched MemoryImage bytes when available — avoids
+                      // Storage CORS / network failures breaking the detail UI.
                       imageBytes: imageBytes,
                     ),
                   ),

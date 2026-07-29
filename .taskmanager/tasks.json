@@ -23,11 +23,11 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "TicketVerificationScreen live on Hosting /verify/:id",
-        "taskId": "task-verify-screen-web-route-deploy-20260729",
-        "updatedAt": "2026-07-29T11:25:50.000Z",
+        "message": "Storage CORS config + graceful image fallbacks",
+        "taskId": "task-firebase-storage-cors-fallback-20260729",
+        "updatedAt": "2026-07-29T11:37:59.000Z",
         "source": "local-fallback",
-        "note": "Cloud notify needs Firebase; Chat needs GOOGLE_CHAT_WEBHOOK_URL."
+        "note": "gsutil blocked until billing/bucket exist."
       }
     }
   ],
@@ -1471,6 +1471,20 @@
       "createdAt": "2026-07-29T11:16:53.000Z",
       "updatedAt": "2026-07-29T11:25:50.000Z",
       "note": "TicketVerificationScreen /verify/:id; path URLs; tickets collection; hosting+rules deployed."
+    },
+    {
+      "id": "task-firebase-storage-cors-fallback-20260729",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Firebase Storage CORS + graceful image fallbacks",
+      "description": "cors.json + gsutil apply; ticket detail/image UI fails soft on CORS.",
+      "details": "",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-29T11:35:36.000Z",
+      "updatedAt": "2026-07-29T11:37:59.000Z",
+      "note": "cors.json + set_storage_cors.sh; UI soft-fail. Bucket apply blocked: billing absent / bucket 404."
     }
   ],
   "epics": [

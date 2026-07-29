@@ -164,7 +164,10 @@ class _TicketCorsSafeNetworkImageState extends State<TicketCorsSafeNetworkImage>
     if (!isFetchableTicketPhotoUrl(widget.url)) {
       return Future<Uint8List?>.value(null);
     }
-    return fetchImageBytesCorsSafe(widget.url);
+    return fetchImageBytesCorsSafe(widget.url).catchError((Object e, StackTrace st) {
+      debugPrint('TicketCorsSafeNetworkImage catchError: $e\n$st');
+      return null;
+    });
   }
 
   @override
@@ -182,6 +185,17 @@ class _TicketCorsSafeNetworkImageState extends State<TicketCorsSafeNetworkImage>
     return FutureBuilder<Uint8List?>(
       future: _bytesFuture,
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          debugPrint(
+            'TicketCorsSafeNetworkImage load error: ${snapshot.error}',
+          );
+          return TicketPhotoPlaceholder(
+            width: width ?? 300,
+            height: height ?? 200,
+            broken: true,
+          );
+        }
+
         if (snapshot.connectionState != ConnectionState.done) {
           return SizedBox(
             width: width,
