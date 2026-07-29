@@ -148,11 +148,13 @@ class TicketsCubit extends Cubit<TicketsState> {
     Uint8List? imageBytes,
   }) async {
     final id = 'ticket-${DateTime.now().millisecondsSinceEpoch}';
-    // Never persist ephemeral web blob: picker URLs.
+    // Guest code in the QR must equal Firestore tickets/{ticketId} exactly.
+    final guestCode = ticket.code.trim();
     var saved = ticket.copyWith(
       id: id,
+      code: guestCode,
       imagePath: sanitizeTicketImagePath(ticket.imagePath),
-      qrData: TicketPayload.verificationUrl(ticket.code),
+      qrData: TicketPayload.verificationUrl(guestCode),
     );
 
     final nextBytes = Map<String, Uint8List>.from(state.imageBytesById);

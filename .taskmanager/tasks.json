@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "Fixed verify not-found: public tickets/{code} on save",
-        "taskId": "task-fix-public-tickets-verify-not-found-20260729",
-        "updatedAt": "2026-07-29T12:18:06.000Z",
+        "message": "Explicit tickets/{code} write on save + web deploy",
+        "taskId": "task-explicit-tickets-collection-write-deploy-20260729",
+        "updatedAt": "2026-07-29T12:43:46.000Z",
         "source": "local-fallback"
       }
     }
@@ -1512,6 +1512,20 @@
       "createdAt": "2026-07-29T12:14:30.000Z",
       "updatedAt": "2026-07-29T12:18:06.000Z",
       "note": "Publish tickets/{code} on save; verify status valid\u2192checked_in; rules+hosting deployed."
+    },
+    {
+      "id": "task-explicit-tickets-collection-write-deploy-20260729",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Explicit tickets/{code} set on save + web deploy",
+      "description": "Hard-code top-level tickets.doc(code).set with status valid; clean build deploy hosting.",
+      "details": "",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-29T12:42:58.000Z",
+      "updatedAt": "2026-07-29T12:43:46.000Z",
+      "note": "Explicit tickets.doc(code).set; clean build + hosting deploy."
     }
   ],
   "epics": [

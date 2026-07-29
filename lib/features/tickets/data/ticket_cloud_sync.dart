@@ -72,42 +72,8 @@ class TicketCloudSync {
     return compressImageToJpeg(bytes, quality: 55, maxWidth: 720);
   }
 
-  /// Payload for top-level `tickets/{guestCode}` used by `/verify/:id`.
-  Map<String, dynamic> publicVerifyPayload(Ticket ticket) {
-    final code = ticket.code.trim();
-    final uid = _uid;
-    return {
-      'ticketId': code,
-      'internalTicketId': ticket.id,
-      'code': code,
-      'eventName': ticket.title,
-      'eventDate': ticket.dateLabel.trim().isNotEmpty
-          ? ticket.dateLabel
-          : ticket.eventAt.toIso8601String(),
-      'eventAt': ticket.eventAt.toIso8601String(),
-      'venue': ticket.venue,
-      'guestName': ticket.subtitle.trim().isNotEmpty
-          ? ticket.subtitle
-          : ticket.headerLabel,
-      'title': ticket.title,
-      'subtitle': ticket.subtitle,
-      'dateLabel': ticket.dateLabel,
-      'timeLabel': ticket.timeLabel,
-      'headerLabel': ticket.headerLabel,
-      'qrData': ticket.qrData.isNotEmpty
-          ? ticket.qrData
-          : TicketPayload.verificationUrl(code),
-      'status': ticket.isCheckedIn ? 'checked_in' : 'valid',
-      'checkedIn': ticket.isCheckedIn,
-      if (ticket.checkedInAt != null)
-        'checkedInAt': ticket.checkedInAt!.toIso8601String(),
-      if (uid != null) 'hostUid': uid,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
-  }
-
-  /// Creates/updates the public verify document. Must succeed for QR scans.
+  /// Explicitly writes the public verify document:
+  /// `tickets/{ticketId}` where [ticketId] is the QR guest code (with dashes).
   ///
   /// Returns `false` when Firebase is not initialized (unit tests) or the write
   /// fails; returns `true` on success.
@@ -118,24 +84,69 @@ class TicketCloudSync {
       return false;
     }
 
-    final code = ticket.code.trim();
-    if (!TicketPayload.codePattern.hasMatch(code)) {
-      debugPrint('Invalid ticket code for public publish: $code');
+    // Doc ID must match the code encoded in the QR exactly (e.g. 4254-4789-417).
+    final ticketId = ticket.code.trim();
+    if (!TicketPayload.codePattern.hasMatch(ticketId)) {
+      debugPrint('Invalid ticket code for public publish: $ticketId');
       return false;
     }
 
+    // Keep QR payload aligned with the same id.
+    final expectedQr = TicketPayload.verificationUrl(ticketId);
+    if (ticket.qrData.trim() != expectedQr) {
+      debugPrint(
+        'QR/code mismatch on publish: qr=${ticket.qrData} code=$ticketId',
+      );
+    }
+
     try {
-      final ref = _publicTicketDoc(code);
-      final payload = publicVerifyPayload(ticket);
+      final firestore = _firestoreOverride ?? FirebaseFirestore.instance;
+      final eventName = ticket.title.trim().isNotEmpty
+          ? ticket.title.trim()
+          : 'Ticket';
+
+      // Required public fields for /verify/:id (merge keeps check-in fields).
+      final payload = <String, dynamic>{
+        'ticketId': ticketId,
+        'eventName': eventName,
+        'status': ticket.isCheckedIn ? 'checked_in' : 'valid',
+        'createdAt': FieldValue.serverTimestamp(),
+        // Extra fields used by the confirmation UI / host sync.
+        'code': ticketId,
+        'internalTicketId': ticket.id,
+        'eventDate': ticket.dateLabel.trim().isNotEmpty
+            ? ticket.dateLabel
+            : ticket.eventAt.toIso8601String(),
+        'eventAt': ticket.eventAt.toIso8601String(),
+        'venue': ticket.venue,
+        'guestName': ticket.subtitle.trim().isNotEmpty
+            ? ticket.subtitle
+            : ticket.headerLabel,
+        'title': eventName,
+        'subtitle': ticket.subtitle,
+        'dateLabel': ticket.dateLabel,
+        'timeLabel': ticket.timeLabel,
+        'headerLabel': ticket.headerLabel,
+        'qrData': expectedQr,
+        'checkedIn': ticket.isCheckedIn,
+        if (ticket.checkedInAt != null)
+          'checkedInAt': ticket.checkedInAt!.toIso8601String(),
+        if (_uid != null) 'hostUid': _uid,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      final ref = firestore.collection('tickets').doc(ticketId);
       final existing = await ref.get();
       if (existing.exists) {
+        // Do not clobber original createdAt on re-save.
         payload.remove('createdAt');
       }
+
       await ref.set(payload, SetOptions(merge: true));
-      debugPrint('Published public ticket tickets/$code');
+      debugPrint('Published public ticket tickets/$ticketId');
       return true;
     } catch (e, st) {
-      debugPrint('Public tickets/$code publish failed: $e\n$st');
+      debugPrint('Public tickets/$ticketId publish failed: $e\n$st');
       return false;
     }
   }
