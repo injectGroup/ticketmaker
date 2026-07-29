@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "Micro-polish: pill edit padding, #E0405B nav selection, crisp QR FilterQuality.none",
-        "taskId": "task-micro-polish-nav-qr-20260729",
-        "updatedAt": "2026-07-29T15:39:32.000Z"
+        "message": "Generate typography: extra-bold titles, centered chip baseline, Space Mono code/date",
+        "taskId": "task-generate-typography-align-20260729",
+        "updatedAt": "2026-07-29T15:51:50.000Z"
       }
     }
   ],
@@ -1595,6 +1595,20 @@
       "createdAt": "2026-07-29T15:37:55.000Z",
       "updatedAt": "2026-07-29T15:39:32.000Z",
       "note": "Cloud MCP denied; local backup only."
+    },
+    {
+      "id": "task-generate-typography-align-20260729",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Generate typography: bold titles, chip align, mono code/date",
+      "description": "w800/#0F172A titles; center Change color/shape chips; guest code w600 + Space Mono on code and date/time.",
+      "details": "",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-29T15:50:46.000Z",
+      "updatedAt": "2026-07-29T15:51:50.000Z",
+      "note": "Cloud MCP denied; local backup only."
     }
   ],
   "epics": [
@@ -1610,5 +1624,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-07-29T15:39:33.194Z"
+  "lastSync": "2026-07-29T15:51:51.214Z"
 }

@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -214,8 +215,8 @@ class TicketDetailsSection extends StatelessWidget {
               minLines: 1,
               maxLines: 3,
               style: theme.textTheme.headlineLarge?.copyWith(
-                color: onText,
-                fontWeight: FontWeight.w700,
+                color: AppColors.pillText,
+                fontWeight: FontWeight.w800,
                 fontSize: 28,
                 height: 1.2,
               ),
@@ -305,8 +306,8 @@ class TicketDetailsSection extends StatelessWidget {
               minLines: 1,
               maxLines: 4,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: onText,
-                fontWeight: FontWeight.w700,
+                color: AppColors.pillText,
+                fontWeight: FontWeight.w800,
                 height: 1.35,
               ),
               cursorColor: onText,
@@ -324,15 +325,18 @@ class TicketDetailsSection extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Icon(Icons.date_range_sharp, color: onText, size: 24),
                       const SizedBox(width: 12),
                       Flexible(
                         child: Text(
                           ticket.dateLabel,
-                          style: theme.textTheme.bodyMedium?.copyWith(
+                          style: GoogleFonts.spaceMono(
                             color: onText,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            height: 1.2,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -343,9 +347,11 @@ class TicketDetailsSection extends StatelessWidget {
                       Flexible(
                         child: Text(
                           ticket.timeLabel,
-                          style: theme.textTheme.bodyMedium?.copyWith(
+                          style: GoogleFonts.spaceMono(
                             color: onText,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            height: 1.2,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),

@@ -32,7 +32,7 @@ class TicketHeaderSection extends StatelessWidget {
     );
     final labelStyle = theme.textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.w800,
-      color: onText,
+      color: AppColors.pillText,
       letterSpacing: 0.4,
     );
 
@@ -145,6 +145,7 @@ class _ChipButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(icon, size: 14, color: AppColors.primary),
               const SizedBox(width: 4),
@@ -152,11 +153,14 @@ class _ChipButton extends StatelessWidget {
                 child: Text(
                   label,
                   overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w600,
                     fontSize: 12,
+                    height: 1.0,
                     letterSpacing: 0.3,
+                    leadingDistribution: TextLeadingDistribution.even,
                   ),
                 ),
               ),

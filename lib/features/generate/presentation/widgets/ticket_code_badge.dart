@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_theme.dart';
 
@@ -48,14 +49,16 @@ class TicketCodeBadge extends StatelessWidget {
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
                 code,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                style: GoogleFonts.spaceMono(
                   color: fg,
                   fontWeight: FontWeight.w600,
+                  fontSize: 14,
                   letterSpacing: 0.6,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+                  height: 1.2,
                 ),
               ),
               const SizedBox(width: 8),
