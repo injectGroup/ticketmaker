@@ -4,7 +4,7 @@
       "android": {
         "default": {
           "projectId": "quick-ticket-maker-sandbox",
-          "appId": "1:107781542059:android:ad44b29439001b91c9e7ee",
+          "appId": "1:107781542059:android:21121105f99c18fdc9e7ee",
           "fileOutput": "android/app/google-services.json"
         }
       },
@@ -28,7 +28,7 @@
         "lib/firebase_options.dart": {
           "projectId": "quick-ticket-maker-sandbox",
           "configurations": {
-            "android": "1:107781542059:android:ad44b29439001b91c9e7ee",
+            "android": "1:107781542059:android:21121105f99c18fdc9e7ee",
             "ios": "1:107781542059:ios:3aee97098aa23948c9e7ee",
             "macos": "1:107781542059:ios:3aee97098aa23948c9e7ee",
             "web": "1:107781542059:web:0dd1b1aa86d6f8e6c9e7ee",

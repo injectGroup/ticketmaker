@@ -48,7 +48,15 @@ class TicketCloudSync {
         .doc(ticketId);
   }
 
-  /// Code-indexed admission doc for host door verification across devices.
+  /// Public verify doc id = guest [code] (`tickets/{code}`).
+  DocumentReference<Map<String, dynamic>>? _publicTicketDoc(String code) {
+    final uid = _uid;
+    final normalized = code.trim();
+    if (uid == null || normalized.isEmpty) return null;
+    return _firestore.collection('tickets').doc(normalized);
+  }
+
+  /// Legacy code index (kept in sync for older verify clients).
   DocumentReference<Map<String, dynamic>>? _indexDoc(String code) {
     final uid = _uid;
     final normalized = code.trim();
@@ -73,25 +81,41 @@ class TicketCloudSync {
 
   Future<void> _upsertIndex(Ticket ticket) async {
     final uid = _uid;
+    final publicDoc = _publicTicketDoc(ticket.code);
     final index = _indexDoc(ticket.code);
-    if (uid == null || index == null) return;
+    if (uid == null || publicDoc == null) return;
+
+    final payload = <String, dynamic>{
+      'hostUid': uid,
+      'ticketId': ticket.id,
+      'code': ticket.code,
+      'title': ticket.title,
+      'eventName': ticket.title,
+      'subtitle': ticket.subtitle,
+      'venue': ticket.venue,
+      'dateLabel': ticket.dateLabel,
+      'timeLabel': ticket.timeLabel,
+      'eventAt': ticket.eventAt.toIso8601String(),
+      'headerLabel': ticket.headerLabel,
+      'qrData': ticket.qrData.isNotEmpty
+          ? ticket.qrData
+          : TicketPayload.verificationUrl(ticket.code),
+      'checkedIn': ticket.isCheckedIn,
+      'status': ticket.isCheckedIn ? 'checked_in' : 'valid',
+      if (ticket.checkedInAt != null)
+        'checkedInAt': ticket.checkedInAt!.toIso8601String(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
     try {
-      await index.set({
-        'hostUid': uid,
-        'ticketId': ticket.id,
-        'code': ticket.code,
-        'title': ticket.title,
-        'subtitle': ticket.subtitle,
-        'venue': ticket.venue,
-        'qrData': ticket.qrData.isNotEmpty
-            ? ticket.qrData
-            : TicketPayload.verificationUrl(ticket.code),
-        'checkedIn': ticket.isCheckedIn,
-        'status': ticket.isCheckedIn ? 'checked_in' : 'valid',
-        if (ticket.checkedInAt != null)
-          'checkedInAt': ticket.checkedInAt!.toIso8601String(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      await publicDoc.set(payload, SetOptions(merge: true));
+    } catch (e, st) {
+      debugPrint('Public tickets upsert failed: $e\n$st');
+    }
+
+    if (index == null) return;
+    try {
+      await index.set(payload, SetOptions(merge: true));
     } catch (e, st) {
       debugPrint('Ticket index upsert failed: $e\n$st');
     }
@@ -109,6 +133,7 @@ class TicketCloudSync {
         await doc.set({
           'checkedIn': true,
           'checkedInAt': iso,
+          'status': 'checked_in',
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       } catch (e, st) {

@@ -3,8 +3,9 @@ rules_version = '2';
 // Quick Ticket Maker — Firestore security rules
 // Paths used by the app:
 //   users/{uid}                      — Auth profile documents
-//   users/{uid}/tickets/{ticketId}   — Saved ticket metadata
-//   ticketIndex/{code}               — Public door verify + host-owned create
+//   users/{uid}/tickets/{ticketId}   — Saved ticket metadata (owner)
+//   tickets/{code}                   — Public door verify docs (QR /verify/:id)
+//   ticketIndex/{code}               — Legacy verify index (kept in sync)
 service cloud.firestore {
   match /databases/{database}/documents {
     function isSignedIn() {
@@ -20,7 +21,7 @@ service cloud.firestore {
         .hasOnly(['checkedIn', 'checkedInAt', 'status', 'updatedAt']);
     }
 
-    function isCheckInTransition() {
+    function isPublicCheckInTransition() {
       return resource.data.get('checkedIn', false) != true
         && request.resource.data.checkedIn == true
         && request.resource.data.status == 'checked_in'
@@ -35,30 +36,43 @@ service cloud.firestore {
         && checkInOnlyKeys();
     }
 
+    function hostOwnsPublicTicket() {
+      return isSignedIn() && resource.data.hostUid == request.auth.uid;
+    }
+
+    function hostCreatesPublicTicket() {
+      return isSignedIn()
+        && request.resource.data.hostUid == request.auth.uid
+        && request.resource.data.code is string;
+    }
+
     match /users/{userId} {
       allow read, write: if isOwner(userId);
 
       match /tickets/{ticketId} {
         allow read, write: if isOwner(userId);
-        // Public gatekeeper check-in via /verify (limited fields only).
         allow update: if isTicketDocCheckIn();
       }
     }
 
-    // Door verification index: hosts create/update; anyone may read + check in.
-    match /ticketIndex/{code} {
-      allow create: if isSignedIn()
-        && request.resource.data.hostUid == request.auth.uid
-        && request.resource.data.code is string;
-      allow delete: if isSignedIn()
-        && resource.data.hostUid == request.auth.uid;
+    // Public verification documents keyed by guest code.
+    match /tickets/{code} {
+      allow create: if hostCreatesPublicTicket();
+      allow delete: if hostOwnsPublicTicket();
       allow read: if true;
-      allow update: if isSignedIn()
-          && resource.data.hostUid == request.auth.uid
-        || (checkInOnlyKeys() && isCheckInTransition());
+      allow update: if hostOwnsPublicTicket()
+        || (checkInOnlyKeys() && isPublicCheckInTransition());
     }
 
-    // Deny everything else by default.
+    // Legacy door verification index.
+    match /ticketIndex/{code} {
+      allow create: if hostCreatesPublicTicket();
+      allow delete: if hostOwnsPublicTicket();
+      allow read: if true;
+      allow update: if hostOwnsPublicTicket()
+        || (checkInOnlyKeys() && isPublicCheckInTransition());
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "Public web /verify check-in + Scan tab removed",
-        "taskId": "task-public-web-verify-remove-scan-20260729",
-        "updatedAt": "2026-07-29T11:07:03.000Z",
+        "message": "TicketVerificationScreen live on Hosting /verify/:id",
+        "taskId": "task-verify-screen-web-route-deploy-20260729",
+        "updatedAt": "2026-07-29T11:25:50.000Z",
         "source": "local-fallback",
         "note": "Cloud notify needs Firebase; Chat needs GOOGLE_CHAT_WEBHOOK_URL."
       }
@@ -1457,6 +1457,20 @@
       "createdAt": "2026-07-29T11:03:42.000Z",
       "updatedAt": "2026-07-29T11:07:03.000Z",
       "note": "Removed Scan tab; QR=Hosting /verify/<code>; public TicketVerifyPage + Firestore public check-in rules. Cloud MCP denied; local backup."
+    },
+    {
+      "id": "task-verify-screen-web-route-deploy-20260729",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "TicketVerificationScreen + /verify/:id web deploy",
+      "description": "Path URL strategy, tickets collection verify screen, build+deploy hosting.",
+      "details": "",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-29T11:16:53.000Z",
+      "updatedAt": "2026-07-29T11:25:50.000Z",
+      "note": "TicketVerificationScreen /verify/:id; path URLs; tickets collection; hosting+rules deployed."
     }
   ],
   "epics": [

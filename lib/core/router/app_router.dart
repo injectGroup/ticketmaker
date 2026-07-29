@@ -5,10 +5,10 @@ import '../../features/account/presentation/pages/legal_document_page.dart';
 import '../../features/generate/presentation/pages/generate_page.dart';
 import '../../features/tickets/presentation/pages/ticket_detail_page.dart';
 import '../../features/tickets/presentation/pages/tickets_page.dart';
-import '../../features/verify/presentation/pages/ticket_verify_page.dart';
+import '../../features/verify/presentation/pages/ticket_verification_screen.dart';
 import '../theme/app_theme.dart';
 
-/// App routes: Generate + Tickets shell, plus public `/verify/:code`.
+/// App routes: Generate + Tickets shell, plus public `/verify/:id`.
 final GoRouter appRouter = GoRouter(
   initialLocation: GeneratePage.routePath,
   routes: [
@@ -29,10 +29,10 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
     GoRoute(
-      path: '/verify/:code',
-      name: TicketVerifyPage.routeName,
-      builder: (context, state) => TicketVerifyPage(
-        code: state.pathParameters['code'] ?? '',
+      path: '/verify/:id',
+      name: TicketVerificationScreen.routeName,
+      builder: (context, state) => TicketVerificationScreen(
+        ticketId: state.pathParameters['id'] ?? '',
       ),
     ),
     StatefulShellRoute.indexedStack(
