@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "Generate screen visual polish: pill contrast, photo placeholder, Bg Color FAB, Save Ticket bottom padding",
-        "taskId": "task-polish-generate-visuals-20260729",
-        "updatedAt": "2026-07-29T15:05:29.000Z"
+        "message": "Pill inputs show edit icon, darker border, and Tap to edit hints",
+        "taskId": "task-pill-edit-affordance-20260729",
+        "updatedAt": "2026-07-29T15:12:24.000Z"
       }
     }
   ],
@@ -1553,6 +1553,20 @@
       "createdAt": "2026-07-29T15:03:55.000Z",
       "updatedAt": "2026-07-29T15:05:29.000Z",
       "note": "Cloud MCP denied; local backup only."
+    },
+    {
+      "id": "task-pill-edit-affordance-20260729",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Pill fields editable affordance (edit icon + border)",
+      "description": "Add edit pencil, darker pink border, Tap to edit hints on Generate pill inputs; keep layout/fonts.",
+      "details": "",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-29T15:11:48.000Z",
+      "updatedAt": "2026-07-29T15:12:24.000Z",
+      "note": "Cloud MCP denied; local backup only."
     }
   ],
   "epics": [
@@ -1568,5 +1582,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-07-29T15:05:39.223Z"
+  "lastSync": "2026-07-29T15:12:25.313Z"
 }

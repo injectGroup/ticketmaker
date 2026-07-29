@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 
-/// Ticket text field with a modern section badge (light-pink tag + • •)
-/// until the user starts editing. Badge returns when [resetToken] changes.
+/// Ticket text field in a pink capsule so it reads as an editable input.
+/// Capsule returns to a fresh session when [resetToken] changes (e.g. Save).
 class BracketedTicketField extends StatefulWidget {
   const BracketedTicketField({
     super.key,
@@ -23,7 +23,7 @@ class BracketedTicketField extends StatefulWidget {
   final TextStyle? style;
   final ValueChanged<String> onChanged;
 
-  /// When this value changes (e.g. after Save Ticket), badge shows again.
+  /// When this value changes (e.g. after Save Ticket), field can re-hint.
   final Object? resetToken;
 
   final TextAlign textAlign;
@@ -54,7 +54,6 @@ class BracketedTicketField extends StatefulWidget {
 
 class _BracketedTicketFieldState extends State<BracketedTicketField> {
   late final FocusNode _focusNode;
-  bool _showBadge = true;
 
   @override
   void initState() {
@@ -63,17 +62,8 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
     _focusNode.addListener(_onFocusChange);
   }
 
-  @override
-  void didUpdateWidget(covariant BracketedTicketField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.resetToken != widget.resetToken) {
-      setState(() => _showBadge = true);
-    }
-  }
-
   void _onFocusChange() {
-    if (!_focusNode.hasFocus || !_showBadge) return;
-    setState(() => _showBadge = false);
+    if (mounted) setState(() {});
   }
 
   @override
@@ -83,23 +73,21 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
     super.dispose();
   }
 
+  void _requestEdit() {
+    _focusNode.requestFocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     final baseStyle = widget.style;
-    // Pink pills sit on light blush — use dark, heavier type for legibility.
-    // When the badge is dismissed, keep the caller style for the dark card.
-    final fieldStyle = _showBadge
-        ? baseStyle?.copyWith(
-            color: AppColors.primaryText,
-            fontWeight: FontWeight.w800,
-          )
-        : baseStyle;
+    // Pink pills sit on light blush — dark, heavy type for legibility.
+    final fieldStyle = baseStyle?.copyWith(
+      color: AppColors.primaryText,
+      fontWeight: FontWeight.w800,
+    );
     final hintStyle = fieldStyle?.copyWith(
-      color: (_showBadge
-              ? AppColors.primaryText
-              : baseStyle?.color)
-          ?.withValues(alpha: _showBadge ? 0.55 : 0.45),
-      fontWeight: _showBadge ? FontWeight.w600 : FontWeight.w400,
+      color: AppColors.primaryText.withValues(alpha: 0.45),
+      fontWeight: FontWeight.w600,
     );
     final bulletStyle = TextStyle(
       color: AppColors.primary,
@@ -117,35 +105,48 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
       minLines: widget.minLines,
       maxLines: widget.maxLines,
       style: fieldStyle,
-      cursorColor: _showBadge ? AppColors.primary : widget.cursorColor,
+      cursorColor: widget.cursorColor ?? AppColors.primary,
+      cursorWidth: 2,
       decoration: BracketedTicketField.plainDecoration.copyWith(
-        hintText: widget.hintText,
+        hintText: widget.hintText ?? 'Tap to edit…',
         hintStyle: hintStyle,
       ),
       onChanged: widget.onChanged,
     );
 
-    final content = _showBadge
-        ? Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFCE7EC),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.28),
+    final pill = Container(
+      padding: const EdgeInsets.fromLTRB(12, 6, 10, 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFCE7EC),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.pinkAccent.withValues(alpha: 0.4),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          Text('•', style: bulletStyle),
+          const SizedBox(width: 8),
+          Expanded(child: field),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: _requestEdit,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 2),
+              child: Icon(
+                Icons.edit_outlined,
+                size: 16,
+                color: AppColors.primary.withValues(
+                  alpha: _focusNode.hasFocus ? 0.95 : 0.55,
+                ),
               ),
             ),
-            child: Row(
-              children: [
-                Text('•', style: bulletStyle),
-                const SizedBox(width: 8),
-                Expanded(child: field),
-                const SizedBox(width: 8),
-                Text('•', style: bulletStyle),
-              ],
-            ),
-          )
-        : Row(children: [Expanded(child: field)]);
+          ),
+        ],
+      ),
+    );
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -154,7 +155,7 @@ class _BracketedTicketFieldState extends State<BracketedTicketField> {
           widget.leading!,
           const SizedBox(width: 12),
         ],
-        Expanded(child: content),
+        Expanded(child: pill),
       ],
     );
   }

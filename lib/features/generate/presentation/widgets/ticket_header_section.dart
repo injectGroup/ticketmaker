@@ -60,7 +60,7 @@ class TicketHeaderSection extends StatelessWidget {
               maxLines: 2,
               style: labelStyle,
               cursorColor: onText,
-              hintText: 'Birthday, dinner, or gathering',
+              hintText: 'Tap to edit…',
               onChanged: cubit.updateHeaderLabel,
             ),
           ),
