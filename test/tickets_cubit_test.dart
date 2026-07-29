@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ticket_maker/features/generate/domain/entities/ticket.dart';
 import 'package:ticket_maker/features/tickets/data/ticket_image_store.dart';
 import 'package:ticket_maker/features/tickets/data/ticket_local_repository.dart';
+import 'package:ticket_maker/features/tickets/data/ticket_payload.dart';
 import 'package:ticket_maker/features/tickets/presentation/bloc/tickets_cubit.dart';
 
 Ticket _sample({required String imagePath}) {
@@ -18,8 +19,8 @@ Ticket _sample({required String imagePath}) {
     dateLabel: 'Sat, Jul 18',
     timeLabel: '8:00 PM',
     eventAt: DateTime(2026, 7, 18, 20),
-    code: '1111-2222',
-    qrData: 'https://example.com',
+    code: '1111-2222-333',
+    qrData: 'https://ticketmaker.app/t/1111-2222-333',
     imagePath: imagePath,
     eyeColor: const Color(0xFFF44336),
     dataModuleColor: const Color(0xFFFF9800),
@@ -158,5 +159,31 @@ void main() {
     await repository.clearTickets();
 
     expect(await repository.loadTickets(), isEmpty);
+  });
+
+  test('verifyAndCheckIn admits once then rejects reuse', () async {
+    await cubit.saveTicket(
+      _sample(imagePath: '').copyWith(
+        code: '1234-5678-910',
+        qrData: 'https://ticketmaker.app/t/1234-5678-910',
+      ),
+    );
+
+    final ok = await cubit.verifyAndCheckIn(
+      'https://ticketmaker.app/t/1234-5678-910',
+    );
+    expect(ok.status, TicketVerifyStatus.success);
+    expect(cubit.state.tickets.single.isCheckedIn, isTrue);
+
+    final again = await cubit.verifyAndCheckIn('1234-5678-910');
+    expect(again.status, TicketVerifyStatus.alreadyCheckedIn);
+  });
+
+  test('verifyAndCheckIn rejects unknown and invalid payloads', () async {
+    final missing = await cubit.verifyAndCheckIn('9999-8888-777');
+    expect(missing.status, TicketVerifyStatus.notFound);
+
+    final bad = await cubit.verifyAndCheckIn('not-a-ticket');
+    expect(bad.status, TicketVerifyStatus.invalidPayload);
   });
 }

@@ -9,6 +9,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/color_contrast.dart';
 import '../../data/ticket_category_palettes.dart';
 import '../../domain/entities/ticket.dart';
+import '../../../tickets/data/ticket_payload.dart';
 
 part 'generate_state.dart';
 
@@ -22,7 +23,7 @@ class GenerateCubit extends Cubit<GenerateState> {
 
   /// Public ticket link template; [code] is the generated ticket id.
   static String ticketPayloadUrl(String code) =>
-      'https://ticketmaker.app/t/$code';
+      TicketPayload.verificationUrl(code);
 
   static Ticket _buildDefaultTicket({required Random random}) {
     final eventAt = DateTime.now();

@@ -21,6 +21,7 @@ class Ticket extends Equatable {
     required this.topGradientEnd,
     required this.bottomGradientStart,
     required this.bottomGradientEnd,
+    this.checkedInAt,
   });
 
   final String id;
@@ -49,6 +50,11 @@ class Ticket extends Equatable {
   final Color bottomGradientStart;
   final Color bottomGradientEnd;
 
+  /// When set, guest has been admitted at the door.
+  final DateTime? checkedInAt;
+
+  bool get isCheckedIn => checkedInAt != null;
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'headerLabel': headerLabel,
@@ -70,10 +76,17 @@ class Ticket extends Equatable {
     'topGradientEnd': topGradientEnd.toARGB32(),
     'bottomGradientStart': bottomGradientStart.toARGB32(),
     'bottomGradientEnd': bottomGradientEnd.toARGB32(),
+    'checkedIn': isCheckedIn,
+    if (checkedInAt != null) 'checkedInAt': checkedInAt!.toIso8601String(),
   };
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
     final path = _readImagePath(json);
+    DateTime? checkedInAt;
+    final rawCheckedIn = json['checkedInAt'];
+    if (rawCheckedIn is String && rawCheckedIn.isNotEmpty) {
+      checkedInAt = DateTime.tryParse(rawCheckedIn);
+    }
     return Ticket(
       id: json['id'] as String,
       headerLabel: json['headerLabel'] as String? ?? 'My Ticket',
@@ -84,7 +97,8 @@ class Ticket extends Equatable {
       timeLabel: json['timeLabel'] as String,
       eventAt: DateTime.parse(json['eventAt'] as String),
       code: json['code'] as String,
-      qrData: json['qrData'] as String,
+      qrData: json['qrData'] as String? ??
+          'https://ticketmaker.app/t/${json['code'] as String? ?? ''}',
       imagePath: path,
       eyeColor: Color(json['eyeColor'] as int),
       dataModuleColor: Color(json['dataModuleColor'] as int),
@@ -93,6 +107,7 @@ class Ticket extends Equatable {
       topGradientEnd: Color(json['topGradientEnd'] as int),
       bottomGradientStart: Color(json['bottomGradientStart'] as int),
       bottomGradientEnd: Color(json['bottomGradientEnd'] as int),
+      checkedInAt: checkedInAt,
     );
   }
 
@@ -149,6 +164,8 @@ class Ticket extends Equatable {
     Color? topGradientEnd,
     Color? bottomGradientStart,
     Color? bottomGradientEnd,
+    DateTime? checkedInAt,
+    bool clearCheckedIn = false,
   }) {
     return Ticket(
       id: id ?? this.id,
@@ -169,6 +186,8 @@ class Ticket extends Equatable {
       topGradientEnd: topGradientEnd ?? this.topGradientEnd,
       bottomGradientStart: bottomGradientStart ?? this.bottomGradientStart,
       bottomGradientEnd: bottomGradientEnd ?? this.bottomGradientEnd,
+      checkedInAt:
+          clearCheckedIn ? null : (checkedInAt ?? this.checkedInAt),
     );
   }
 
@@ -192,5 +211,6 @@ class Ticket extends Equatable {
     topGradientEnd,
     bottomGradientStart,
     bottomGradientEnd,
+    checkedInAt,
   ];
 }

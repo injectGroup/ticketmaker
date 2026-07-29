@@ -12,6 +12,7 @@ import '../../data/ticket_image_codec.dart';
 import '../../data/ticket_image_store.dart';
 import '../../data/ticket_local_repository.dart';
 import '../../data/ticket_network_image.dart';
+import '../../data/ticket_payload.dart';
 
 part 'tickets_state.dart';
 
@@ -172,6 +173,69 @@ class TicketsCubit extends Cubit<TicketsState> {
         saved,
         nextBytes[id] ?? imageBytes,
       ),
+    );
+  }
+
+  /// Door entrance: decode QR/manual payload, verify against host tickets,
+  /// and mark valid unused tickets as checked in.
+  Future<TicketVerifyResult> verifyAndCheckIn(String rawPayload) async {
+    final code = TicketPayload.parseCode(rawPayload);
+    if (code == null) {
+      return const TicketVerifyResult(
+        status: TicketVerifyStatus.invalidPayload,
+      );
+    }
+
+    Ticket? match;
+    for (final ticket in state.tickets) {
+      if (ticket.code == code) {
+        match = ticket;
+        break;
+      }
+    }
+    match ??= await _cloudSync.findTicketByCode(code);
+
+    if (match == null) {
+      return TicketVerifyResult(
+        status: TicketVerifyStatus.notFound,
+        code: code,
+      );
+    }
+
+    if (match.isCheckedIn) {
+      return TicketVerifyResult(
+        status: TicketVerifyStatus.alreadyCheckedIn,
+        ticket: match,
+        code: code,
+      );
+    }
+
+    final checkedInAt = DateTime.now();
+    final updated = match.copyWith(checkedInAt: checkedInAt);
+
+    final index = state.tickets.indexWhere((t) => t.id == updated.id);
+    final next = [...state.tickets];
+    if (index >= 0) {
+      next[index] = updated;
+    } else {
+      next.insert(0, updated);
+    }
+
+    try {
+      await _repository.saveTickets(next);
+      emit(state.copyWith(tickets: next));
+    } catch (e, st) {
+      debugPrint('Local check-in persist failed: $e\n$st');
+    }
+
+    unawaited(
+      _cloudSync.markCheckedIn(ticket: updated, checkedInAt: checkedInAt),
+    );
+
+    return TicketVerifyResult(
+      status: TicketVerifyStatus.success,
+      ticket: updated,
+      code: code,
     );
   }
 

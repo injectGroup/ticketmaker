@@ -68,6 +68,8 @@
 	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Select an event photo for your ticket.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Scan guest ticket QR codes at the entrance.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Show nearby Discover events based on your city.</string>
 	<key>CFBundleURLTypes</key>

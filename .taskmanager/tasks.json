@@ -23,11 +23,11 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "Web ticket PNG: raster fallback when CanvasKit toImage LateInits",
-        "taskId": "task-fix-web-raster-export-lateinit-20260728",
-        "updatedAt": "2026-07-28T10:56:36.000Z",
+        "message": "Door QR scanner + check-in verification flow",
+        "taskId": "task-door-qr-scanner-checkin-20260729",
+        "updatedAt": "2026-07-29T10:47:51.000Z",
         "source": "local-fallback",
-        "note": "Cloud notify may require Firebase; Chat requires GOOGLE_CHAT_WEBHOOK_URL."
+        "note": "Cloud notify needs Firebase; Chat needs GOOGLE_CHAT_WEBHOOK_URL."
       }
     }
   ],
@@ -1429,6 +1429,20 @@
       "createdAt": "2026-07-28T10:52:08.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "note": "Cloud task_create denied; local backup only."
+    },
+    {
+      "id": "task-door-qr-scanner-checkin-20260729",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Door QR scanner + check-in verification flow",
+      "description": "Add mobile_scanner door scan tab: decode ticketmaker.app/t/<code>, verify against host tickets, green/red feedback, torch toggle, checkedInAt persist.",
+      "details": "",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-29T10:41:09.000Z",
+      "updatedAt": "2026-07-29T10:47:51.000Z",
+      "note": "Door Scan tab: payload parse, verify/check-in, torch, Firestore ticketIndex. Cloud MCP update denied; local backup."
     }
   ],
   "epics": [
