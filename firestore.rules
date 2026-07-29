@@ -3,7 +3,7 @@ rules_version = '2';
 // Quick Ticket Maker — Firestore security rules
 // Paths:
 //   users/{uid}/tickets/{ticketId}  — owner private docs
-//   tickets/{code}                  — public QR verify docs (doc id = guest code)
+//   tickets/{guestCode}             — public QR verify docs (doc id = guest code)
 service cloud.firestore {
   match /databases/{database}/documents {
     function isSignedIn() {
@@ -19,13 +19,13 @@ service cloud.firestore {
         .hasOnly(['checkedIn', 'checkedInAt', 'status', 'updatedAt']);
     }
 
-    function isValidGuestCode(code) {
-      return code.matches('^[0-9]{4}-[0-9]{4}-[0-9]{3}$');
+    function isValidGuestCode(guestCode) {
+      return guestCode.matches('^[0-9]{4}-[0-9]{4}-[0-9]{3}$');
     }
 
-    function isPublicTicketCreate() {
-      return isValidGuestCode(code)
-        && request.resource.data.ticketId == code
+    function isPublicTicketCreate(guestCode) {
+      return isValidGuestCode(guestCode)
+        && request.resource.data.ticketId == guestCode
         && request.resource.data.status == 'valid'
         && request.resource.data.eventName is string;
     }
@@ -38,10 +38,10 @@ service cloud.firestore {
         && checkInOnlyKeys();
     }
 
-    function isPublicMetadataRefresh() {
+    function isPublicMetadataRefresh(guestCode) {
       return resource.data.get('status', 'valid') == 'valid'
         && request.resource.data.status == 'valid'
-        && request.resource.data.ticketId == code
+        && request.resource.data.ticketId == guestCode
         && request.resource.data.eventName is string;
     }
 
@@ -66,12 +66,12 @@ service cloud.firestore {
       }
     }
 
-    match /tickets/{code} {
+    match /tickets/{guestCode} {
       allow read: if true;
-      allow create: if isPublicTicketCreate();
+      allow create: if isPublicTicketCreate(guestCode);
       allow update: if isPublicCheckInTransition()
         || hostOwnsPublicTicket()
-        || isPublicMetadataRefresh();
+        || isPublicMetadataRefresh(guestCode);
       allow delete: if hostOwnsPublicTicket();
     }
 
