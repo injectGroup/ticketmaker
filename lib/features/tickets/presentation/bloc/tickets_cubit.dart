@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -54,6 +55,8 @@ class TicketsCubit extends Cubit<TicketsState> {
       );
       // Warm MemoryImage cache for http(s) event photos (CORS-safe capture).
       unawaited(_prefetchNetworkEventPhotos(withVerifyUrls));
+      // Ensure older local tickets exist in tickets/{code} for /verify.
+      unawaited(_backfillPublicTickets(withVerifyUrls));
     } catch (_) {
       emit(
         state.copyWith(
@@ -61,6 +64,16 @@ class TicketsCubit extends Cubit<TicketsState> {
           message: 'Could not load saved tickets',
         ),
       );
+    }
+  }
+
+  Future<void> _backfillPublicTickets(List<Ticket> tickets) async {
+    for (final ticket in tickets) {
+      try {
+        await _cloudSync.publishPublicTicket(ticket);
+      } catch (e, st) {
+        debugPrint('Public ticket backfill failed for ${ticket.code}: $e\n$st');
+      }
     }
   }
 
@@ -178,8 +191,24 @@ class TicketsCubit extends Cubit<TicketsState> {
       rethrow;
     }
 
-    // Firestore doc + Storage upload (non-blocking). Guests / web: failures
-    // here must never fail the local save above.
+    // Public verify doc must exist before the QR is scannable.
+    final published = await _cloudSync.publishPublicTicket(saved);
+    if (!published && !isClosed) {
+      try {
+        if (Firebase.apps.isNotEmpty) {
+          emit(
+            state.copyWith(
+              message:
+                  'Ticket saved locally, but cloud verify link failed. Check connection and try Save again.',
+            ),
+          );
+        }
+      } catch (_) {
+        // Firebase not available (tests) — keep local success message.
+      }
+    }
+
+    // Owner photo embed / private doc (non-blocking).
     unawaited(
       _persistImageAndCloudInBackground(
         saved,
@@ -251,8 +280,8 @@ class TicketsCubit extends Cubit<TicketsState> {
     );
   }
 
-  /// Compresses the event photo locally and syncs metadata (+ optional Base64
-  /// flyer) to Firestore. Never uploads to Firebase Storage.
+  /// Compresses the event photo locally and syncs the owner Firestore doc.
+  /// Public verify doc is published separately (awaited) during [saveTicket].
   Future<void> _persistImageAndCloudInBackground(
     Ticket ticket,
     Uint8List? imageBytes,
@@ -282,7 +311,6 @@ class TicketsCubit extends Cubit<TicketsState> {
       if (payload != null && payload.isNotEmpty) {
         final jpeg = await compressImageToJpeg(payload);
 
-        // Durable local / web-bytes copy for offline ticket rendering.
         final durable = await _imageStore.persistForTicket(
           ticketId: ticket.id,
           sourcePath: 'ticket.jpg',
@@ -297,7 +325,6 @@ class TicketsCubit extends Cubit<TicketsState> {
 
         await _cloudSync.upsertTicketDocument(ticket, photoBytes: jpeg);
       } else {
-        debugPrint('No ticket image bytes to sync for ${ticket.id}');
         await _cloudSync.upsertTicketDocument(ticket);
       }
     } catch (e, st) {

@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "Spark-safe tickets: no Storage, Firestore Base64 flyers",
-        "taskId": "task-disable-storage-use-firestore-base64-20260729",
-        "updatedAt": "2026-07-29T11:58:14.000Z",
+        "message": "Fixed verify not-found: public tickets/{code} on save",
+        "taskId": "task-fix-public-tickets-verify-not-found-20260729",
+        "updatedAt": "2026-07-29T12:18:06.000Z",
         "source": "local-fallback"
       }
     }
@@ -1498,6 +1498,20 @@
       "createdAt": "2026-07-29T11:49:51.000Z",
       "updatedAt": "2026-07-29T11:58:14.000Z",
       "note": "Removed firebase_storage; flyers local/Base64 in Firestore; verify metadata-only."
+    },
+    {
+      "id": "task-fix-public-tickets-verify-not-found-20260729",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Fix public tickets/{id} write + verify not-found",
+      "description": "Ensure save creates tickets/{code}; verify reads that doc by status valid/checked_in; rebuild deploy.",
+      "details": "",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-29T12:14:30.000Z",
+      "updatedAt": "2026-07-29T12:18:06.000Z",
+      "note": "Publish tickets/{code} on save; verify status valid\u2192checked_in; rules+hosting deployed."
     }
   ],
   "epics": [

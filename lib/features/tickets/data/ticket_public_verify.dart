@@ -5,9 +5,9 @@ import 'package:flutter/painting.dart';
 import '../../generate/domain/entities/ticket.dart';
 import 'ticket_payload.dart';
 
-/// Public (no-auth) door verification against the top-level `tickets` collection.
+/// Public door verification against top-level `tickets/{ticketId}`.
 ///
-/// Document id is the guest code (`####-####-###`) encoded in the QR URL.
+/// Document id is the guest code (`####-####-###`) from the QR URL.
 class TicketPublicVerify {
   TicketPublicVerify({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
@@ -17,10 +17,7 @@ class TicketPublicVerify {
   DocumentReference<Map<String, dynamic>> _ticketsDoc(String id) =>
       _firestore.collection('tickets').doc(id);
 
-  DocumentReference<Map<String, dynamic>> _indexDoc(String id) =>
-      _firestore.collection('ticketIndex').doc(id);
-
-  /// Looks up [rawOrCode], admits once, and returns a UI-ready result.
+  /// Looks up [rawOrCode], admits once when `status == valid`, and returns UI result.
   Future<TicketVerifyResult> verifyAndCheckIn(String rawOrCode) async {
     final code = TicketPayload.parseCode(rawOrCode);
     if (code == null) {
@@ -31,30 +28,31 @@ class TicketPublicVerify {
 
     try {
       return await _firestore.runTransaction((tx) async {
-        final primary = _ticketsDoc(code);
-        var snap = await tx.get(primary);
-        var usingIndex = false;
+        final ref = _ticketsDoc(code);
+        final snap = await tx.get(ref);
 
+        // Red INVALID only when the public doc is missing.
         if (!snap.exists) {
-          // Legacy docs written only to ticketIndex.
-          final legacy = await tx.get(_indexDoc(code));
-          if (!legacy.exists) {
-            return TicketVerifyResult(
-              status: TicketVerifyStatus.notFound,
-              code: code,
-            );
-          }
-          snap = legacy;
-          usingIndex = true;
+          return TicketVerifyResult(
+            status: TicketVerifyStatus.notFound,
+            code: code,
+          );
         }
 
         final data = Map<String, dynamic>.from(snap.data() ?? {});
         final ticket = _ticketFromData(code: code, data: data);
-        final already = data['checkedIn'] == true ||
-            data['status'] == 'checked_in' ||
-            ticket.isCheckedIn;
+        final status = (data['status'] as String?)?.trim().toLowerCase() ?? '';
 
-        if (already) {
+        if (status == 'checked_in' || data['checkedIn'] == true) {
+          return TicketVerifyResult(
+            status: TicketVerifyStatus.alreadyCheckedIn,
+            ticket: ticket,
+            code: code,
+          );
+        }
+
+        // Treat missing/unknown status as valid so older docs still admit once.
+        if (status.isNotEmpty && status != 'valid') {
           return TicketVerifyResult(
             status: TicketVerifyStatus.alreadyCheckedIn,
             ticket: ticket,
@@ -64,37 +62,40 @@ class TicketPublicVerify {
 
         final checkedInAt = DateTime.now();
         final iso = checkedInAt.toIso8601String();
-        final patch = <String, dynamic>{
-          'checkedIn': true,
-          'checkedInAt': iso,
-          'status': 'checked_in',
-          'updatedAt': FieldValue.serverTimestamp(),
-        };
-
-        if (usingIndex) {
-          tx.set(_indexDoc(code), patch, SetOptions(merge: true));
-        } else {
-          tx.set(primary, patch, SetOptions(merge: true));
-          final indexSnap = await tx.get(_indexDoc(code));
-          if (indexSnap.exists) {
-            tx.set(_indexDoc(code), patch, SetOptions(merge: true));
-          }
-        }
+        tx.set(
+          ref,
+          {
+            'checkedIn': true,
+            'checkedInAt': iso,
+            'status': 'checked_in',
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        );
 
         final hostUid = data['hostUid'] as String?;
-        final ownerTicketId = data['ticketId'] as String?;
+        final internalId = data['internalTicketId'] as String?;
         if (hostUid != null &&
             hostUid.isNotEmpty &&
-            ownerTicketId != null &&
-            ownerTicketId.isNotEmpty) {
+            internalId != null &&
+            internalId.isNotEmpty) {
           final ownerRef = _firestore
               .collection('users')
               .doc(hostUid)
               .collection('tickets')
-              .doc(ownerTicketId);
+              .doc(internalId);
           final ownerSnap = await tx.get(ownerRef);
           if (ownerSnap.exists) {
-            tx.set(ownerRef, patch, SetOptions(merge: true));
+            tx.set(
+              ownerRef,
+              {
+                'checkedIn': true,
+                'checkedInAt': iso,
+                'status': 'checked_in',
+                'updatedAt': FieldValue.serverTimestamp(),
+              },
+              SetOptions(merge: true),
+            );
           }
         }
 
@@ -106,6 +107,8 @@ class TicketPublicVerify {
       });
     } catch (e, st) {
       debugPrint('Public verify failed: $e\n$st');
+      // Permission / network errors — surface as invalid so the gatekeeper
+      // does not falsely admit.
       return TicketVerifyResult(
         status: TicketVerifyStatus.notFound,
         code: code,
@@ -120,7 +123,8 @@ class TicketPublicVerify {
     DateTime? checkedInAt;
     final raw = data['checkedInAt'];
     if (raw is String) checkedInAt = DateTime.tryParse(raw);
-    if (data['checkedIn'] == true && checkedInAt == null) {
+    if ((data['status'] == 'checked_in' || data['checkedIn'] == true) &&
+        checkedInAt == null) {
       checkedInAt = DateTime.now();
     }
 
@@ -131,14 +135,18 @@ class TicketPublicVerify {
     }
 
     return Ticket(
-      id: data['ticketId'] as String? ?? code,
+      id: data['internalTicketId'] as String? ?? code,
       headerLabel: data['headerLabel'] as String? ?? 'GUEST PASS',
-      title: data['title'] as String? ??
-          data['eventName'] as String? ??
+      title: data['eventName'] as String? ??
+          data['title'] as String? ??
           'Ticket',
-      subtitle: data['subtitle'] as String? ?? '',
+      subtitle: data['guestName'] as String? ??
+          data['subtitle'] as String? ??
+          '',
       venue: data['venue'] as String? ?? '',
-      dateLabel: data['dateLabel'] as String? ?? '',
+      dateLabel: data['eventDate'] as String? ??
+          data['dateLabel'] as String? ??
+          '',
       timeLabel: data['timeLabel'] as String? ?? '',
       eventAt: eventAt,
       code: code,

@@ -1,11 +1,9 @@
 rules_version = '2';
 
 // Quick Ticket Maker — Firestore security rules
-// Paths used by the app:
-//   users/{uid}                      — Auth profile documents
-//   users/{uid}/tickets/{ticketId}   — Saved ticket metadata (owner)
-//   tickets/{code}                   — Public door verify docs (QR /verify/:id)
-//   ticketIndex/{code}               — Legacy verify index (kept in sync)
+// Paths:
+//   users/{uid}/tickets/{ticketId}  — owner private docs
+//   tickets/{code}                  — public QR verify docs (doc id = guest code)
 service cloud.firestore {
   match /databases/{database}/documents {
     function isSignedIn() {
@@ -21,29 +19,42 @@ service cloud.firestore {
         .hasOnly(['checkedIn', 'checkedInAt', 'status', 'updatedAt']);
     }
 
+    function isValidGuestCode(code) {
+      return code.matches('^[0-9]{4}-[0-9]{4}-[0-9]{3}$');
+    }
+
+    function isPublicTicketCreate() {
+      return isValidGuestCode(code)
+        && request.resource.data.ticketId == code
+        && request.resource.data.status == 'valid'
+        && request.resource.data.eventName is string;
+    }
+
     function isPublicCheckInTransition() {
-      return resource.data.get('checkedIn', false) != true
-        && request.resource.data.checkedIn == true
+      return resource.data.get('status', 'valid') == 'valid'
+        && resource.data.get('checkedIn', false) != true
         && request.resource.data.status == 'checked_in'
-        && request.resource.data.hostUid == resource.data.hostUid
-        && request.resource.data.ticketId == resource.data.ticketId
-        && request.resource.data.code == resource.data.code;
+        && request.resource.data.checkedIn == true
+        && checkInOnlyKeys();
+    }
+
+    function isPublicMetadataRefresh() {
+      return resource.data.get('status', 'valid') == 'valid'
+        && request.resource.data.status == 'valid'
+        && request.resource.data.ticketId == code
+        && request.resource.data.eventName is string;
+    }
+
+    function hostOwnsPublicTicket() {
+      return isSignedIn()
+        && resource.data.keys().hasAny(['hostUid'])
+        && resource.data.hostUid == request.auth.uid;
     }
 
     function isTicketDocCheckIn() {
       return resource.data.get('checkedIn', false) != true
         && request.resource.data.checkedIn == true
         && checkInOnlyKeys();
-    }
-
-    function hostOwnsPublicTicket() {
-      return isSignedIn() && resource.data.hostUid == request.auth.uid;
-    }
-
-    function hostCreatesPublicTicket() {
-      return isSignedIn()
-        && request.resource.data.hostUid == request.auth.uid
-        && request.resource.data.code is string;
     }
 
     match /users/{userId} {
@@ -55,22 +66,13 @@ service cloud.firestore {
       }
     }
 
-    // Public verification documents keyed by guest code.
     match /tickets/{code} {
-      allow create: if hostCreatesPublicTicket();
-      allow delete: if hostOwnsPublicTicket();
       allow read: if true;
-      allow update: if hostOwnsPublicTicket()
-        || (checkInOnlyKeys() && isPublicCheckInTransition());
-    }
-
-    // Legacy door verification index.
-    match /ticketIndex/{code} {
-      allow create: if hostCreatesPublicTicket();
+      allow create: if isPublicTicketCreate();
+      allow update: if isPublicCheckInTransition()
+        || hostOwnsPublicTicket()
+        || isPublicMetadataRefresh();
       allow delete: if hostOwnsPublicTicket();
-      allow read: if true;
-      allow update: if hostOwnsPublicTicket()
-        || (checkInOnlyKeys() && isPublicCheckInTransition());
     }
 
     match /{document=**} {
