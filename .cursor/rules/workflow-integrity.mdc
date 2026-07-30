@@ -1,0 +1,21 @@
+---
+description: Enforce Git branch safety, feature isolation, and milestone tracking compliance
+globs: **/*
+alwaysApply: true
+---
+# Project Milestone & Git Workflow Rules
+
+## 1. Feature Branch Discipline
+- **Isolate Code Changes**: Write and modify code *only* within the active feature branch (`feature/v1-personal-ticket-share`).
+- **Protect Main Baseline**: Never push changes or generate code directly on the `main` branch.
+
+## 2. Milestone Alignment (V1 Scope)
+- **Reject Out-of-Scope Code**: Block the addition of enterprise, commercial, or payment features in this phase.
+- **Enforce V1 Defaults**: Flag and reject code adjustments that alter the hardcoded corporate configuration defaults:
+  - Host Event: "Ejike's Birthday Bash"
+  - Subtitle: "VIP Guest Pass"
+  - Base URL: "https://ticketmaker.app"
+
+## 3. Test & Deployment Integrity
+- **Research Compliance**: Ensure that any structural bugs discovered during local simulation are documented in `USER_RESEARCH_REPORT.md`.
+- **Build Configurations**: Do not change the `applicationId` (`com.agathakakalogical.quickticketmaker`) or version parameters inside `android/app/build.gradle` unless preparing for a specific Play Console Internal Track release build.

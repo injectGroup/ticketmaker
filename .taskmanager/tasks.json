@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "Fixed 5 flutter analyze info warnings in tickets",
-        "taskId": "task-fix-analyze-infos-tickets-20260730",
-        "updatedAt": "2026-07-30T07:50:00.000Z"
+        "message": "Added ticket-security and workflow-integrity Cursor rules",
+        "taskId": "task-cursor-rules-security-workflow-20260730",
+        "updatedAt": "2026-07-30T07:58:00.000Z"
       }
     }
   ],
@@ -1678,6 +1678,20 @@
       "status": "done",
       "createdAt": "2026-07-30T07:48:00.000Z",
       "updatedAt": "2026-07-30T07:50:00.000Z",
+      "note": "Cloud MCP denied; local backup only."
+    },
+    {
+      "id": "task-cursor-rules-security-workflow-20260730",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Add ticket-security and workflow-integrity Cursor rules",
+      "description": "Create .cursor/rules/ticket-security.mdc and workflow-integrity.mdc; verify .env gitignore and V1 adherence gaps.",
+      "details": "",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-30T07:56:00.000Z",
+      "updatedAt": "2026-07-30T07:58:00.000Z",
       "note": "Cloud MCP denied; local backup only."
     }
   ],

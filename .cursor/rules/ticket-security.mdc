@@ -1,0 +1,19 @@
+---
+description: Data security, secure storage, and privacy standards for Quick Ticket Maker
+globs: lib/**/*.dart, .env
+alwaysApply: false
+---
+# Quick Ticket Maker Security Guidelines
+
+## 1. Secure Local Storage
+- **No Plaintext Storage**: Never store guest ticket data, device identifiers, or payload tokens in standard `SharedPreferences`.
+- **Use Encrypted Storage**: Use `flutter_secure_storage` exclusively for caching any sensitive ticket or host configuration data.
+
+## 2. API & QR Code Payload Safety
+- **No PII in QR Strings**: Do not embed raw Personal Identifiable Information (like guest phone numbers or emails) directly into the QR string payload.
+- **Payload Structure**: Only store a cryptographically secure token or unique ID in the URL path: `https://ticketmaker.app<secure_token>`.
+- **Sanitize Logging**: Strip out token payload URLs and device details from console logs (`print`, `debugPrint`) before compilation.
+
+## 3. Credential & Environment Protection
+- **Hardcoding Ban**: Never hardcode production API keys, service accounts, or backend credentials directly within Dart source files.
+- **Gitignore Safety**: Keep environment variables inside a localized `.env` file and verify it is explicitly listed in your `.gitignore`.
