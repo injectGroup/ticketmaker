@@ -6,6 +6,7 @@ import 'core/theme/app_theme.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/presentation/bloc/auth_cubit.dart';
 import 'features/generate/presentation/bloc/generate_cubit.dart';
+import 'features/tickets/data/ticket_image_store.dart';
 import 'features/tickets/data/ticket_local_repository.dart';
 import 'features/tickets/presentation/bloc/tickets_cubit.dart';
 
@@ -13,11 +14,15 @@ class TicketMakerApp extends StatelessWidget {
   const TicketMakerApp({
     super.key,
     this.ticketsRepository,
+    this.ticketsImageStore,
     this.authRepository,
   });
 
   /// Optional override for tests.
   final TicketLocalRepository? ticketsRepository;
+
+  /// Optional override for tests (avoids path_provider in widget tests).
+  final TicketImageStore? ticketsImageStore;
 
   /// Optional override for tests.
   final AuthRepository? authRepository;
@@ -30,9 +35,10 @@ class TicketMakerApp extends StatelessWidget {
           create: (_) => AuthCubit(repository: authRepository),
         ),
         BlocProvider(
-          create: (_) =>
-              TicketsCubit(ticketsRepository ?? TicketLocalRepository())
-                ..loadTickets(),
+          create: (_) => TicketsCubit(
+                ticketsRepository ?? TicketLocalRepository(),
+                imageStore: ticketsImageStore,
+              )..loadTickets(),
         ),
         BlocProvider(create: (_) => GenerateCubit()),
       ],

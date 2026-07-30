@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "Added ticket-security and workflow-integrity Cursor rules",
-        "taskId": "task-cursor-rules-security-workflow-20260730",
-        "updatedAt": "2026-07-30T07:58:00.000Z"
+        "message": "TicketLocalRepository now uses FlutterSecureStorage",
+        "taskId": "task-secure-ticket-local-repository-20260730",
+        "updatedAt": "2026-07-30T08:15:00.000Z"
       }
     }
   ],
@@ -1692,6 +1692,20 @@
       "status": "done",
       "createdAt": "2026-07-30T07:56:00.000Z",
       "updatedAt": "2026-07-30T07:58:00.000Z",
+      "note": "Cloud MCP denied; local backup only."
+    },
+    {
+      "id": "task-secure-ticket-local-repository-20260730",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Migrate TicketLocalRepository to FlutterSecureStorage",
+      "description": "Replace SharedPreferences with FlutterSecureStorage for guest ticket JSON; keep loadTickets/saveTickets/clearTickets API.",
+      "details": "",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-30T08:00:00.000Z",
+      "updatedAt": "2026-07-30T08:15:00.000Z",
       "note": "Cloud MCP denied; local backup only."
     }
   ],

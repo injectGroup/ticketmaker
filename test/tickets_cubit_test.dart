@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ticket_maker/features/generate/domain/entities/ticket.dart';
@@ -42,6 +43,7 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({});
     tempRoot = await Directory.systemTemp.createTemp('tickets_cubit_');
     final imagesDir = Directory('${tempRoot.path}/ticket_images');
     imageStore = TicketImageStore(overrideImagesDirectory: imagesDir);
