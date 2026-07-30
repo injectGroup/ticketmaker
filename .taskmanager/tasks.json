@@ -23,8 +23,8 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "TicketConfig + SecureStorageService wired to Save Ticket",
-        "taskId": "task-ticket-config-secure-storage-20260730",
+        "message": "Fixed 5 flutter analyze info warnings in tickets",
+        "taskId": "task-fix-analyze-infos-tickets-20260730",
         "updatedAt": "2026-07-30T07:50:00.000Z"
       }
     }
@@ -1663,6 +1663,20 @@
       "priority": "high",
       "status": "done",
       "createdAt": "2026-07-30T07:43:00.000Z",
+      "updatedAt": "2026-07-30T07:50:00.000Z",
+      "note": "Cloud MCP denied; local backup only."
+    },
+    {
+      "id": "task-fix-analyze-infos-tickets-20260730",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Fix 5 flutter analyze info warnings in tickets",
+      "description": "Clear unnecessary_import, prefer_initializing_formals, and use_build_context_synchronously in ticket_image_store, tickets_cubit, ticket_detail_page.",
+      "details": "",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "low",
+      "status": "done",
+      "createdAt": "2026-07-30T07:48:00.000Z",
       "updatedAt": "2026-07-30T07:50:00.000Z",
       "note": "Cloud MCP denied; local backup only."
     }

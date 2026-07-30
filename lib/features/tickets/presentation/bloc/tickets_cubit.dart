@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
 import 'package:firebase_core/firebase_core.dart';

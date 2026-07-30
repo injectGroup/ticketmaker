@@ -55,11 +55,13 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
       if (!mounted) return;
       // Last-resort link share so the Share button still completes.
       try {
+        final origin = buttonContext.mounted
+            ? TicketShareHelper.shareOriginFrom(buttonContext)
+            : null;
         await TicketShareHelper.share(
           context,
           ticket,
-          sharePositionOrigin:
-              TicketShareHelper.shareOriginFrom(buttonContext),
+          sharePositionOrigin: origin,
           attachTicketImage: false,
         );
       } catch (fallbackError, fallbackSt) {

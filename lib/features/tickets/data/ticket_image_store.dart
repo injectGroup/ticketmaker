@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
@@ -16,8 +15,9 @@ class TicketImageStore {
   TicketImageStore({
     Directory? overrideImagesDirectory,
     SharedPreferences? preferences,
-  }) : _overrideImagesDirectory = overrideImagesDirectory,
-       _preferences = preferences;
+  }) : this._(overrideImagesDirectory, preferences);
+
+  TicketImageStore._(this._overrideImagesDirectory, this._preferences);
 
   static const String folderName = 'ticket_images';
   static const String webBytesPrefix = 'web-bytes:';
