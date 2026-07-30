@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "Generate AppBar title renamed to My Tickets",
-        "taskId": "task-rename-header-my-tickets-20260729",
-        "updatedAt": "2026-07-29T20:16:27.000Z"
+        "message": "TicketConfig + SecureStorageService wired to Save Ticket",
+        "taskId": "task-ticket-config-secure-storage-20260730",
+        "updatedAt": "2026-07-30T07:50:00.000Z"
       }
     }
   ],
@@ -1650,6 +1650,20 @@
       "status": "done",
       "createdAt": "2026-07-29T20:16:09.000Z",
       "updatedAt": "2026-07-29T20:16:27.000Z",
+      "note": "Cloud MCP denied; local backup only."
+    },
+    {
+      "id": "task-ticket-config-secure-storage-20260730",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "TicketConfig model + SecureStorageService",
+      "description": "Add flutter_secure_storage, TicketConfig model, SecureStorageService, and wire Save Ticket on Generate to persist TicketConfig.",
+      "details": "lib/models/ticket_config.dart; lib/services/secure_storage_service.dart; GeneratePage Save Ticket handler.",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-30T07:43:00.000Z",
+      "updatedAt": "2026-07-30T07:50:00.000Z",
       "note": "Cloud MCP denied; local backup only."
     }
   ],

@@ -2,6 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../models/ticket_config.dart';
+import '../../../../services/secure_storage_service.dart';
 import '../../../auth/presentation/auth_gate.dart';
 import '../../../tickets/presentation/bloc/tickets_cubit.dart';
 import '../bloc/generate_cubit.dart';
@@ -62,6 +64,27 @@ class _GenerateViewState extends State<_GenerateView> {
     if (_isSaving) return;
     setState(() => _isSaving = true);
     try {
+      final generateCubit = context.read<GenerateCubit>();
+      // Ensure QR / verify URL is minted before secure-storage snapshot.
+      generateCubit.ensureTicketPayload();
+      final ticket = generateCubit.state.ticket;
+      final guestName = ticket.subtitle.trim().isNotEmpty
+          ? ticket.subtitle.trim()
+          : 'Guest';
+      final config = ticket.title.trim().isEmpty
+          ? TicketConfig.v1Default(guestName: guestName)
+          : TicketConfig(
+              eventName: ticket.title.trim(),
+              subtitle: ticket.subtitle,
+              payloadUrl: ticket.qrData,
+              guestName: guestName,
+              generatedAt: DateTime.now(),
+            );
+      final ticketId =
+          ticket.code.trim().isNotEmpty ? ticket.code.trim() : ticket.id;
+      await SecureStorageService().saveTicket(ticketId, config);
+      if (!mounted) return;
+
       // Guests save locally — event photo from GenerateCubit; share composes
       // the full ticket later via SavedTicketView.
       await saveTicketAsGuest(context);
