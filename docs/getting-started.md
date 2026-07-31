@@ -104,7 +104,11 @@ Hot reload: `r` · Hot restart: `R` · Quit: `q`
 - Routes: `lib/core/router/app_router.dart`
 - Lint rules: `analysis_options.yaml` (includes `flutter_lints`)
 
-No `.env` secrets are required for the current local preview build. If future features add API keys:
+No `.env` secrets are required to run the app: Firebase client configuration in
+`lib/firebase_options.dart` is public by design. Android **release** builds do
+need a local `android/key.properties` pointing at the upload keystore — see
+[development.md](development.md#android-upload-signing-play-console). If future features add
+API keys:
 
 1. Keep secrets out of git (use ignored local env files or CI secrets).
 2. Document required variables in this file without values.

@@ -1,43 +1,55 @@
 # Features and functions
 
-Functional specification for Quick Ticket Maker **as implemented on `main`**.
+Functional specification for Quick Ticket Maker **as implemented on the V1
+personal ticket share milestone**.
 
-This document is the source of truth for shipped behaviour. Marketing language must not exceed this specification.
+This document is the source of truth for shipped behaviour. Marketing language
+must not exceed this specification. `test/docs_accuracy_test.dart` guards it
+against drifting back to the preview-only description.
 
 ---
 
 ## 1. Product summary
 
-Quick Ticket Maker lets a user **preview and visually customize** an event ticket, including a QR code. It is a client-side design tool, not a complete ticketing platform.
+Quick Ticket Maker lets a host design an event ticket with a QR code, save it,
+share it as an image, and have it verified at the door. It is a personal-scale
+tool: no payments, no inventory, no seating.
 
 ---
 
 ## 2. Actors
 
-| Actor | Description |
-| --- | --- |
-| End user | Person running the app on a supported device |
-| Maintainer | Inject engineer with repository access |
+| Actor | Description | Authentication |
+| --- | --- | --- |
+| Host | Designs, saves, and shares tickets | Optional — guest-first |
+| Guest | Receives the ticket image and presents it | None |
+| Door staff | Scans the QR and reads the verdict | None |
+| Maintainer | Inject engineer with repository access | GitHub |
 
-There is no authenticated end-user role in the current release.
+Accounts are **optional**. The full create → save → share → verify journey works
+without signing in; Firebase Auth adds owner-scoped cloud copies of a host's
+tickets.
 
 ---
 
 ## 3. Application shell
 
-### 3.1 Bottom navigation
+### 3.1 Routes
 
-| Destination | Route | Description |
+| Route | In shell? | Description |
 | --- | --- | --- |
-| Discover | `/discover` | Curated Abuja events list with local search (default) |
-| Generate | `/generate` | Ticket designer |
-| Tickets | `/tickets` | Saved tickets list |
-| Account | `/account` | Account placeholder |
+| `/generate` | Yes (tab 1, default) | Ticket designer |
+| `/tickets` | Yes (tab 2) | Saved tickets list |
+| `/tickets/:ticketId` | Nested | Saved ticket detail and share |
+| `/verify/:id` | No — public | Door verification for a scanned code |
+| `/terms`, `/privacy` | No — public | Legal documents |
 
 Shell behaviour:
 
 - Uses `StatefulShellRoute.indexedStack` so tab UI state is retained while switching.
-- App bars are provided by each page.
+- Bottom `NavigationBar` has two destinations: Generate and Tickets.
+- Public routes sit outside the shell so a scanned link opens straight into
+  verification without any tab chrome or account.
 
 ---
 
@@ -47,23 +59,26 @@ Shell behaviour:
 
 The Generate page shows a scrollable ticket composed of:
 
-1. **Header / stub region** (top gradient)
-2. **Perforation** (side notches + dashed divider)
-3. **Details region** (bottom gradient)
+1. **Header / stub region** — QR, `TICKET ID` label and code, stub controls
+2. **Perforation** — side notches + dashed divider
+3. **Details region** — flyer, `ABOUT THIS EVENT`, date/time row, `Scan at
+   entrance` hint, `Powered by Quick Ticket` footer
 
-### 4.2 Default sample content
+### 4.2 Default content
 
 | Field | Default |
 | --- | --- |
-| Title | Circu Du Freak |
-| Subtitle | Vision & Sound Experience |
-| Date label | Sat, Jul 18 |
-| Time label | 8:00 PM |
-| Ticket code | 1234-5678-910 |
-| Initial QR data | LinkedIn URL sample (until Generate is pressed) |
-| Image | `https://picsum.photos/seed/695/600` |
-| QR shape | Circle modules/eyes |
-| QR colors | Error / warning theme colors |
+| Header label | GUEST PASS |
+| Title | Ejike's Birthday Bash |
+| Subtitle | VIP Guest Pass |
+| Venue | Private gathering |
+| Date / time labels | Derived from "now" at first launch |
+| Ticket code | Randomised `####-####-###` |
+| QR data | `https://quick-ticket-maker-sandbox.web.app/verify/<code>` |
+| QR style | Brand pink eyes, white circular modules, dark plum card |
+
+These V1 defaults are pinned by `.cursor/rules/workflow-integrity.mdc` §2 and
+by `test/ticket_personal_defaults_test.dart`.
 
 ### 4.3 Functions
 
@@ -85,85 +100,165 @@ The Generate page shows a scrollable ticket composed of:
 - **Behaviour:** Toggles `isSquare` between `false` (circle) and `true` (square).
 - **Acceptance:** Both eye and data-module shapes update together.
 
-#### F-GEN-004 — Generate ticket code and QR payload
+#### F-GEN-004 — Ticket code and QR payload
 
-- **Trigger:** “Generate Qr Code” button.
 - **Behaviour:**
-  - Creates a code formatted `####-####-###`
-  - Sets `qrData` to `https://ticketmaker.app/t/<code>`
-  - Shows a snackbar: `QR code generated`
-- **Acceptance:** Code label and QR content both reflect the new values.
-- **Note:** The URL host is illustrative; no backend is guaranteed to resolve it.
+  - A code formatted `####-####-###` exists from first build; `ensureTicketPayload()`
+    guarantees a code and matching QR string before save or share.
+  - `qrData` is `https://quick-ticket-maker-sandbox.web.app/verify/<code>`, built
+    by `TicketPayload`.
+- **Acceptance:** Code label and QR content always reflect the same code.
+- **Note:** The QR string carries only the code — no guest PII. The link resolves
+  to `/verify/:id` (see F-VER-001).
+- **Host caveat:** `TicketPayload.host` is the Firebase Hosting domain above
+  because that is what resolves today. `ticketmaker.app`, `www.ticketmaker.app`,
+  `localhost`, and bare codes are accepted when *parsing* a scanned payload, so
+  older tickets still verify. Which host is canonical at launch is open decision
+  D6 in [implementation-plan.md](../instructions/implementation-plan.md).
 
 #### F-GEN-005 — Cycle background gradients
 
-- **Trigger:** “Bg color” controls (header and details regions).
-- **Behaviour:** Cycles predefined gradient pairs for top and derived bottom gradients.
-- **Acceptance:** Both ticket regions update visually.
+- **Trigger:** “Bg color” controls and the top-background customizer sheet.
+- **Behaviour:** Cycles predefined gradient pairs, or applies a chosen solid.
+  Foreground colors are re-derived for contrast via `core/utils/color_contrast.dart`.
+- **Acceptance:** Both ticket regions update visually and text stays readable.
 
-#### F-GEN-006 — Refresh event image
+#### F-GEN-006 — Set the event flyer
 
-- **Trigger:** Photo icon on the event image.
-- **Behaviour:** Loads a new `picsum.photos` URL with a random seed.
-- **Acceptance:** Image widget attempts to load the new URL; broken images show a fallback icon.
+- **Trigger:** Photo control on the event image.
+- **Behaviour:** Picks an image from the device (`image_picker`) or uses the
+  bundled placeholder asset; remote URLs are still supported for existing tickets.
+- **Acceptance:** The chosen image renders in the preview and in the exported PNG;
+  broken remote images show a fallback icon.
 
-#### F-GEN-007 — Display event metadata
+#### F-GEN-007 — Edit event metadata
 
-- Shows title, subtitle, date, and time labels from state.
-- **Current limitation:** Fields are not editable in the UI.
+- Title, subtitle, header label, and venue are editable in the UI.
+- Date and time are set together via `setEventDateTime`, which also refreshes the
+  display labels.
+- `applyCategoryPalette` applies a category's preset look; `resetToDefault`
+  returns to the V1 defaults.
 
-#### F-GEN-008 — Unfocus on background tap
+#### F-GEN-008 — Save the ticket
 
-- Tapping outside inputs dismisses the soft keyboard / primary focus (defensive UX for future forms).
+- **Trigger:** “Save Ticket”.
+- **Behaviour:** Writes the ticket to encrypted local storage, stores its flyer
+  in the durable image store, publishes the public `tickets/{code}` document for
+  door verification, and — if signed in — mirrors it under
+  `users/{uid}/tickets/{id}`.
+- **Acceptance:** The ticket appears in the Tickets tab and survives a restart.
+
+#### F-GEN-009 — Unfocus on background tap
+
+- Tapping outside inputs dismisses the soft keyboard / primary focus.
 
 ---
 
 ## 5. Tickets feature
 
-#### F-TKT-001 — List sample tickets
+#### F-TKT-001 — List saved tickets
 
-- Displays two hardcoded sample tickets with title, subtitle, schedule text, and code.
-- Row tap handler is a no-op placeholder.
+- Displays the host's saved tickets (title, subtitle, schedule text, code) from
+  `TicketLocalRepository`; empty state when nothing is saved yet.
+- Tapping a row opens `/tickets/:ticketId`.
 
 #### F-TKT-002 — Persistence
 
-- **Not implemented.** Tickets created on Generate are not saved to the Tickets tab.
+- **Implemented.** Tickets are persisted in `FlutterSecureStorage` via
+  `SecureKeyValueStore`, with a one-time migration of any legacy plaintext list
+  and a `SharedPreferences` fallback only where the secure plugin is
+  unavailable. Flyer bytes live in `TicketImageStore`.
+
+#### F-TKT-003 — Ticket detail
+
+- Shows the read-only `SavedTicketView` — the same composition the PNG export
+  rasterises, so the shared image matches what the host saw.
+
+#### F-TKT-004 — Export and share
+
+- **Behaviour:** `TicketRasterExport` rasterises the ticket to PNG in memory
+  (pure Dart, no canvas/CORS dependency); `TicketShareHelper` hands it to the
+  native share sheet. On web, `WebShareOptionsDialog` offers share or download
+  where the platform cannot share directly.
+- **Acceptance:** The recipient gets a high-resolution image with a scannable QR.
 
 ---
 
-## 6. Non-functional behaviour
+## 6. Verification feature
+
+#### F-VER-001 — Verify a scanned ticket
+
+- **Trigger:** Any browser opening `/verify/:id` from a scanned QR — no app
+  install and no account required.
+- **Behaviour:** `TicketPublicVerify` reads the public `tickets/{code}`
+  document and reports valid, already checked in, or not found. Missing fields
+  fall back to sensible defaults rather than failing the check.
+- **Acceptance:** A shared ticket verifies at the door within a couple of seconds.
+
+#### F-VER-002 — Single-use admission
+
+- Admission is **single-use**: the first successful verification flips the
+  document to `checked_in` and records the timestamp; subsequent scans report
+  that earlier admission instead of admitting again.
+- **Limitation:** This detects reuse *after* the first scan. It does not stop a
+  guest forwarding the image before anyone has scanned it — the first person
+  through the door wins. See
+  [security/threat-model.md](security/threat-model.md).
+
+---
+
+## 7. Accounts (optional)
+
+#### F-ACC-001 — Sign in / register
+
+- Firebase Auth with email/password, Google, and Apple.
+- `AuthGate` never blocks the core journey; it prompts only where an account is
+  genuinely needed, and a **pending action** is replayed after sign-in so the
+  host does not lose the step they were on.
+- Profile display name/photo can be updated; sign-out returns to the guest flow
+  with local tickets intact.
+
+---
+
+## 8. Non-functional behaviour
 
 | ID | Requirement | Current approach |
 | --- | --- | --- |
 | NFR-001 | Analyze clean | `flutter analyze` |
-| NFR-002 | Automated tests | Widget test covers Generate branding/controls |
-| NFR-003 | No committed secrets | Enforced by policy + `.gitignore` |
-| NFR-004 | Accessibility | Material widgets; further a11y audits recommended before production release |
-| NFR-005 | Offline | Core UI works offline; remote images/fonts may fail without network |
+| NFR-002 | Automated tests | Unit + widget suite covering models, cubits, services, verification, routing, release config, and doc accuracy |
+| NFR-003 | No committed secrets | Policy + `.gitignore` (`key.properties`, keystores, `.env`) |
+| NFR-004 | Accessibility | Material widgets, contrast-derived foregrounds; further a11y audit recommended before wide release |
+| NFR-005 | Offline | Core design, save, and share work offline; fonts and assets are bundled. Publishing the public document and door verification need network |
+| NFR-006 | Sensitive data at rest | Encrypted secure storage, documented fallback |
 
 ---
 
-## 7. Out-of-scope functions (explicit)
+## 9. Out-of-scope functions (explicit)
 
-The following are **not** provided in the current release:
+The following are **not** provided:
 
-- Account registration / login
-- Payment processing
-- Ticket inventory / seating maps
-- Admission scanning and validation
+- Payment processing or ticket sales
+- Ticket inventory, seating maps, or capacity limits
+- Server-side issuance or cryptographically signed payloads
+- An in-app scanner entry point — `ScanPage` exists in the codebase but no route
+  reaches it; door staff use a phone camera and `/verify/:id`
 - Push notifications
-- Cloud sync
-- PDF/PNG export and system share sheets
-- Admin console
+- Admin console or door-staff accounts
+- PDF export (PNG only)
 
 ---
 
-## 8. Traceability
+## 10. Traceability
 
 | Function | Primary code location |
 | --- | --- |
-| F-GEN-001..008 | `lib/features/generate/` |
-| Cubit commands | `presentation/bloc/generate_cubit.dart` |
-| QR widget | `presentation/widgets/generate_qr_code.dart` |
-| F-TKT-001 | `lib/features/tickets/presentation/pages/tickets_page.dart` |
+| F-GEN-001..009 | `lib/features/generate/` |
+| Cubit commands | `features/generate/presentation/bloc/generate_cubit.dart` |
+| QR widget / payload | `generate/presentation/widgets/generate_qr_code.dart`, `tickets/data/ticket_payload.dart` |
+| F-TKT-001, F-TKT-003 | `features/tickets/presentation/` (`tickets_page.dart`, `ticket_detail_page.dart`, `saved_ticket_view.dart`) |
+| F-TKT-002 | `tickets/data/ticket_local_repository.dart`, `services/secure_key_value_store.dart`, `tickets/data/ticket_image_store.dart` |
+| F-TKT-004 | `tickets/data/ticket_raster_export.dart`, `ticket_share_helper.dart` |
+| F-GEN-008 cloud copy | `tickets/data/ticket_cloud_sync.dart` |
+| F-VER-001..002 | `tickets/data/ticket_public_verify.dart`, `features/verify/presentation/pages/ticket_verification_screen.dart` |
+| F-ACC-001 | `features/auth/` |
 | Navigation | `lib/core/router/app_router.dart` |

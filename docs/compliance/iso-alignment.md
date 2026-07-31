@@ -14,7 +14,7 @@ Map Quick Ticket Maker repository practices to selected ISO/IEC standards used b
 | --- | --- |
 | Product | Quick Ticket Maker |
 | Repository | injectGroup/ticketmaker; ejike-art/ticketmaker-gen-and-tickets-only |
-| Last reviewed | 2026-07-27 |
+| Last reviewed | 2026-07-31 (re-checked against the shipped V1 app) |
 
 ---
 
@@ -44,14 +44,16 @@ Map Quick Ticket Maker repository practices to selected ISO/IEC standards used b
 | Management of technical vulnerabilities | [SECURITY.md](../../SECURITY.md), Dependabot, disclosure process |
 | Logging / privacy in logs | Secure coding + privacy notice; no raw password logs |
 | Supplier relationships (packages) | Dependency rules + Dependabot |
-| Cloud data access | Firestore/Storage owner-only rules; [firebase-console-hardening.md](../security/firebase-console-hardening.md) |
+| Cloud data access | Owner-only rules for `users/**`; public `tickets/{guestCode}` deliberately readable for door verification with rule-shaped writes; [firebase-console-hardening.md](../security/firebase-console-hardening.md) |
+| Cryptographic protection of stored data | Ticket data written through `SecureKeyValueStore` (`FlutterSecureStorage`), documented plaintext fallback only where the plugin is unavailable |
+| Secure release signing | Android upload key outside the repo via untracked `key.properties`; release builds fail closed |
 
 ### B. Privacy (27701 themes)
 
 | Theme | Repository implementation |
 | --- | --- |
-| Privacy notice / transparency | [privacy.md](../privacy.md) |
-| Data minimization | Local preview by default; cloud sync only for signed-in owners |
+| Privacy notice / transparency | [privacy.md](../privacy.md) — names every processor and states what leaves the device on save and share |
+| Data minimization | No account required; QR carries only a ticket code; owner copies only for signed-in users; host guidance to keep PII out of the public ticket label |
 | Purpose limitation | Features doc + threat model |
 | Breach / vulnerability communication | Security disclosure channels (not public Issues) |
 
@@ -80,7 +82,7 @@ Map Quick Ticket Maker repository practices to selected ISO/IEC standards used b
 
 | Characteristic | Evidence |
 | --- | --- |
-| Functional suitability | features.md vs implementation |
+| Functional suitability | features.md vs implementation, pinned by `test/docs_accuracy_test.dart` |
 | Performance efficiency | Lightweight local Cubit state |
 | Compatibility | Flutter multi-platform targets |
 | Usability | Material navigation + clear primary actions |
@@ -98,7 +100,11 @@ Map Quick Ticket Maker repository practices to selected ISO/IEC standards used b
 | Formal org-wide ISMS certification evidence | Outside this repo | Maintain org documents separately |
 | Enforced GitHub branch protection / required reviewers | Configured on primary public remote when admin available | Keep checklist current; mirror on injectGroup if org admin |
 | Automated SAST beyond analyze + gitleaks | Partial (Security CI) | Expand when ready |
-| App Check / API key restrictions in Console | Operator checklist | Enforce in Firebase/GCP Console |
+| App Check / API key restrictions in Console | Operator checklist | Enforce in Firebase/GCP Console — this is what currently backstops unauthenticated public ticket writes |
+| Ticket admission integrity | Codes are identifiers, not signed credentials; reuse is detected only after the first check-in | Server-side issuance and signed payloads before any event where admission has real value |
+| Public ticket document confidentiality | Accepted: readable by anyone holding the code, so door staff need no account | Minimisation guidance now in the privacy notice; revisit if hosts need private guest data |
+| Check-in accountability | No door-staff identity recorded, only a timestamp | Door-staff accounts if operations require an audit trail |
+| Deletion path for tickets published without an account | No in-app owner, so removal is a manual privacy request | Bind every published document to a host, or add a local deletion token |
 | Formal ISO certification claim | Not claimed | Alignment only |
 
 ---

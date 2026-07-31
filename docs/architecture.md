@@ -4,59 +4,96 @@
 
 Describe the software architecture of Quick Ticket Maker for maintainers and reviewers. This document supports ISO/IEC/IEEE 12207 design and ISO/IEC 25010 maintainability goals.
 
+**Revision:** 2.0 — V1 personal ticket share (31 July 2026)
+
 ---
 
 ## System context
 
 ```text
-┌─────────────────────────────────────────────┐
-│                 User device                 │
-│  ┌───────────────────────────────────────┐  │
-│  │         Quick Ticket Maker            │  │
-│  │  Generate tab │ Tickets tab           │  │
-│  └───────────────┬───────────────────────┘  │
-└──────────────────┼──────────────────────────┘
-                   │ HTTPS (optional)
-                   ▼
-        Remote image host (picsum.photos)
+┌──────────────────────────────────────────────┐
+│                 Host device                  │
+│  ┌────────────────────────────────────────┐  │
+│  │           Quick Ticket Maker           │  │
+│  │  Generate tab │ Tickets tab │ Share    │  │
+│  │  Secure local store + image store      │  │
+│  └───────┬────────────────────────┬───────┘  │
+└──────────┼────────────────────────┼──────────┘
+           │ HTTPS                  │ PNG via OS share sheet
+           ▼                        ▼
+  ┌────────────────────┐     Guest's phone / chat app
+  │ Firebase           │              │
+  │  • Auth (optional) │              │ opens QR link
+  │  • Cloud Firestore │              ▼
+  │    users/{uid}/…   │   ┌──────────────────────────┐
+  │    tickets/{code}  │◀──│ Door: /verify/:id in any  │
+  └────────────────────┘   │ browser (no account)      │
+                           └──────────────────────────┘
 ```
+
+Firebase **Storage is deliberately not used.** The project runs on the Spark
+plan without Storage initialised, and browser CORS on Storage downloads broke
+web share. Flyers are embedded in the Firestore document (Base64) or kept as a
+local path instead (commit `4c90706`). `storage.rules` denies everything and is
+kept only in case Storage is enabled later.
 
 **Current boundaries**
 
-- No first-party backend API
-- No authentication service
-- No persistent local database
-- QR payloads are client-generated strings/URLs for preview only
+- **No custom server.** There is no first-party API, Cloud Function, or admin
+  backend. The client talks to Firebase directly.
+- **Verification trusts Firestore rules, not a server.** `tickets/{guestCode}`
+  is world-readable so the door can verify without an account, and the
+  valid → checked-in transition is allowed unauthenticated but constrained by
+  rules to that one shape. See [security/threat-model.md](security/threat-model.md).
+- **Check-in is single-use and client-initiated.** The first successful
+  `/verify/:id` load flips the document; later loads report the earlier
+  check-in. Nothing prevents a determined party from replaying the *image* of a
+  ticket before its first scan.
+- **Accounts are optional.** The guest-first flow saves and shares locally with
+  no sign-in. Signing in through Firebase Auth (email/password, Google, Apple)
+  adds owner-scoped cloud copies under `users/{uid}/tickets/{id}`.
+- **Ticket codes are not cryptographic.** A code is `####-####-###`; it is an
+  identifier, not a signed credential.
 
 ---
 
 ## Logical architecture
 
-The codebase follows a lightweight feature-first layout inspired by clean architecture, without over-engineering unused layers.
+The codebase follows a lightweight feature-first layout inspired by clean
+architecture, without over-engineering unused layers.
 
 ```text
 lib/
-├── main.dart / app.dart          Presentation bootstrap
-├── core/                         Cross-cutting concerns
-│   ├── router/                   Navigation (go_router shell)
-│   ├── theme/                    Design tokens / ThemeData
-│   └── widgets/                  Shared pure UI widgets
+├── main.dart / app.dart              Bootstrap, Firebase init, providers
+├── core/
+│   ├── router/app_router.dart        go_router: shell (Generate|Tickets)
+│   │                                 + public /verify/:id, /terms, /privacy
+│   ├── theme/                        Design tokens, brand #E0405B
+│   ├── utils/color_contrast.dart     Readable foreground selection
+│   └── widgets/                      Shared pure UI
+├── models/ticket_config.dart         Host ticket configuration
+├── services/
+│   ├── secure_key_value_store.dart   Secure storage + prefs fallback
+│   └── secure_storage_service.dart   TicketConfig persistence
 └── features/
-    ├── generate/
-    │   ├── domain/entities/      Ticket model
-    │   └── presentation/
-    │       ├── bloc/             GenerateCubit + state
-    │       ├── pages/            GeneratePage
-    │       └── widgets/          QR, header, details, perforation
-    └── tickets/
-        └── presentation/pages/   TicketsPage (sample list)
+    ├── account/                      Legal document pages
+    ├── auth/                         AuthCubit, auth gate, pending actions
+    ├── generate/                     GenerateCubit, preview widgets
+    ├── tickets/
+    │   ├── data/                     Local repo, image store/codec,
+    │   │                             raster export, share, cloud sync,
+    │   │                             payload, public verify
+    │   └── presentation/             TicketsCubit, list, detail, share dialog
+    ├── scan/                         ScanPage — built, not yet routed
+    └── verify/                       TicketVerificationScreen
 ```
 
 ### Layering rules
 
 | Layer | May depend on | Must not depend on |
 | --- | --- | --- |
-| `presentation` | `domain`, `core` | Unrelated features’ internals |
+| `presentation` | `domain`, `data` repositories, `core` | Unrelated features’ internals |
+| `data` | `domain`, platform SDKs (Firestore, storage, files) | Widgets outside raster export |
 | `domain` | Dart / equatable only (prefer) | Flutter UI widgets where avoidable |
 | `core` | Flutter / shared packages | Feature-specific business rules |
 
@@ -64,31 +101,76 @@ lib/
 
 ## Runtime composition
 
-1. `main()` initializes Flutter bindings and runs `TicketMakerApp`.
-2. `TicketMakerApp` configures `MaterialApp.router` with `AppTheme.light` and `appRouter`.
-3. `StatefulShellRoute.indexedStack` hosts:
+1. `main()` initialises Flutter bindings and Firebase, then runs `TicketMakerApp`.
+2. `TicketMakerApp` provides `AuthCubit` and `TicketsCubit` and configures
+   `MaterialApp.router` with `AppTheme` and `appRouter`. Repositories and stores
+   are injectable so tests can supply fakes.
+3. Public routes sit **outside** the shell: `/verify/:id`, `/terms`, `/privacy`.
+4. `StatefulShellRoute.indexedStack` hosts the two signed-in-optional tabs:
    - `/generate` → `GeneratePage` (provides `GenerateCubit`)
-   - `/tickets` → `TicketsPage`
-4. `GenerateCubit` owns mutable ticket preview state and emits `GenerateState`.
+   - `/tickets` → `TicketsPage`, with `/tickets/:ticketId` → `TicketDetailPage`
+5. `GenerateCubit` owns the mutable draft; `TicketsCubit` owns the saved list.
+
+### Core journey data flow
+
+`GenerateCubit` holds the draft → `TicketPayload` builds the
+`https://quick-ticket-maker-sandbox.web.app/verify/<code>` QR string → save writes through
+`TicketLocalRepository` (secure) and publishes a public `tickets/{guestCode}`
+document via `TicketCloudSync` → share rasterises `SavedTicketView` to PNG →
+the door opens `/verify/:id`, which reads the public document and performs a
+single-use check-in.
+
+---
+
+## Local persistence and the secure-storage fallback chain
+
+Guest ticket data is sensitive under
+[`.cursor/rules/ticket-security.mdc`](../.cursor/rules/ticket-security.mdc), so
+it must not sit in plaintext `SharedPreferences`. `SecureKeyValueStore` is the
+single seam that enforces this:
+
+1. **Preferred:** `FlutterSecureStorage` (Keychain / EncryptedSharedPreferences /
+   WebCrypto).
+2. **Fallback:** `SharedPreferences`, entered only when the secure plugin is
+   genuinely unavailable — `MissingPluginException`, `PlatformException`, or
+   `UnsupportedError`.
+
+The fallback exists because a stale `web_plugin_registrant.dart` left
+`flutter_secure_storage` unregistered on Flutter web and threw
+`MissingPluginException` at runtime, losing saved tickets. It is a documented
+exception rather than a licence to store plaintext: `scripts/build_web.sh` fails
+the build if the registrant omits the plugin, so the fallback should never be
+reached on a correctly built web bundle.
+
+`TicketLocalRepository` performs a one-time migration of any pre-existing
+plaintext ticket list into the secure store and then clears the legacy key.
+Ticket images live in `TicketImageStore` (files on device, `SharedPreferences`
+index for non-sensitive paths only).
 
 ---
 
 ## State management
 
 - Pattern: **Cubit** (`flutter_bloc`)
-- State object: `GenerateState` (Equatable)
-- Domain entity: `Ticket` (immutable `copyWith`)
+- State objects: `GenerateState`, `TicketsState`, `AuthState` (all Equatable)
+- Domain entities: `Ticket`, `TicketConfig` (immutable `copyWith`)
 
 ### Primary commands (`GenerateCubit`)
 
 | Method | Effect |
 | --- | --- |
-| `cycleQrColors()` | Rotate QR eye/module color palette |
-| `toggleQrShape()` | Square ↔ circle modules/eyes |
-| `cycleBackgroundColors()` | Rotate ticket gradients |
-| `refreshImage()` | New picsum seed URL |
-| `generateTicketCode()` | New code + QR data URL + snackbar message |
-| `clearMessage()` | Clear one-shot UI message |
+| `cycleQrColors()` / `toggleQrShape()` | QR palette and square ↔ circle modules |
+| `cycleBackgroundColors()` / `setTopBackgroundGradient()` / `applyTopBackgroundSolid()` | Card gradients |
+| `applyCategoryPalette(category)` | Apply a category's preset look |
+| `updateTitle()` / `updateSubtitle()` / `updateVenue()` / `updateHeaderLabel()` | Editable event metadata |
+| `setEventDateTime(eventAt)` | Event date/time and their display labels |
+| `setImagePath()` / `setPickedImage()` | Flyer from assets or the picker |
+| `ensureTicketPayload()` | Guarantee a code and its `/t/<code>` QR string |
+| `resetToDefault()` / `clearMessage()` | Reset draft; clear one-shot UI message |
+
+Date labels are formatted by `formatDateLabel` (persisted short form),
+`formatFullDateLabel` (`Friday, 31 July 2026`), and `formatCompactDateLabel`
+(`Fri, 31 Jul 2026`), the last two chosen at layout time by `TicketDateText`.
 
 ---
 
@@ -96,19 +178,26 @@ lib/
 
 Implemented with `go_router`:
 
-- Shell preserves tab state via `indexedStack`
-- Bottom `NavigationBar` switches branches
+- Shell preserves tab state via `indexedStack`; bottom `NavigationBar` switches branches
 - Route constants live on page classes (`routePath`, `routeName`)
+- `/verify/:id` is a public deep link reachable without the shell or an account,
+  so a scanned QR opens straight into verification
 
 ---
 
 ## UI composition (Generate)
 
-1. **TicketHeaderSection** — QR and stub controls
+1. **TicketHeaderSection** — QR, `TICKET ID` label, and stub controls
 2. **TicketPerforation** — visual tear line
-3. **TicketDetailsSection** — event imagery and metadata
+3. **TicketDetailsSection** — flyer, `ABOUT THIS EVENT`, date/time row, `Scan at
+   entrance` hint, and the `Powered by Quick Ticket` footer
 
-Shared visual language is defined in `AppColors` / `AppTheme` (Outfit + Readex Pro via `google_fonts`).
+`SavedTicketView` is the read-only twin of this composition and is what the PNG
+export rasterises, so the shared image matches the preview.
+
+Shared visual language is defined in `AppColors` / `AppTheme` (Outfit + Readex
+Pro + Space Mono, **bundled as assets** rather than fetched at runtime — see
+`test/bundled_fonts_test.dart`).
 
 ---
 
@@ -118,11 +207,19 @@ Shared visual language is defined in `AppColors` / `AppTheme` (Outfit + Readex P
 | --- | --- | --- |
 | `flutter_bloc` | State management | Official bloc ecosystem |
 | `go_router` | Declarative routing | Flutter favorite / widely used |
-| `qr_flutter` | QR rendering | Local generation; no network |
-| `google_fonts` | Typography | May fetch fonts; cache locally after first load |
+| `qr_flutter` / `qr` | QR rendering | Local generation; no network |
+| `mobile_scanner` | Door-side QR scanning | Camera permission required |
+| `firebase_core` / `firebase_auth` / `cloud_firestore` | Auth and ticket documents | Client keys are public; rules are the control |
+| `google_sign_in` / `sign_in_with_apple` | Social sign-in | Optional providers |
+| `flutter_secure_storage` | Encrypted local store | Fallback chain above |
+| `shared_preferences` | Non-sensitive indexes, fallback store | Plaintext — never for ticket data by default |
+| `share_plus` / `path_provider` / `image` / `image_picker` | PNG export and share | Local file access |
+| `geolocator` / `geocoding` | Venue convenience | Location permission required |
+| `google_fonts` | Typography | Resolves from bundled assets; runtime fetch not relied on |
 | `equatable` | Value equality | Pure Dart |
 
-Network use today is limited to optional remote images and font fetching. Treat both as untrusted input surfaces (see threat model).
+Network use is Firebase, optional remote flyer images, and (only if an asset is
+ever missing) fonts. Treat remote media as untrusted input — see threat model.
 
 ---
 
@@ -131,22 +228,33 @@ Network use today is limited to optional remote images and font fetching. Treat 
 | Characteristic | Approach |
 | --- | --- |
 | Maintainability | Feature modules, small widgets, Cubit isolation |
-| Reliability | Analyzer + widget tests as merge gates |
-| Security | Secrets ban, disclosure policy, secure coding guide |
-| Usability | Material 3, clear primary actions, bottom navigation |
-| Portability | Flutter multi-platform targets |
+| Reliability | Analyzer + unit/widget tests as merge gates; drift guards for docs and release config |
+| Security | Secure local storage, deny-by-default Firestore rules, secrets ban, disclosure policy |
+| Usability | Material 3, clear primary actions, responsive date/label handling |
+| Portability | Flutter multi-platform targets; web share and secure-storage fallbacks |
 | Performance | Lightweight local state; avoid unnecessary rebuilds |
 
 ---
 
-## Future extension points (not implemented)
+## Still unbuilt
 
 Documented for planning only — **not current features**:
 
-- Repository + local persistence for saved tickets
-- Auth and multi-user ownership
-- Backend ticket issuance and validation
-- Export / share / print
-- Editable event form fields
+- Server-side ticket issuance and signed payloads (today a code is an
+  identifier; validity is a Firestore document, not a signature)
+- App Check enforcement, which would close unauthenticated public writes
+- Shared/host-side collections, seating, inventory, or payments
+- Push notifications
+- Admin console and door-staff accounts
+- An in-app scanner entry point. `lib/features/scan/presentation/pages/scan_page.dart`
+  exists and uses `mobile_scanner`, but no route or navigation reaches it — the
+  door path today is a phone camera opening `/verify/:id` in a browser.
 
-When adding these, update this document, the threat model, and privacy notice in the same change set.
+What earlier revisions of this document listed as unbuilt has since shipped:
+local persistence (`TicketLocalRepository`), optional auth (`AuthCubit`),
+verification (`/verify/:id`), PNG export and share (`TicketShareHelper`), and
+editable event fields.
+
+When adding to this list, update this document, the threat model, and the
+privacy notice in the same change set. `test/docs_accuracy_test.dart` fails if
+these documents drift back to describing a preview-only demo.

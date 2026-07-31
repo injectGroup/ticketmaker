@@ -22,8 +22,8 @@ documentation that no longer describes the app.
 | Optional auth + cloud publish | Built (`features/auth`, `ticket_cloud_sync.dart`) |
 | Fonts | Bundled as assets; no runtime CDN fetch |
 | Android release config | **Done** — upload-key signed AAB builds; package `com.agathakakalogical.quickticketmaker` |
-| Test coverage | **120 tests**; Phase 1 + Phase 2 coverage complete |
-| Product docs | **Stale** — describe a preview-only app — see Phase 3 |
+| Test coverage | **132 tests**; Phase 1 + Phase 2 + Phase 3 coverage complete |
+| Product docs | **Done** — rewritten against shipped behaviour, pinned by `test/docs_accuracy_test.dart` |
 | Release to `main` | Not started — see Phase 4 |
 
 ---
@@ -100,11 +100,11 @@ no hardcoded credentials.
 - [x] 2.4 `TicketPublicVerify` specs
 - [x] 2.5 `/verify/:id` deep-link routing specs
 
-### Phase 3 — Documentation and compliance truth-up → [phase-3.md](phase-3.md)
-- [ ] 3.1 Rewrite `docs/architecture.md` to match the as-built system
-- [ ] 3.2 Record the V1 feature set in `CHANGELOG.md`
-- [ ] 3.3 Add structural bugs to `USER_RESEARCH_REPORT.md`
-- [ ] 3.4 Sweep `docs/features.md` and `docs/privacy.md` for the same drift
+### Phase 3 — Documentation and compliance truth-up → [phase-3.md](phase-3.md) ✅ done
+- [x] 3.1 Rewrite `docs/architecture.md` to match the as-built system
+- [x] 3.2 Record the V1 feature set in `CHANGELOG.md`
+- [x] 3.3 Add structural bugs to `USER_RESEARCH_REPORT.md`
+- [x] 3.4 Sweep `docs/features.md` and `docs/privacy.md` for the same drift
 
 ### Phase 4 — Release and merge → [phase-4.md](phase-4.md)
 - [ ] 4.1 Full green gate (analyze, test, web plugin check)
@@ -137,8 +137,8 @@ requires Phases 1–3 complete.
 | D2 | Gradle `namespace` | **Settled 31 Jul 2026:** align the namespace to `com.agathakakalogical.quickticketmaker` and move `MainActivity.kt` to the matching package path |
 | D3 | Version for this release | Open — `pubspec.yaml` says `1.0.0+1`; Gradle now hardcodes `versionCode 1` / `versionName "1.0.0"`; no git tags exist locally despite the changelog citing `v1.0.0` |
 | D4 | Merge style for 108 commits | Open — merge commit (keeps granular history) vs. squash (single V1 commit) |
-| D5 | Unreachable `ScanPage` | Open — found during Phase 2: `lib/features/scan/presentation/pages/scan_page.dart` is referenced nowhere (no route, no navigation, no test) despite declaring `routePath = '/scan'`. Wire it into the router as a host-side scanner, or remove it |
-| D6 | Documented vs. implemented base URL | Open — the workflow-integrity rule names `https://ticketmaker.app` as the V1 base URL, but `TicketPayload.host` and `TicketConfig.v1Default` use `quick-ticket-maker-sandbox.web.app` (the domain that actually resolves). `ticketmaker.app` is accepted as a legacy host when parsing. Confirm which is canonical before launch |
+| D5 | Unreachable `ScanPage` | Open — found during Phase 2: `lib/features/scan/presentation/pages/scan_page.dart` is referenced nowhere (no route, no navigation, no test) despite declaring `routePath = '/scan'`. Wire it into the router as a host-side scanner, or remove it. Phase 3 documented it as unbuilt so no doc claims in-app scanning ships; the code decision is still yours |
+| D6 | Documented vs. implemented base URL | Open — the workflow-integrity rule names `https://ticketmaker.app` as the V1 base URL, but `TicketPayload.host` and `TicketConfig.v1Default` use `quick-ticket-maker-sandbox.web.app` (the domain that actually resolves). `ticketmaker.app` is accepted as a legacy host when parsing. Confirm which is canonical before launch. Phase 3 corrected the docs to quote the host that is actually generated and cites this decision instead of resolving it; `test/docs_accuracy_test.dart` now reads `TicketPayload.host` so the docs follow whichever host you choose |
 
 **Execution order chosen:** Phase 2 first (it needs no decisions and protects the
 merge), then Phase 1, then Phase 3, then Phase 4.

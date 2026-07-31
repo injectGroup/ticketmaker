@@ -6,9 +6,9 @@
 [![Security Policy](https://img.shields.io/badge/Security-Policy-green)](SECURITY.md)
 [![Code of Conduct](https://img.shields.io/badge/Contributor-Covenant-4baaaa)](CODE_OF_CONDUCT.md)
 
-**Quick Ticket Maker** is a Flutter application for designing and previewing event-style tickets with customizable QR codes. It is owned and maintained by [Inject](https://github.com/injectGroup).
+**Quick Ticket Maker** is a Flutter application for designing event tickets with customizable QR codes, sharing them as images, and verifying them at the door. It is owned and maintained by [Inject](https://github.com/injectGroup).
 
-> **Scope note:** This repository is a ticket *design and preview* client. It does not currently provide ticket sales, payment processing, admission scanning, or a production ticketing backend.
+> **Scope note:** This is a personal-scale ticketing tool. Tickets are saved on the host's device and verified through a public link backed by Cloud Firestore — there is no custom server, no payments or ticket sales, and no seating or inventory management. Ticket codes are identifiers, not cryptographically signed credentials; see [docs/security/threat-model.md](docs/security/threat-model.md) before using it where admission has real value.
 
 ---
 
@@ -40,11 +40,13 @@
 | State management | `flutter_bloc` (Cubit) |
 | Navigation | `go_router` |
 | QR rendering | `qr_flutter` |
+| Backend | Firebase Auth (optional) + Cloud Firestore + Hosting; no custom server |
 
-The application presents a two-tab experience:
+The application presents a two-tab experience plus a public verification link:
 
-1. **Generate** — customize a live ticket preview (QR style, gradients, image, ticket code).
-2. **Tickets** — browse a sample ticket list (placeholder until persistence is added).
+1. **Generate** — design the ticket and save it (QR style, gradients, flyer, event details).
+2. **Tickets** — open a saved ticket and share it as an image.
+3. **`/verify/:id`** — what a scanned QR opens, in any browser, with no account.
 
 ---
 
@@ -52,27 +54,37 @@ The application presents a two-tab experience:
 
 ### Generate
 
-- Live QR code preview with configurable eye and data-module colors
-- Toggle QR module/eye shape between circle and square
-- Cycle ticket background gradients
-- Generate a new ticket code (`XXXX-XXXX-XXX`) and QR payload
-- Refresh the event image from a remote placeholder provider
+- Live QR preview with configurable eye/module colors and circle ↔ square shapes
+- Editable event details: title, subtitle, header label, venue, date and time
+- Ticket background gradients, category palettes, and contrast-aware text colors
+- Flyer image from the device gallery or the bundled placeholder
+- Ticket code (`XXXX-XXXX-XXX`) with a matching `/verify/<code>` QR payload on the Firebase Hosting domain
 - Ticket perforation UI (side notches + dashed divider)
-- Event detail strip (title, subtitle, date, time)
 
 ### Tickets
 
-- Sample “My Tickets” list UI
-- Navigation shell shared with Generate
+- Saved tickets persisted in **encrypted** local storage, with a detail page
+- PNG export rendered in pure Dart and shared through the native share sheet, with a web download fallback
+
+### Verify
+
+- Public `/verify/:id` route resolves a scanned code against Firestore
+- **Single-use check-in:** the first successful scan admits, later scans report the earlier admission
+
+### Accounts (optional)
+
+- Firebase Auth with email/password, Google, and Apple
+- Guest-first: nothing in the core journey requires signing in; signing in adds owner-scoped cloud copies
 
 ### Explicitly out of scope (current release)
 
-- User authentication and authorization
 - Payment or e-commerce checkout
-- Persistent ticket storage / sync
-- QR scanning / door admission workflows
-- Editing event metadata via forms
-- Export, share, or print pipelines
+- Ticket inventory, seating maps, or capacity limits
+- Server-side issuance or cryptographically signed ticket payloads
+- An in-app scanner entry point (door staff use a phone camera and the verify link)
+- Push notifications
+- Admin console or door-staff accounts
+- PDF export (PNG only)
 
 See [docs/features.md](docs/features.md) for a complete functional description.
 
@@ -127,16 +139,24 @@ Full setup, toolchain, and quality gates: [docs/getting-started.md](docs/getting
 
 ```text
 lib/
-  app.dart                 # MaterialApp.router root
-  main.dart                # Entry point
+  app.dart                 # MaterialApp.router root, providers
+  main.dart                # Entry point, Firebase init
   core/
-    router/                # go_router shell navigation
+    router/                # go_router shell + public routes
     theme/                 # App colors and typography
+    utils/                 # Contrast helpers
     widgets/               # Shared UI (e.g. dashed divider)
+  models/                  # TicketConfig
+  services/                # Secure key-value store and ticket config storage
   features/
-    generate/              # Ticket generator (domain + Cubit + UI)
-    tickets/               # Tickets list UI
+    auth/                  # Optional accounts, auth gate, pending actions
+    generate/              # Ticket designer (domain + Cubit + UI)
+    tickets/               # Saved tickets: data layer + list, detail, share
+    verify/                # Public door verification screen
+    account/               # Legal document pages
+assets/fonts/              # Bundled typefaces (no runtime font fetching)
 docs/                      # Product, security, and compliance docs
+instructions/              # Implementation plan and phase checklists
 .github/                   # Issue/PR templates and automation config
 .taskmanager/              # Local TaskManager backup (project tracking)
 ```

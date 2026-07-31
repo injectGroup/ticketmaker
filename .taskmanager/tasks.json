@@ -1833,6 +1833,20 @@
       "createdAt": "2026-07-31T12:51:00.000Z",
       "updatedAt": "2026-07-31T13:30:00.000Z",
       "note": "Operator must back up the upload keystore and passwords offline. Next: Phase 3 docs truth-up."
+    },
+    {
+      "id": "task-phase3-docs-truth-up-20260731",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Phase 3 — Documentation and privacy-notice truth-up",
+      "description": "Rewrite the published docs so they describe the shipped V1 app instead of the preview-only demo, disclose Firebase and the world-readable public ticket document in the privacy notice, and record the structural defects found in local simulation.",
+      "details": "TDD: test/docs_accuracy_test.dart written first, 11 red → green (a 12th case added during the sweep derives the QR host from TicketPayload source). Rewrote docs/architecture.md (rev 2.0: Firebase Auth + Firestore context, Storage deliberately unused, as-built lib tree, secure-storage fallback chain, honest 'Still unbuilt') and docs/features.md (routes, V1 defaults, F-GEN-008 save, F-TKT-002 persistence implemented, F-TKT-004 export/share, F-VER-001/002 verification, F-ACC-001 optional accounts). docs/privacy.md rev 2026-07-31 now names Google Firebase Auth/Firestore/Hosting, tabulates what leaves the device on save and share, and adds section 5 on the publicly readable tickets/{code} document with minimisation guidance. threat-model.md v3.0 adds the door trust boundary, unauthenticated public writes, and the pre-emptive check-in denial-of-admission case. CHANGELOG.md gained the full V1 Added/Changed/Fixed/Security sets (version heading left for D3). USER_RESEARCH_REPORT.md bumped to AG-HR-TR-26-V5 with section 4 covering four structural defects (web MissingPluginException, runtime font fetching, phone-width date truncation, clearAllTickets concurrent modification), each with symptom, root cause, resolution, and guarding test. Also swept iso-alignment.md (four new honest gaps), README.md, and getting-started.md. Corrected two claims found while writing: ScanPage is built but unrouted, so no doc says in-app scanning ships; and the generated QR host is quick-ticket-maker-sandbox.web.app/verify/<code>, not ticketmaker.app/t/<code>. No lib/ code changed. flutter analyze clean; 132 tests passing (120 → 132).",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-31T13:40:00.000Z",
+      "updatedAt": "2026-07-31T14:05:00.000Z",
+      "note": "Decisions still open for Phase 4: D3 version/tag, D4 merge style, D5 ScanPage wire-or-remove, D6 canonical QR host. Next: Phase 4 release and merge."
     }
   ],
   "epics": [
@@ -1848,5 +1862,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-07-31T10:10:20.751Z"
+  "lastSync": "2026-07-31T12:55:31.578Z"
 }
