@@ -6,8 +6,9 @@ alwaysApply: false
 # Quick Ticket Maker Security Guidelines
 
 ## 1. Secure Local Storage
-- **No Plaintext Storage**: Never store guest ticket data, device identifiers, or payload tokens in standard `SharedPreferences`.
-- **Use Encrypted Storage**: Use `flutter_secure_storage` exclusively for caching any sensitive ticket or host configuration data.
+- **No Plaintext Storage**: Never store guest ticket data, device identifiers, or payload tokens in standard `SharedPreferences` as the primary store.
+- **Use Encrypted Storage**: Use `flutter_secure_storage` (via `SecureKeyValueStore`) for caching any sensitive ticket or host configuration data.
+- **Narrow Fallback Exception**: If the secure-storage platform plugin is unavailable (`MissingPluginException` / `PlatformException` / `UnsupportedError` — e.g. a stale web registrant), `SecureKeyValueStore` may latch once to `SharedPreferences` under the `secure_fallback.` key prefix so Save Ticket still works. Do not expand this to a permanent plaintext primary store. Always rebuild web with `./scripts/build_web.sh` so the plugin registrant stays complete.
 
 ## 2. API & QR Code Payload Safety
 - **No PII in QR Strings**: Do not embed raw Personal Identifiable Information (like guest phone numbers or emails) directly into the QR string payload.

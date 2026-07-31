@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-28T10:56:36.000Z",
       "lastMilestone": {
-        "message": "TicketLocalRepository now uses FlutterSecureStorage",
-        "taskId": "task-secure-ticket-local-repository-20260730",
-        "updatedAt": "2026-07-30T08:15:00.000Z"
+        "message": "Fixed web secure storage MissingPluginException; redeployed hosting",
+        "taskId": "task-fix-web-secure-storage-20260731",
+        "updatedAt": "2026-07-31T08:45:00.000Z"
       }
     }
   ],
@@ -1706,6 +1706,20 @@
       "status": "done",
       "createdAt": "2026-07-30T08:00:00.000Z",
       "updatedAt": "2026-07-30T08:15:00.000Z",
+      "note": "Cloud MCP denied; local backup only."
+    },
+    {
+      "id": "task-fix-web-secure-storage-20260731",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Fix web secure storage MissingPluginException",
+      "description": "Add SecureKeyValueStore with SharedPreferences fallback, legacy migration, build_web registrant guard; rebuild and redeploy hosting so FlutterSecureStorageWeb registers.",
+      "details": "Root cause: stale web_plugin_registrant omitted flutter_secure_storage_web. Deployed via ./scripts/build_web.sh + firebase deploy --only hosting.",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-31T08:30:00.000Z",
+      "updatedAt": "2026-07-31T08:45:00.000Z",
       "note": "Cloud MCP denied; local backup only."
     }
   ],
