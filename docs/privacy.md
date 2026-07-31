@@ -70,7 +70,7 @@ part of the published document described in §5.
 | Designing a ticket | Nothing | — |
 | Saving a ticket | Ticket code, event name, guest-pass label, venue, date/time, QR string, status, and the flyer image embedded as Base64 | Cloud Firestore `tickets/{code}` — **publicly readable** |
 | Saving while signed in | The same fields plus `hostUid`, mirrored to an owner-only copy | Firestore `users/{uid}/tickets/{id}` |
-| Sharing a ticket | A PNG image of the ticket | Whichever app or contact the host picks in the OS share sheet — outside our control from that point |
+| Sharing a ticket | A PNG image or a PDF of the ticket, built in memory and never saved to the device by the app | Whichever app or contact the host picks in the OS share sheet — outside our control from that point |
 | Verifying at the door | The scanned code, then a check-in flag and timestamp written back | Firestore `tickets/{code}` |
 | Signing in | Credentials or OAuth tokens | Firebase Auth (never logged by the app, never committed) |
 | Venue lookup | Device coordinates | `geocoding` provider |
@@ -130,7 +130,7 @@ you would not put on a printed ticket.
 | Google (Play / geocoding services) | Venue name lookup, where invoked | Coordinates |
 | GitHub | Source hosting for developers | Contributor identities, code |
 | Remote image hosts | Optional flyer URLs on older tickets | IP address / request metadata to that host |
-| OS share targets | Whatever app the host shares the PNG into | The ticket image |
+| OS share targets | Whatever app the host shares into | The ticket image, or the ticket PDF |
 
 Google Fonts infrastructure is **no longer contacted at runtime** — the required
 fonts ship as bundled assets.

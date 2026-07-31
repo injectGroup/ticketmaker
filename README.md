@@ -64,7 +64,8 @@ The application presents a two-tab experience plus a public verification link:
 ### Tickets
 
 - Saved tickets persisted in **encrypted** local storage, with a detail page
-- PNG export rendered in pure Dart and shared through the native share sheet, with a web download fallback
+- Share in the format the recipient needs: a PNG rendered in pure Dart, or a printable PDF drawn as text plus a vector QR code
+- Both formats are built in memory and handed straight to the native share sheet — no copy is saved to the device first — with a Web Share API path and browser download fallback on web
 
 ### Verify
 
@@ -84,7 +85,7 @@ The application presents a two-tab experience plus a public verification link:
 - An in-app scanner entry point (door staff use a phone camera and the verify link)
 - Push notifications
 - Admin console or door-staff accounts
-- PDF export (PNG only)
+- Printing from inside the app (the shared PDF hands off to the OS print dialog)
 
 See [docs/features.md](docs/features.md) for a complete functional description.
 

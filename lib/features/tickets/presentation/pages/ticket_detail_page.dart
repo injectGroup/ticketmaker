@@ -27,22 +27,9 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
           context.read<TicketsCubit>().state.imageBytesFor(ticket.id);
       final origin = TicketShareHelper.shareOriginFrom(buttonContext);
 
-      // If the ticket card isn't painted / capture fails, never crash —
-      // fall back to link/text share (clipboard on web, share sheet native).
-      final png = await TicketShareHelper.capturePngBytes(_ticketBoundaryKey);
-      if (!mounted) return;
-
-      if (png == null || png.isEmpty) {
-        await TicketShareHelper.share(
-          context,
-          ticket,
-          sharePositionOrigin: origin,
-          eventImageBytes: bytes,
-          attachTicketImage: false,
-        );
-        return;
-      }
-
+      // No pre-capture: the PDF is drawn from the ticket model and needs no
+      // painted boundary, and the image path already degrades to JPEG and then
+      // to a link share on its own if capture fails.
       await TicketShareHelper.share(
         context,
         ticket,

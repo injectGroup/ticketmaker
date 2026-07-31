@@ -175,4 +175,21 @@ void main() {
       ]);
     });
   });
+
+  group('multi-format share', () {
+    test('the docs no longer call PDF export out of scope', () {
+      for (final path in const ['README.md', 'docs/features.md']) {
+        _mustNotContain(_read(path), path, ['PDF export (PNG only)']);
+      }
+    });
+
+    test('the shipped PDF path is documented', () {
+      _mustContain(_read('docs/features.md'), 'docs/features.md', [
+        'TicketPdfExport',
+        'Share as PDF',
+      ]);
+      _mustContain(_read('README.md'), 'README.md', ['PDF']);
+      _mustContain(_read('docs/privacy.md'), 'docs/privacy.md', ['PDF']);
+    });
+  });
 }
