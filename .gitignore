@@ -53,6 +53,9 @@ app.*.map.json
 *.key
 *.keystore
 *.jks
+# Upload-key passwords for Play release signing
+key.properties
+**/key.properties
 google-services.json
 GoogleService-Info.plist
 **/secrets/

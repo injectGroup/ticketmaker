@@ -21,8 +21,8 @@ documentation that no longer describes the app.
 | Public QR verification (`/verify/:id`) | Built (`features/verify`, `ticket_public_verify.dart`) |
 | Optional auth + cloud publish | Built (`features/auth`, `ticket_cloud_sync.dart`) |
 | Fonts | Bundled as assets; no runtime CDN fetch |
-| Android release config | **In flight and uncommitted** — see Phase 1 |
-| Test coverage | **109 tests**; the five previously unspecced logic units are now covered (Phase 2 done) |
+| Android release config | **Done** — upload-key signed AAB builds; package `com.agathakakalogical.quickticketmaker` |
+| Test coverage | **120 tests**; Phase 1 + Phase 2 coverage complete |
 | Product docs | **Stale** — describe a preview-only app — see Phase 3 |
 | Release to `main` | Not started — see Phase 4 |
 
@@ -86,12 +86,12 @@ no hardcoded credentials.
 
 ## 4. Master checklist
 
-### Phase 1 — Android internal-track release readiness → [phase-1.md](phase-1.md)
-- [ ] 1.1 Commit the in-flight release configuration
-- [ ] 1.2 Replace debug release signing with an upload keystore
-- [ ] 1.3 Fix the on-device app label
-- [ ] 1.4 Decide the Gradle `namespace` alignment
-- [ ] 1.5 Verify a release App Bundle builds and is not debug-signed
+### Phase 1 — Android internal-track release readiness → [phase-1.md](phase-1.md) ✅ done
+- [x] 1.1 Commit the in-flight release configuration
+- [x] 1.2 Replace debug release signing with an upload keystore
+- [x] 1.3 Fix the on-device app label
+- [x] 1.4 Decide the Gradle `namespace` alignment
+- [x] 1.5 Verify a release App Bundle builds and is not debug-signed
 
 ### Phase 2 — TDD coverage for untested logic → [phase-2.md](phase-2.md) ✅ done
 - [x] 2.1 `TicketConfig` model specs

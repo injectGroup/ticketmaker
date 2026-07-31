@@ -1819,6 +1819,20 @@
       "createdAt": "2026-07-31T12:45:00.000Z",
       "updatedAt": "2026-07-31T13:10:00.000Z",
       "note": "Phase 1 (Android release readiness) is next; D1 and D2 already settled."
+    },
+    {
+      "id": "task-phase1-android-release-20260731",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Phase 1 — Android release readiness (upload key + package align)",
+      "description": "Generate a local upload keystore, wire release signing through gitignored key.properties, align namespace/MainActivity to com.agathakakalogical.quickticketmaker, and verify a non-debug-signed App Bundle.",
+      "details": "TDD: test/android_release_config_test.dart went 9 red → 11 green. Keystore at ~/.keystores/ticketmaker-upload.jks (alias upload); android/key.properties gitignored. build.gradle.kts uses signingConfigs.release and fails fast when key.properties is missing. Restored targetSdk/versionCode/versionName to Flutter toolchain values. Moved MainActivity.kt to the new package path. AAB at build/app/outputs/bundle/release/app-release.aab (66MB) signed CN=Quick Ticket Maker (not Android Debug). Also aligned iOS CFBundleDisplayName and web/manifest.json. flutter analyze clean; 120 tests passing.",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-31T12:51:00.000Z",
+      "updatedAt": "2026-07-31T13:30:00.000Z",
+      "note": "Operator must back up the upload keystore and passwords offline. Next: Phase 3 docs truth-up."
     }
   ],
   "epics": [

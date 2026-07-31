@@ -3,133 +3,103 @@
 **Goal:** make `flutter build appbundle --release` produce an artifact Play
 Console will accept, and get the in-flight configuration committed.
 
-**Why this phase exists:** the working tree already carries an unfinished
-release-prep change, and the release build type is still signed with the debug
-keystore, which Play Console rejects.
+**Branch/commit naming:** `phase/1-android-release-readiness`
 
-**Branch/commit naming:** `phase/1-android-release-readiness`, with
-`subtask/1.x-...` commits.
+**Status:** ✅ done — 31 July 2026
 
 ---
 
 ## 1.1 Commit the in-flight release configuration
 
-The working tree currently holds uncommitted changes that belong together:
-
-- `android/app/build.gradle.kts`: `applicationId` moved from
-  `com.injectgroup.ticket_maker` to `com.agathakakalogical.quickticketmaker`,
-  `targetSdk` pinned to `34`, `versionCode 1`, `versionName "1.0.0"`.
-- `lib/firebase_options.dart`: Android `appId` and `apiKey` switched to the
-  Firebase Android app registered for the new package name.
-
-This is the one change the workflow-integrity rule permits, because it is
-Play Console Internal Track preparation.
-
-- [ ] Confirm `android/app/google-services.json` contains a client for
-      `com.agathakakalogical.quickticketmaker` (verified present on 31 Jul 2026,
-      alongside the legacy `com.injectgroup.ticket_maker` and
-      `com.ticketmaker.ticketmaker` clients).
-- [ ] Confirm the `appId` in `firebase_options.dart` matches that client's
-      `mobilesdk_app_id`.
-- [ ] Decide whether pinning `targetSdk = 34` is intended, or whether it should
-      return to `flutter.targetSdkVersion` (see note below).
-- [ ] Commit both files together with a message explaining the Play Console intent.
-
-> **Note on `targetSdk = 34`:** Play requires new apps and updates to target a
-> recent API level, and the requirement rises annually. Hardcoding `34` freezes
-> the target even when the Flutter toolchain moves on. Prefer
-> `flutter.targetSdkVersion` unless you have a specific reason to pin.
+- [x] Confirm `android/app/google-services.json` contains a client for
+      `com.agathakakalogical.quickticketmaker` (alongside the legacy clients).
+- [x] Confirm the `appId` in `firebase_options.dart` matches that client's
+      `mobilesdk_app_id` (`1:107781542059:android:21121105f99c18fdc9e7ee`).
+- [x] Rejected pinning `targetSdk = 34` — restored `flutter.targetSdkVersion`
+      (36 on Flutter 3.44.6). Play raises the required target annually.
+- [x] Restored `versionCode` / `versionName` from `flutter.versionCode` /
+      `flutter.versionName` so `pubspec.yaml` remains the single source of truth.
+- [x] Commit both files with the rest of Phase 1.
 
 ---
 
 ## 1.2 Replace debug release signing with an upload keystore
 
-Current state in `android/app/build.gradle.kts`:
-
-```kotlin
-buildTypes {
-    release {
-        // TODO: Add your own signing config for the release build.
-        // Signing with the debug keys for now, so `flutter run --release` works.
-        signingConfig = signingConfigs.getByName("debug")
-    }
-}
-```
-
-A debug-signed bundle cannot be uploaded to any Play track. **Blocks 4.5.**
-
 **D1 settled:** generate a new upload keystore locally; credentials live in a
 gitignored `android/key.properties` and the keystore file never enters git.
 
-- [ ] Step 1 (spec first): add `test/android_release_config_test.dart` asserting,
-      by reading `android/app/build.gradle.kts` as text, that the `release` block
-      does not reference `signingConfigs.getByName("debug")` and does reference a
-      named `release` signing config. Watch it fail.
-- [ ] Step 2: add a `signingConfigs { create("release") { ... } }` block sourced
-      from a gitignored `android/key.properties`, falling back to a clear build
-      error (not silent debug signing) when the file is absent.
-- [ ] Step 3: add `key.properties` and `android/key.properties` to `.gitignore`.
-      `*.jks` and `*.keystore` are already covered at lines 54–55, but the
-      properties file that holds the key passwords is **not**.
-- [ ] Step 4: run `flutter test` → green; tick this item.
-- [ ] Never commit the keystore or its passwords; document the setup in
-      `docs/development.md` instead.
+- [x] Step 1 (spec first): `test/android_release_config_test.dart` asserts the
+      `release` block does not reference the debug signing config and does
+      reference a named `release` signing config. Watched it fail (9 red).
+- [x] Step 2: added `signingConfigs { create("release") { ... } }` sourced from
+      `android/key.properties`, with a fail-fast `GradleException` when the file
+      is missing during a release build (verified by temporarily renaming it).
+- [x] Step 3: `key.properties` ignored via both `android/.gitignore` (already
+      present) and the root `.gitignore`. `*.jks` / `*.keystore` already covered.
+- [x] Step 4: `flutter test` → green (120 passing including 11 release-config
+      specs).
+- [x] Keystore lives at `~/.keystores/ticketmaker-upload.jks` (alias `upload`,
+      PKCS12, RSA 2048, ~27-year validity). Setup documented in
+      `docs/development.md`.
 
 ---
 
 ## 1.3 Fix the on-device app label
 
-`android/app/src/main/AndroidManifest.xml` sets `android:label="ticket_maker"`,
-so the launcher shows the Gradle project name rather than the product name.
-
-- [ ] Step 1 (spec first): extend `test/android_release_config_test.dart` to
-      assert the manifest label is `Quick Ticket Maker`. Watch it fail.
-- [ ] Step 2: update `android:label`.
-- [ ] Step 3: `flutter test` → green; tick this item.
-- [ ] Check the iOS `CFBundleDisplayName` and `web/manifest.json` names for the
-      same mismatch while you are here.
+- [x] Step 1 (spec first): assert the Android manifest label is
+      `Quick Ticket Maker`. Watched it fail.
+- [x] Step 2: updated `android:label`.
+- [x] Step 3: `flutter test` → green.
+- [x] Also aligned iOS `CFBundleDisplayName` and `web/manifest.json` name /
+      short_name to the same product name (pinned by the same test file).
 
 ---
 
-## 1.4 Decide the Gradle `namespace` alignment
-
-`namespace` is still `com.injectgroup.ticket_maker` while `applicationId` is now
-`com.agathakakalogical.quickticketmaker`. This is legal — the namespace only
-governs the generated `R` class and Kotlin package — and
-`MainActivity.kt` currently lives at
-`android/app/src/main/kotlin/com/injectgroup/ticket_maker/MainActivity.kt`,
-consistent with the namespace.
+## 1.4 Align the Gradle `namespace`
 
 **D2 settled:** align the namespace to the new package.
 
-- [ ] Set `namespace = "com.agathakakalogical.quickticketmaker"`.
-- [ ] Move `MainActivity.kt` to
+- [x] Set `namespace = "com.agathakakalogical.quickticketmaker"`.
+- [x] Moved `MainActivity.kt` to
       `android/app/src/main/kotlin/com/agathakakalogical/quickticketmaker/` and
-      update its `package` declaration; remove the now-empty old directories.
-- [ ] Rebuild from clean (`flutter clean`) so the generated `R` class and
-      `GeneratedPluginRegistrant` pick up the new namespace.
-- [ ] Either way, confirm `flutter run --release` still launches on a device.
+      updated its `package` declaration; removed the old
+      `com/injectgroup/ticket_maker/` tree.
+- [x] Rebuilt from clean; release App Bundle succeeds.
 
 ---
 
 ## 1.5 Verify the release App Bundle
 
-- [ ] `flutter build appbundle --release` completes.
-- [ ] Verify the signer is the upload key, not the debug key:
-      `jarsigner -verify -verbose -certs build/app/outputs/bundle/release/app-release.aab`
-      (or `keytool -printcert`) — the CN must not be `Android Debug`.
-- [ ] Record the `versionCode` policy for future uploads: Play rejects a reused
-      `versionCode`, so decide whether it is driven by `pubspec.yaml`'s build
-      number or maintained by hand in Gradle (ties into D3).
-- [ ] Note the resulting artifact path and size in the phase-4 checklist.
+- [x] `flutter build appbundle --release` completes →
+      `build/app/outputs/bundle/release/app-release.aab` (66 MB / 69.5 MB reported).
+- [x] Signer verified via `META-INF/UPLOAD.RSA`:
+      `Owner: CN=Quick Ticket Maker, OU=Mobile, O=Agatha Kakalogical, L=Lagos,
+      ST=Lagos, C=NG` — **not** `CN=Android Debug`.
+- [x] Version policy: driven by `pubspec.yaml` (`1.0.0+1` today). Play rejects a
+      reused `versionCode`, so bump the `+N` build number for every upload.
+- [x] Artifact path: `build/app/outputs/bundle/release/app-release.aab`.
 
 ---
 
 ## Exit criteria
 
-1. No uncommitted Android release configuration remains.
-2. `test/android_release_config_test.dart` passes and pins both the signing
-   config and the app label.
-3. A release App Bundle exists, signed with a non-debug key.
-4. `flutter analyze` clean, `flutter test` 100% green.
-5. Every box above ticked, and each subtask logged in `.taskmanager/tasks.json`.
+1. [x] No unfinished Android release configuration remains uncommitted.
+2. [x] `test/android_release_config_test.dart` passes and pins signing, package
+   identity, MainActivity path, and product name.
+3. [x] A release App Bundle exists, signed with a non-debug upload key.
+4. [x] `flutter analyze` clean, `flutter test` 100% green (120 passing).
+5. [x] Every box above ticked, and the subtask logged in `.taskmanager/tasks.json`.
+
+---
+
+## Outcome (31 July 2026)
+
+Play-ready release config is now committed on
+`feature/v1-personal-ticket-share`. The previously unfinished `applicationId` /
+Firebase Android app switch is finished, the package `namespace` matches, and
+the release build type no longer falls back to the debug keystore.
+
+**Operator reminder:** back up `~/.keystores/ticketmaker-upload.jks` and the
+passwords in `android/key.properties` offline. Losing them permanently blocks
+Play uploads until an upload-key reset through Play Console (only possible if
+Play App Signing is enrolled).

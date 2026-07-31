@@ -50,8 +50,8 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCXwPrpuJK3CGVEuJ-hYEp9N4Y99gbmHZg',
-    appId: '1:107781542059:android:ad44b29439001b91c9e7ee',
+    apiKey: 'AIzaSyBb-6qTmAalrs3pFzyacEI4HnQvyxIYTCE',
+    appId: '1:107781542059:android:21121105f99c18fdc9e7ee',
     messagingSenderId: '107781542059',
     projectId: 'quick-ticket-maker-sandbox',
     storageBucket: 'quick-ticket-maker-sandbox.firebasestorage.app',

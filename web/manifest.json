@@ -1,11 +1,11 @@
 {
-    "name": "ticket_maker",
-    "short_name": "ticket_maker",
+    "name": "Quick Ticket Maker",
+    "short_name": "Quick Ticket",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Create, save, and share personal event tickets with scannable QR codes.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
