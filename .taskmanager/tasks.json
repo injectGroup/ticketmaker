@@ -1777,6 +1777,20 @@
       "createdAt": "2026-07-31T12:05:00.000Z",
       "updatedAt": "2026-07-31T12:15:00.000Z",
       "note": "Local backup; cloud MCP not used for this task."
+    },
+    {
+      "id": "task-reorganize-cursor-rules-20260731",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Reorganize Cursor rules under .cursor/rules/",
+      "description": "Rename .cursor/rules/.cursorrules to project-standards.mdc with an alwaysApply metadata header, and add tdd-workflow.mdc covering task preparation and strict TDD execution rules.",
+      "details": "Used git mv so the rename keeps file history. Frontmatter matches the existing .mdc rules (description / globs / alwaysApply). Verified no remaining references to the old .cursorrules filename anywhere in the repo. Rules directory now holds project-standards, tdd-workflow, ticket-security, workflow-integrity, and taskmanager-app-notifications.",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "low",
+      "status": "done",
+      "createdAt": "2026-07-31T12:25:00.000Z",
+      "updatedAt": "2026-07-31T12:30:00.000Z",
+      "note": "Docs/config only; no app code touched. Local backup only."
     }
   ],
   "epics": [
