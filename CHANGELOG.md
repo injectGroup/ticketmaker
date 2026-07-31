@@ -7,6 +7,14 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.0.0] - 2026-07-31
+
+First tagged release. The `1.0.0` heading previously carried a 2026-07-16 date,
+but no `v1.0.0` tag was ever cut, so the Flutter rewrite and the V1 personal
+ticket share milestone ship together as one release.
+
 ### Added
 
 - **Saved tickets.** Generated tickets persist locally in encrypted secure storage and appear in the Tickets tab, with a detail page and a durable image store for flyers
@@ -23,6 +31,10 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 - ISO alignment mapping (`docs/compliance/iso-alignment.md`)
 - GitHub Issue/PR templates and Dependabot configuration
 - Hardened `.gitignore` for secrets and credential files
+- Baseline from the initial Flutter rewrite: Generate + Tickets shell, QR
+  customization (colors, shape), ticket code generation, background gradients,
+  Cubit state management, `go_router` navigation, and the TaskManager backup
+  under `.taskmanager/`
 
 ### Changed
 
@@ -45,14 +57,17 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 - QR payloads carry only a ticket code — no guest PII in the scanned string
 - Firestore rules keep owner documents owner-only and constrain the public ticket document to creation, a single valid → checked-in transition, and host-owned edits
 
-## [1.0.0] - 2026-07-16
+### Known limitations
 
-### Added
-
-- Initial Flutter rewrite of Quick Ticket Maker (Generate + Tickets tabs)
-- QR customization (colors, shape), ticket code generation, background gradients, image refresh
-- Cubit state management, go_router shell navigation
-- TaskManager local backup under `.taskmanager/`
+- Ticket codes are identifiers, not signed credentials: reuse is detected only
+  after the first check-in, and anyone holding a code can read that ticket's
+  public document. See [docs/security/threat-model.md](docs/security/threat-model.md)
+  and [docs/privacy.md](docs/privacy.md) §5
+- `ScanPage` is built but not routed; door staff use a phone camera against the
+  verification link
+- The canonical QR host is the Firebase Hosting domain
+  (`quick-ticket-maker-sandbox.web.app`); `ticketmaker.app` is still accepted
+  when parsing older payloads
 
 [Unreleased]: https://github.com/injectGroup/ticketmaker/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/injectGroup/ticketmaker/releases/tag/v1.0.0
