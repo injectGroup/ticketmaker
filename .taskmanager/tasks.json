@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-31T09:55:00.000Z",
       "lastMilestone": {
-        "message": "Bundled Google Fonts assets so Flutter Web no longer fetches fonts at runtime; test suite fully green",
-        "taskId": "task-bundle-google-fonts-assets-20260731",
-        "updatedAt": "2026-07-31T11:10:00.000Z"
+        "message": "Flutter Web now loads every font from the app bundle; no font CDN requests and no Noto fallback warning",
+        "taskId": "task-bundle-engine-default-roboto-20260731",
+        "updatedAt": "2026-07-31T11:35:00.000Z"
       }
     }
   ],
@@ -1749,6 +1749,20 @@
       "createdAt": "2026-07-31T10:15:00.000Z",
       "updatedAt": "2026-07-31T11:10:00.000Z",
       "note": "Also fixed 3 pre-existing ticket_share_helper_test failures (SpaceMono-Bold asset); suite now 49/49. Cloud MCP unavailable; local backup only."
+    },
+    {
+      "id": "task-bundle-engine-default-roboto-20260731",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Bundle engine default Roboto to remove last web font CDN fetch",
+      "description": "Declare a Roboto family in pubspec pointing at assets/fonts/Roboto-Regular.ttf so the Flutter web engine stops downloading its default font from fonts.gstatic.com.",
+      "details": "Verified by loading the release build in headless Chrome with fonts.gstatic.com and fonts.googleapis.com blackholed: the previous 'Failed to load font Roboto at https://fonts.gstatic.com/...' console lines are gone and no Noto or font-CDN references remain. Roboto-Regular.ttf verified by SHA-256 (81044 bytes) and pinned in test/bundled_fonts_test.dart.",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-31T11:15:00.000Z",
+      "updatedAt": "2026-07-31T11:35:00.000Z",
+      "note": "Follow-up chosen by user after the google_fonts bundling task. Cloud MCP unavailable; local backup only."
     }
   ],
   "epics": [

@@ -27,6 +27,9 @@ void main() {
     'Outfit-SemiBold.ttf',
     // Ticket code + date pills request w600; Space Mono's nearest is w700.
     'SpaceMono-Bold.ttf',
+    // Not a google_fonts request: declared as the `Roboto` family in pubspec so
+    // the web engine uses it instead of downloading its default from the CDN.
+    'Roboto-Regular.ttf',
   ];
 
   test('every declared font variant is bundled as an asset', () async {

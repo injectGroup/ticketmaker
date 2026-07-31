@@ -55,3 +55,10 @@ flutter:
     # Only the variants the app actually requests are bundled — see
     # test/bundled_fonts_test.dart, which fails if a new variant is missing.
     - assets/fonts/
+  fonts:
+    # The web engine downloads its own default font from fonts.gstatic.com
+    # unless the app already declares a family named Roboto. Declaring it keeps
+    # the engine's fallback local, so no text render depends on the font CDN.
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
