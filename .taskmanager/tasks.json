@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-31T12:15:00.000Z",
       "lastMilestone": {
-        "message": "Responsive ticket date: Expanded leftover width + compact Fri, 31 Jul 2026 fallback; fixed ABOUT THIS EVENT contrast",
-        "taskId": "task-responsive-ticket-date-20260731",
-        "updatedAt": "2026-07-31T12:15:00.000Z"
+        "message": "Android release readiness: upload-key signed AAB for com.agathakakalogical.quickticketmaker",
+        "taskId": "task-phase1-android-release-20260731",
+        "updatedAt": "2026-07-31T13:30:00.000Z"
       }
     }
   ],
