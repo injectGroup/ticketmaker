@@ -29,8 +29,7 @@ class LegalDocumentPage extends StatelessWidget {
       'Quick Ticket Maker Privacy Policy (demo stub).\n\n'
       'We store your profile fields (name, email, phone, preferences) locally '
       'on this device. No cloud backend is used in this demo build.\n\n'
-      'Optional marketing consent controls promotional messages only. You can '
-      'change preferences anytime in Account settings.';
+      'Optional marketing consent controls promotional messages only.';
 
   @override
   Widget build(BuildContext context) {

@@ -27,28 +27,33 @@ class TicketCategoryPalette extends Equatable {
 }
 
 /// Canonical category labels and Generate color defaults.
+/// Personal gatherings are listed first for the V1 personal-ticket flow.
 abstract final class TicketCategoryPalettes {
-  static const String music = 'Music';
-  static const String tech = 'Tech';
-  static const String sports = 'Sports';
-  static const String comedy = 'Comedy';
-  static const String wedding = 'Wedding';
   static const String birthday = 'Birthday';
+  static const String dinner = 'Dinner';
+  static const String privateGathering = 'Private gathering';
+  static const String wedding = 'Wedding';
   static const String anniversary = 'Anniversary';
   static const String graduation = 'Graduation';
   static const String generalParty = 'General party';
+  static const String music = 'Music';
+  static const String comedy = 'Comedy';
+  static const String sports = 'Sports';
+  static const String tech = 'Tech';
   static const String generalEvent = 'General event';
 
   static const List<String> all = [
-    music,
-    tech,
-    sports,
-    comedy,
-    wedding,
     birthday,
+    dinner,
+    privateGathering,
+    wedding,
     anniversary,
     graduation,
     generalParty,
+    music,
+    comedy,
+    sports,
+    tech,
     generalEvent,
   ];
 
@@ -60,11 +65,11 @@ abstract final class TicketCategoryPalettes {
   static TicketCategoryPalette forCategory(String category) {
     switch (category) {
       case music:
-        return TicketCategoryPalette(
-          eyeColor: const Color(0xFF1A1A2E),
-          dataModuleColor: const Color(0xFFE94560),
-          backgroundStart: _bg(0xFF5963),
-          backgroundEnd: _bg(0xF9CF58),
+        return const TicketCategoryPalette(
+          eyeColor: AppColors.primary,
+          dataModuleColor: Colors.white,
+          backgroundStart: AppColors.brandDarkPlum,
+          backgroundEnd: AppColors.brandDarkPlum,
         );
       case tech:
         return const TicketCategoryPalette(
@@ -100,6 +105,20 @@ abstract final class TicketCategoryPalettes {
           dataModuleColor: const Color(0xFF4ECDC4),
           backgroundStart: _bg(0xFF6B6B),
           backgroundEnd: _bg(0x4ECDC4),
+        );
+      case dinner:
+        return TicketCategoryPalette(
+          eyeColor: const Color(0xFF8B4513),
+          dataModuleColor: const Color(0xFFF5E6D3),
+          backgroundStart: _bg(0x8B4513),
+          backgroundEnd: _bg(0xC9A227),
+        );
+      case privateGathering:
+        return TicketCategoryPalette(
+          eyeColor: AppColors.primary,
+          dataModuleColor: Colors.white,
+          backgroundStart: _bg(0x6A0572),
+          backgroundEnd: _bg(0xFF6B6B),
         );
       case anniversary:
         return TicketCategoryPalette(

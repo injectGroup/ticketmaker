@@ -9,7 +9,7 @@ part 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit({AuthRepository? repository})
-    : _repository = repository ?? AuthRepository(),
+    : _repository = repository ?? FirebaseAuthRepository(),
       super(const AuthState()) {
     restoreSession();
   }
@@ -89,10 +89,7 @@ class AuthCubit extends Cubit<AuthState> {
     required String firstName,
     required String lastName,
     required String email,
-    required String phone,
     required String password,
-    required DateTime dateOfBirth,
-    required bool marketingOptIn,
   }) async {
     emit(state.copyWith(isSubmitting: true, clearMessage: true));
     try {
@@ -100,10 +97,7 @@ class AuthCubit extends Cubit<AuthState> {
         firstName: firstName,
         lastName: lastName,
         email: email,
-        phone: phone,
         password: password,
-        dateOfBirth: dateOfBirth,
-        marketingOptIn: marketingOptIn,
       );
       emit(
         state.copyWith(
@@ -123,6 +117,44 @@ class AuthCubit extends Cubit<AuthState> {
         state.copyWith(
           isSubmitting: false,
           message: 'Could not create account. Try again.',
+        ),
+      );
+      return false;
+    }
+  }
+
+  Future<bool> signInWithGoogle() => _socialSignIn(_repository.signInWithGoogle);
+
+  Future<bool> signInWithApple() => _socialSignIn(_repository.signInWithApple);
+
+  Future<bool> _socialSignIn(Future<AppUser> Function() action) async {
+    emit(state.copyWith(isSubmitting: true, clearMessage: true));
+    try {
+      final user = await action();
+      emit(
+        state.copyWith(
+          status: AuthStatus.authenticated,
+          user: user,
+          isSubmitting: false,
+          justSignedUp: false,
+          message: 'Signed in',
+        ),
+      );
+      return true;
+    } on AuthException catch (e) {
+      emit(
+        state.copyWith(
+          isSubmitting: false,
+          message: e.message,
+          status: AuthStatus.unauthenticated,
+        ),
+      );
+      return false;
+    } catch (_) {
+      emit(
+        state.copyWith(
+          isSubmitting: false,
+          message: 'Could not sign in. Try again.',
         ),
       );
       return false;

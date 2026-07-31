@@ -91,7 +91,8 @@ Hot reload: `r` · Hot restart: `R` · Quit: `q`
 | `flutter pub outdated` | Review dependency updates |
 | `flutter build apk` | Android release/debug build |
 | `flutter build ios --no-codesign` | iOS compile check without signing |
-| `flutter build web` | Web build output under `build/web` |
+| `./scripts/build_web.sh` | Clean web release build + cache-bust JS under `build/web` |
+| `flutter build web` | Web build only (prefer `./scripts/build_web.sh` for Hosting deploys) |
 | `flutter clean` | Clear build caches when tooling is inconsistent |
 
 ---
@@ -103,7 +104,11 @@ Hot reload: `r` · Hot restart: `R` · Quit: `q`
 - Routes: `lib/core/router/app_router.dart`
 - Lint rules: `analysis_options.yaml` (includes `flutter_lints`)
 
-No `.env` secrets are required for the current local preview build. If future features add API keys:
+No `.env` secrets are required to run the app: Firebase client configuration in
+`lib/firebase_options.dart` is public by design. Android **release** builds do
+need a local `android/key.properties` pointing at the upload keystore — see
+[development.md](development.md#android-upload-signing-play-console). If future features add
+API keys:
 
 1. Keep secrets out of git (use ignored local env files or CI secrets).
 2. Document required variables in this file without values.

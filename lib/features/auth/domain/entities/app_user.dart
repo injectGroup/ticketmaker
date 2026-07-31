@@ -6,9 +6,9 @@ class AppUser extends Equatable {
     required this.email,
     required this.firstName,
     required this.lastName,
-    required this.phone,
-    required this.dateOfBirth,
-    required this.marketingOptIn,
+    this.phone = '',
+    this.dateOfBirth,
+    this.marketingOptIn = false,
     this.preferredCity,
     this.interests = const [],
   });
@@ -18,7 +18,7 @@ class AppUser extends Equatable {
   final String firstName;
   final String lastName;
   final String phone;
-  final DateTime dateOfBirth;
+  final DateTime? dateOfBirth;
   final bool marketingOptIn;
   final String? preferredCity;
   final List<String> interests;
@@ -41,6 +41,7 @@ class AppUser extends Equatable {
     String? preferredCity,
     List<String>? interests,
     bool clearPreferredCity = false,
+    bool clearDateOfBirth = false,
   }) {
     return AppUser(
       id: id ?? this.id,
@@ -48,7 +49,9 @@ class AppUser extends Equatable {
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
       phone: phone ?? this.phone,
-      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      dateOfBirth: clearDateOfBirth
+          ? null
+          : (dateOfBirth ?? this.dateOfBirth),
       marketingOptIn: marketingOptIn ?? this.marketingOptIn,
       preferredCity: clearPreferredCity
           ? null
@@ -63,20 +66,23 @@ class AppUser extends Equatable {
     'firstName': firstName,
     'lastName': lastName,
     'phone': phone,
-    'dateOfBirth': dateOfBirth.toIso8601String(),
+    if (dateOfBirth != null) 'dateOfBirth': dateOfBirth!.toIso8601String(),
     'marketingOptIn': marketingOptIn,
     'preferredCity': preferredCity,
     'interests': interests,
   };
 
   factory AppUser.fromJson(Map<String, dynamic> json) {
+    final dobRaw = json['dateOfBirth'];
     return AppUser(
-      id: json['id'] as String,
-      email: json['email'] as String,
+      id: json['id'] as String? ?? json['uid'] as String? ?? '',
+      email: json['email'] as String? ?? '',
       firstName: json['firstName'] as String? ?? '',
       lastName: json['lastName'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
-      dateOfBirth: DateTime.parse(json['dateOfBirth'] as String),
+      dateOfBirth: dobRaw is String && dobRaw.isNotEmpty
+          ? DateTime.tryParse(dobRaw)
+          : null,
       marketingOptIn: json['marketingOptIn'] as bool? ?? false,
       preferredCity: json['preferredCity'] as String?,
       interests: (json['interests'] as List<dynamic>? ?? const [])

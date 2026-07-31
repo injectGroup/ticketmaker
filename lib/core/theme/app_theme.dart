@@ -3,11 +3,28 @@ import 'package:google_fonts/google_fonts.dart';
 
 /// Application color tokens for Quick Ticket Maker.
 abstract final class AppColors {
-  static const Color primary = Color(0xFF4B39EF);
+  /// Brand rose — primary actions, QR accents, active states.
+  static const Color primary = Color(0xFFE0405B);
+
+  /// Sleek dark plum — default ticket card fill.
+  static const Color brandDarkPlum = Color(0xFF1A1A2E);
+
+  /// Soft blush alternate ticket fill.
+  static const Color brandBlush = Color(0xFFF4EEFF);
+
+  /// Crisp off-white for editable pill inputs on the ticket card.
+  static const Color pillBackground = Color(0xFFF8FAFC);
+
+  /// High-contrast ink for pill input text.
+  static const Color pillText = Color(0xFF0F172A);
+
+  /// Dark neutral for floating controls (e.g. Bg color FAB).
+  static const Color fabNeutral = Color(0xFF1E293B);
+
   static const Color secondary = Color(0xFF39D2C0);
   static const Color error = Color(0xFFFF5963);
   static const Color warning = Color(0xFFF9CF58);
-  static const Color primaryBackground = Color(0xFFF1F4F8);
+  static const Color primaryBackground = Color(0xFFF8F9FA);
   static const Color secondaryBackground = Color(0xFFFFFFFF);
   static const Color primaryText = Color(0xFF14181B);
   static const Color secondaryText = Color(0xFF57636C);

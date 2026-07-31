@@ -1,6 +1,6 @@
 # Security Policy
 
-This security policy describes how to report vulnerabilities in **Quick Ticket Maker** (`injectGroup/ticketmaker`) and how Inject handles those reports.
+This security policy describes how to report vulnerabilities in **Quick Ticket Maker** (`injectGroup/ticketmaker`, `ejike-art/ticketmaker-gen-and-tickets-only`) and how Inject handles those reports.
 
 It is written to align with:
 
@@ -77,7 +77,7 @@ We classify using industry-standard impact thinking (e.g. CVSS-like factors):
 | Medium | XSS/injection in any future web surfaces; insecure storage of PII |
 | Low | Hardening gaps, missing TLS pinning opportunities, informational |
 
-Current product note: the app is primarily a **local UI preview** with network image loads. Even so, supply-chain, dependency, and client-side injection risks remain in scope.
+Current product note: the app includes **Firebase Auth** and optional cloud sync (Firestore/Storage). Client API keys in source are public-by-design; server secrets and webhooks must never be committed. Supply-chain, dependency, auth bypass, and cross-user data access risks remain in scope.
 
 ---
 
@@ -100,15 +100,18 @@ Maintainers and contributors must follow:
 - [docs/security/information-security-policy.md](docs/security/information-security-policy.md)
 - [docs/security/secure-coding.md](docs/security/secure-coding.md)
 - [docs/security/threat-model.md](docs/security/threat-model.md)
+- [docs/security/github-hardening-checklist.md](docs/security/github-hardening-checklist.md)
+- [docs/security/firebase-console-hardening.md](docs/security/firebase-console-hardening.md)
 - [docs/compliance/iso-alignment.md](docs/compliance/iso-alignment.md)
 
 ### Hard requirements
 
-- Never commit secrets (API keys, tokens, private keys, `.env` with credentials, keystores with production passwords).
+- Never commit secrets (API tokens, private keys, `.env` with credentials, keystores with production passwords, Chat webhooks).
 - Never request or paste production secrets into Issues or PR descriptions.
 - Prefer SSH remotes and least-privilege tokens for automation.
 - Dependency updates must be reviewed for known CVEs before merge.
 - Security-relevant changes require explicit review notes in the pull request.
+- Firestore/Storage access must remain owner-only via deployed rules.
 
 ---
 
@@ -143,4 +146,4 @@ Public disclosure timelines are coordinated with the reporter when feasible.
 
 ---
 
-*Last reviewed: 2026-07-16*
+*Last reviewed: 2026-07-27*

@@ -1,36 +1,34 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ticket_maker/app.dart';
 import 'package:ticket_maker/core/router/app_router.dart';
 import 'package:ticket_maker/features/auth/data/auth_repository.dart';
-import 'package:ticket_maker/features/discover/domain/location_city_service.dart';
+import 'package:ticket_maker/features/generate/presentation/bloc/generate_cubit.dart';
+import 'package:ticket_maker/features/generate/presentation/pages/generate_page.dart';
+import 'package:ticket_maker/features/tickets/data/ticket_image_store.dart';
 import 'package:ticket_maker/features/tickets/data/ticket_local_repository.dart';
-import 'package:ticket_maker/presentation/pages/discover_screen.dart';
 
 Widget buildTestApp({
-  LocationCityService? location,
   AuthRepository? authRepository,
+  TicketLocalRepository? ticketsRepository,
+  TicketImageStore? ticketsImageStore,
 }) {
   return TicketMakerApp(
-    locationCityService: location ?? FakeLocationCityService('Abuja'),
-    authRepository: authRepository,
+    authRepository: authRepository ?? FakeAuthRepository(),
+    ticketsRepository: ticketsRepository,
+    ticketsImageStore: ticketsImageStore,
   );
 }
 
 Future<AuthRepository> seedSignedInUser() async {
-  final prefs = await SharedPreferences.getInstance();
-  final repo = AuthRepository(prefs: prefs);
+  final repo = FakeAuthRepository();
   await repo.signUp(
     firstName: 'Ada',
     lastName: 'Lovelace',
     email: 'ada@example.com',
-    phone: '+2348000000000',
     password: 'secret1',
-    dateOfBirth: DateTime(1990, 1, 1),
-    marketingOptIn: false,
   );
   return repo;
 }
@@ -40,50 +38,74 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    // Global GoRouter retains location across tests; reset to Discover.
-    appRouter.go(DiscoverScreen.routePath);
+    FlutterSecureStorage.setMockInitialValues({});
+    // Global GoRouter retains location across tests; reset to Generate.
+    appRouter.go(GeneratePage.routePath);
   });
 
-  testWidgets('App opens on Discover home', (tester) async {
+  testWidgets('App opens on Generate home with Generate and Tickets nav', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildTestApp());
-    await tester.pump(); // Avoid hang on Image.network loading animation
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pumpAndSettle();
 
-    expect(find.text('Discover · Abuja'), findsOneWidget);
-    expect(find.text('Abuja Jazz Night'), findsOneWidget);
-    expect(find.byType(Image), findsWidgets);
-  });
+    expect(find.text('My Tickets'), findsOneWidget);
+    expect(find.text("Ejike's Birthday Bash"), findsOneWidget);
+    expect(find.text('Change color'), findsOneWidget);
+    expect(find.text('Change shape'), findsOneWidget);
+    expect(find.text('Create Guest Link'), findsNothing);
+    expect(find.text('Save Ticket'), findsOneWidget);
 
-  testWidgets('Discover cards use network hero images', (tester) async {
-    await tester.pumpWidget(buildTestApp());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-
-    final networkImages = tester.widgetList<Image>(find.byType(Image)).where((
-      image,
-    ) {
-      return image.image is NetworkImage;
-    });
-    expect(networkImages, isNotEmpty);
-    expect(
-      (networkImages.first.image as NetworkImage).url,
-      contains('images.unsplash.com/'),
-    );
+    expect(find.text('Generate'), findsWidgets);
+    expect(find.text('Tickets'), findsOneWidget);
+    expect(find.text('Discover'), findsNothing);
+    expect(find.text('Account'), findsNothing);
   });
 
   testWidgets('Generate page shows ticket title branding', (tester) async {
     await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Generate'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Quick Ticket Maker'), findsOneWidget);
-    expect(find.text('My Ticket'), findsOneWidget);
-    expect(find.text('Circu Du Freak'), findsOneWidget);
-    expect(find.text('Generate Qr Code'), findsOneWidget);
+    expect(find.text('My Tickets'), findsOneWidget);
+    expect(find.text('GUEST PASS'), findsOneWidget);
+    expect(find.text("Ejike's Birthday Bash"), findsOneWidget);
+    expect(find.text('VIP Guest Pass'), findsOneWidget);
+    expect(find.text('Private gathering'), findsOneWidget);
+    expect(find.byIcon(Icons.threed_rotation), findsNothing);
+    expect(find.byIcon(Icons.place_outlined), findsOneWidget);
+    expect(find.text('Create Guest Link'), findsNothing);
+    expect(find.text('Bg color'), findsOneWidget);
     expect(find.text('Save Ticket'), findsOneWidget);
+    // Date row defaults to today (GenerateCubit uses DateTime.now()) and is
+    // rendered in long form, e.g. `Friday, 31 July 2026`.
+    final todayLabel = GenerateCubit.formatFullDateLabel(DateTime.now());
+    expect(find.text(todayLabel), findsOneWidget);
+    expect(find.text('TICKET ID'), findsOneWidget);
+    expect(find.text('ABOUT THIS EVENT'), findsOneWidget);
+    expect(find.text('Powered by Quick Ticket'), findsOneWidget);
   });
+
+  testWidgets(
+    'Generate date row uses compact form on phone-width viewport',
+    (tester) async {
+      // Match a typical iPhone logical size so TicketDateText falls back.
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestApp());
+      await tester.pumpAndSettle();
+
+      final now = DateTime.now();
+      final compact = GenerateCubit.formatCompactDateLabel(now);
+      final full = GenerateCubit.formatFullDateLabel(now);
+
+      expect(find.text(compact), findsOneWidget);
+      expect(find.text(full), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('Tickets tab starts empty without saved records', (tester) async {
     await tester.pumpWidget(buildTestApp());
@@ -93,198 +115,20 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('No saved tickets yet'), findsOneWidget);
-    expect(find.text('Circu Du Freak'), findsNothing);
+    expect(find.text("Ejike's Birthday Bash"), findsNothing);
   });
 
-  testWidgets('Discover lists Abuja events and filters by search', (
-    tester,
-  ) async {
+  testWidgets('Guest Save Ticket saves without auth gate', (tester) async {
     await tester.pumpWidget(buildTestApp());
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-
-    await tester.tap(find.text('Discover'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-
-    expect(find.text('Discover · Abuja'), findsOneWidget);
-    expect(find.text('Abuja Jazz Night'), findsOneWidget);
-    expect(find.text('Music'), findsWidgets);
-
-    await tester.enterText(find.byType(TextField), 'zzzz-no-match');
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(find.textContaining('No events match'), findsOneWidget);
-
-    await tester.enterText(find.byType(TextField), 'Wedding');
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('Asokoro Garden Wedding Fair'), findsOneWidget);
-    expect(find.text('Abuja Jazz Night'), findsNothing);
-
-    await tester.enterText(find.byType(TextField), 'Flutter');
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('Flutter Abuja Meetup'), findsOneWidget);
-    expect(find.text('Tech'), findsWidgets);
-  });
-
-  testWidgets('Discover city switch filters events', (tester) async {
-    await tester.pumpWidget(buildTestApp());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-
-    expect(find.text('Abuja Jazz Night'), findsOneWidget);
-    expect(find.text('Lagos Afrobeats Night'), findsNothing);
-
-    await tester.tap(find.widgetWithText(Chip, 'Abuja'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.text('Lagos').last);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-
-    expect(find.text('Discover · Lagos'), findsOneWidget);
-    expect(find.text('Lagos Afrobeats Night'), findsOneWidget);
-    expect(find.text('Abuja Jazz Night'), findsNothing);
-  });
-
-  testWidgets('Guest Book Spot opens auth gate', (tester) async {
-    await tester.pumpWidget(buildTestApp());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-
-    expect(find.text('Book Spot'), findsWidgets);
-    await tester.ensureVisible(find.text('Book Spot').first);
-    await tester.tap(find.text('Book Spot').first);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 800));
-
-    expect(find.text('Sign in to book'), findsOneWidget);
-    expect(find.text('Sign In'), findsWidgets);
-    expect(find.text('Sign Up'), findsWidgets);
-  });
-
-  testWidgets('Signed-in Book Spot prefills Generate', (tester) async {
-    final repo = await seedSignedInUser();
-    await tester.pumpWidget(buildTestApp(authRepository: repo));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-
-    await tester.ensureVisible(find.text('Book Spot').first);
-    await tester.tap(find.text('Book Spot').first);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 800));
-
-    expect(find.text('Sign in to book'), findsNothing);
-    expect(find.text('Quick Ticket Maker'), findsOneWidget);
-    expect(find.text('Abuja Jazz Night'), findsWidgets);
-    expect(find.text('Transcorp Hilton — Ballroom'), findsOneWidget);
-    expect(find.text('Capital Jazz Collective'), findsOneWidget);
-  });
-
-  testWidgets('Guest Save Ticket opens auth gate', (tester) async {
-    await tester.pumpWidget(buildTestApp());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-
-    await tester.tap(find.text('Generate'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
 
     await tester.ensureVisible(find.text('Save Ticket'));
     await tester.tap(find.text('Save Ticket'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 800));
+    await tester.pump(const Duration(seconds: 1));
 
-    expect(find.text('Sign in to book'), findsOneWidget);
-  });
-
-  testWidgets('Discover card opens details sheet', (tester) async {
-    await tester.pumpWidget(buildTestApp());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-
-    expect(find.text('Abuja Jazz Night'), findsWidgets);
-    await tester.scrollUntilVisible(
-      find.text('Abuja Jazz Night').first,
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(find.text('Abuja Jazz Night').first);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 800));
-
-    expect(find.text('Book a Spot'), findsOneWidget);
-    expect(find.text('Capital Jazz Collective'), findsOneWidget);
-    expect(find.textContaining('₦8,500'), findsWidgets);
-  });
-
-  testWidgets('Generate category palette applies wedding colors', (
-    tester,
-  ) async {
-    await tester.pumpWidget(buildTestApp());
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Generate'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Event category palette'), findsOneWidget);
-    await tester.tap(find.widgetWithText(FilterChip, 'Wedding'));
-    await tester.pumpAndSettle();
-    expect(find.widgetWithText(FilterChip, 'Wedding'), findsOneWidget);
-  });
-
-  testWidgets('Tapping a saved ticket opens read-only detail view', (
-    tester,
-  ) async {
-    final ticketJson = {
-      'id': 'ticket-detail-test-1',
-      'headerLabel': 'VIP Pass',
-      'title': 'Detail View Concert',
-      'subtitle': 'National Stadium Abuja',
-      'dateLabel': 'Sat, Jul 18',
-      'timeLabel': '8:00 PM',
-      'eventAt': '2026-07-18T20:00:00.000',
-      'code': '9999-8888-777',
-      'qrData': 'https://example.com/ticket/detail-view',
-      'imagePath': '',
-      'eyeColor': 0xFFF44336,
-      'dataModuleColor': 0xFFFF9800,
-      'isSquare': false,
-      'topGradientStart': 0xFF4B39EF,
-      'topGradientEnd': 0xFF39D2C0,
-      'bottomGradientStart': 0xFF4B39EF,
-      'bottomGradientEnd': 0xFF39D2C0,
-    };
-    SharedPreferences.setMockInitialValues({
-      TicketLocalRepository.storageKey: <String>[jsonEncode(ticketJson)],
-    });
-
-    await tester.pumpWidget(buildTestApp());
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Tickets'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Detail View Concert'), findsOneWidget);
-    await tester.tap(find.text('Detail View Concert'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('VIP Pass'), findsOneWidget);
-    expect(find.text('National Stadium Abuja'), findsOneWidget);
-    expect(find.text('[ 9999-8888-777 ]'), findsOneWidget);
-    expect(find.text('Generate Qr Code'), findsNothing);
-    expect(find.text('Save Ticket'), findsNothing);
-  });
-
-  testWidgets('Account tab shows sign-in CTA when guest', (tester) async {
-    await tester.pumpWidget(buildTestApp());
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Account'));
-    await tester.pumpAndSettle();
-    expect(find.text('Your account'), findsOneWidget);
-    expect(find.text('Sign In / Sign Up'), findsOneWidget);
+    expect(find.text('Sign in to continue'), findsNothing);
+    expect(find.text('Sign In'), findsNothing);
   });
 }

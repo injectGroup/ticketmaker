@@ -14,8 +14,12 @@ abstract final class ColorContrast {
   /// Light text for dark backgrounds.
   static const Color onDark = Colors.white;
 
-  /// Opaque-stop luminance below this → prefer [onDark] for ticket gradients.
+  /// Opaque-stop luminance below this → may prefer [onDark] when alpha is high.
   static const double darkStopLuminanceThreshold = 0.45;
+
+  /// Minimum alpha before the opaque-dark → white rule applies.
+  /// Low-alpha brand washes (e.g. `0x35…`) stay judged by blended luminance.
+  static const double minAlphaForOpaqueDarkRule = 0.30;
 
   /// Returns [onLight] or [onDark] for best contrast on [background].
   ///
@@ -26,22 +30,50 @@ abstract final class ColorContrast {
     return opaque.computeLuminance() > 0.5 ? onLight : onDark;
   }
 
-  /// Contrasting color for a two-stop gradient (midpoint sample).
+  /// QR pad behind modules/eyes so patterns stay scanner-legible.
+  /// Light modules (e.g. white) sit on dark plum; dark modules on white.
+  static Color qrPadForPattern(Color dataModuleColor) {
+    return dataModuleColor.computeLuminance() > 0.5
+        ? AppColors.brandDarkPlum
+        : Colors.white;
+  }
+
+  /// Contrasting color for a two-stop gradient.
   ///
-  /// If either stop is dark when fully opaque (e.g. graduation charcoal),
-  /// returns [onDark] so translucent fills still get white text.
+  /// Prefers luminance of alpha-blended stops (what shows on [surface]).
+  /// Only forces [onDark] when a stop is both substantially opaque and dark
+  /// when fully opaque (e.g. graduation charcoal at ~`0x55` alpha).
   static Color onGradient(
     Color start,
     Color end, {
     Color surface = blendSurface,
   }) {
-    final opaqueStart = start.withValues(alpha: 1);
-    final opaqueEnd = end.withValues(alpha: 1);
-    if (opaqueStart.computeLuminance() < darkStopLuminanceThreshold ||
-        opaqueEnd.computeLuminance() < darkStopLuminanceThreshold) {
+    if (_isSubstantialDarkFill(start) || _isSubstantialDarkFill(end)) {
       return onDark;
     }
+
     final mid = Color.lerp(start, end, 0.5) ?? start;
-    return onColor(mid, surface: surface);
+    final samples = <Color>[
+      Color.alphaBlend(start, surface),
+      Color.alphaBlend(mid, surface),
+      Color.alphaBlend(end, surface),
+    ];
+    // Darkest blended sample → worst-case readability across the gradient.
+    var darkest = samples.first;
+    var darkestLum = darkest.computeLuminance();
+    for (final sample in samples.skip(1)) {
+      final lum = sample.computeLuminance();
+      if (lum < darkestLum) {
+        darkest = sample;
+        darkestLum = lum;
+      }
+    }
+    return darkestLum > 0.5 ? onLight : onDark;
+  }
+
+  static bool _isSubstantialDarkFill(Color color) {
+    if (color.a < minAlphaForOpaqueDarkRule) return false;
+    return color.withValues(alpha: 1).computeLuminance() <
+        darkStopLuminanceThreshold;
   }
 }

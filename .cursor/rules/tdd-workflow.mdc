@@ -1,0 +1,23 @@
+---
+description: Project TDD & Architecture Workflow Rules
+globs: **/*
+alwaysApply: true
+---
+
+# Project & TDD Workflow Rules
+
+## Trigger: Task Preparation
+When the user says "please prepare my tasks":
+1. Create `instructions/implementation-plan.md` with high-level architecture and master checklist.
+2. Create phase breakdown files (e.g., `instructions/phase-1.md`, `instructions/phase-2.md`) with structured subtask checklists.
+3. DO NOT write implementation code yet. Stop and ask for confirmation before writing files outside `instructions/`.
+
+## Execution Phase (TDD Rules)
+1. STRICT TDD FOR LOGIC: Always create/update unit/widget test specs before writing feature code (Models, Cubits, Repositories, Services).
+2. For every subtask:
+   - Step 1: Write failing test code based on the spec.
+   - Step 2: Write minimal implementation code to pass the test.
+   - Step 3: Run `flutter test` to confirm green (100% passing).
+   - Step 4: Check off completed items in the `.md` checklist files (`- [x]`).
+3. Never start a new task if current tests fail or checklist items are incomplete.
+4. Git Rule: Remind the user to commit using `subtask/`, `task/`, or `phase/` branch/commit naming conventions. Never instruct to delete branches.

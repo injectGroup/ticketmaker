@@ -1,55 +1,74 @@
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../discover/domain/entities/event.dart';
+import '../../../../core/utils/color_contrast.dart';
 import '../../data/ticket_category_palettes.dart';
 import '../../domain/entities/ticket.dart';
+import '../../../tickets/data/ticket_payload.dart';
 
 part 'generate_state.dart';
 
 class GenerateCubit extends Cubit<GenerateState> {
-  GenerateCubit({Random? random})
-    : _random = random ?? Random(),
-      super(GenerateState(ticket: _defaultTicket));
+  GenerateCubit({Random? random}) : this._(random ?? Random());
+
+  GenerateCubit._(this._random)
+    : super(GenerateState(ticket: _buildDefaultTicket(random: _random)));
 
   final Random _random;
 
-  static final DateTime _defaultEventAt = DateTime(2026, 7, 18, 20, 0);
+  /// Public ticket link template; [code] is the generated ticket id.
+  static String ticketPayloadUrl(String code) =>
+      TicketPayload.verificationUrl(code);
 
-  static final Ticket _defaultTicket = Ticket(
-    id: 'default',
-    headerLabel: 'My Ticket',
-    title: 'Circu Du Freak',
-    subtitle: 'Vision & Sound Experience',
-    dateLabel: formatDateLabel(_defaultEventAt),
-    timeLabel: formatTimeLabel(_defaultEventAt),
-    eventAt: _defaultEventAt,
-    code: '1234-5678-910',
-    qrData: 'https://www.linkedin.com/in/abdulkadirmohammed/',
-    imagePath: '',
-    eyeColor: AppColors.error,
-    dataModuleColor: AppColors.warning,
-    isSquare: false,
-    topGradientStart: const Color(0x354B39EF),
-    topGradientEnd: const Color(0x3A39D2C0),
-    bottomGradientStart: const Color(0x354B39EF),
-    bottomGradientEnd: const Color(0x3A39D2C0),
-  );
+  static Ticket _buildDefaultTicket({required Random random}) {
+    final eventAt = DateTime.now();
+    final code = _makeCode(random);
+    return Ticket(
+      id: 'default',
+      headerLabel: 'GUEST PASS',
+      title: "Ejike's Birthday Bash",
+      subtitle: 'VIP Guest Pass',
+      venue: 'Private gathering',
+      dateLabel: formatDateLabel(eventAt),
+      timeLabel: formatTimeLabel(eventAt),
+      eventAt: eventAt,
+      code: code,
+      qrData: ticketPayloadUrl(code),
+      imagePath: '',
+      // Brand pink corners + white modules on dark plum card.
+      eyeColor: AppColors.primary,
+      dataModuleColor: Colors.white,
+      isSquare: false,
+      topGradientStart: AppColors.brandDarkPlum,
+      topGradientEnd: AppColors.brandDarkPlum,
+      bottomGradientStart: AppColors.brandDarkPlum,
+      bottomGradientEnd: AppColors.brandDarkPlum,
+    );
+  }
+
+  static String _makeCode(Random random) {
+    String four() => (random.nextInt(9000) + 1000).toString();
+    String three() => (random.nextInt(900) + 100).toString();
+    return '${four()}-${four()}-${three()}';
+  }
 
   static const List<(Color, Color)> _qrPalettes = [
+    (AppColors.primary, Colors.white),
+    (AppColors.primary, AppColors.brandDarkPlum),
     (AppColors.error, AppColors.warning),
     (AppColors.primary, AppColors.secondary),
-    (Color(0xFF1A1A2E), Color(0xFFE94560)),
     (Color(0xFF0F3460), Color(0xFF16C79A)),
     (Color(0xFF6A0572), Color(0xFFFFB703)),
   ];
 
   static const List<(Color, Color)> _bgPalettes = [
-    (Color(0x354B39EF), Color(0x3A39D2C0)),
+    (AppColors.brandDarkPlum, AppColors.brandDarkPlum),
+    (AppColors.brandBlush, AppColors.brandBlush),
     (Color(0x55FF5963), Color(0x55F9CF58)),
     (Color(0x5539D2C0), Color(0x554B39EF)),
     (Color(0x55EE8B60), Color(0x554B39EF)),
@@ -81,8 +100,49 @@ class GenerateCubit extends Cubit<GenerateState> {
     'Dec',
   ];
 
+  static const List<String> _weekdaysFull = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+
+  static const List<String> _monthsFull = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
   static String formatDateLabel(DateTime date) {
     return '${_weekdays[date.weekday - 1]}, ${_months[date.month - 1]} ${date.day}';
+  }
+
+  /// `EEEE, d MMMM yyyy` — e.g. `Friday, 31 July 2026`.
+  ///
+  /// Display-only long form; [formatDateLabel] stays the persisted
+  /// `Ticket.dateLabel` value.
+  static String formatFullDateLabel(DateTime date) {
+    return '${_weekdaysFull[date.weekday - 1]}, ${date.day} '
+        '${_monthsFull[date.month - 1]} ${date.year}';
+  }
+
+  /// `EEE, d MMM yyyy` — e.g. `Fri, 31 Jul 2026`. Display-only fallback for when
+  /// the long form does not fit on one line.
+  static String formatCompactDateLabel(DateTime date) {
+    return '${_weekdays[date.weekday - 1]}, ${date.day} '
+        '${_months[date.month - 1]} ${date.year}';
   }
 
   static String formatTimeLabel(DateTime date) {
@@ -118,12 +178,12 @@ class GenerateCubit extends Cubit<GenerateState> {
 
   /// Solid / gradient presets shown in the background customizer sheet.
   static const List<Color> topBgColorPresets = [
+    AppColors.brandDarkPlum,
     AppColors.primary,
+    AppColors.brandBlush,
     AppColors.secondary,
     AppColors.error,
     AppColors.warning,
-    Color(0xFF1A1A2E),
-    Color(0xFFE94560),
     Color(0xFF0F3460),
     Color(0xFF16C79A),
     Color(0xFF6A0572),
@@ -142,12 +202,20 @@ class GenerateCubit extends Cubit<GenerateState> {
   }
 
   /// Applies the same solid/gradient to both ticket halves.
+  /// Syncs QR corners to brand pink and modules to high-contrast white/dark.
   void setTopBackgroundGradient({required Color start, required Color end}) {
     final ticket = state.ticket;
+    final onFg = ColorContrast.onGradient(start, end);
+    final darkCard = onFg == ColorContrast.onDark;
+    final eye = AppColors.primary;
+    final modules = darkCard ? Colors.white : AppColors.brandDarkPlum;
+
     if (ticket.topGradientStart.toARGB32() == start.toARGB32() &&
         ticket.topGradientEnd.toARGB32() == end.toARGB32() &&
         ticket.bottomGradientStart.toARGB32() == start.toARGB32() &&
-        ticket.bottomGradientEnd.toARGB32() == end.toARGB32()) {
+        ticket.bottomGradientEnd.toARGB32() == end.toARGB32() &&
+        ticket.eyeColor.toARGB32() == eye.toARGB32() &&
+        ticket.dataModuleColor.toARGB32() == modules.toARGB32()) {
       return;
     }
     emit(
@@ -157,6 +225,8 @@ class GenerateCubit extends Cubit<GenerateState> {
           topGradientEnd: end,
           bottomGradientStart: start,
           bottomGradientEnd: end,
+          eyeColor: eye,
+          dataModuleColor: modules,
         ),
       ),
     );
@@ -201,8 +271,23 @@ class GenerateCubit extends Cubit<GenerateState> {
   }
 
   void setImagePath(String path) {
-    if (path == state.ticket.imagePath) return;
-    emit(state.copyWith(ticket: state.ticket.copyWith(imagePath: path)));
+    if (path == state.ticket.imagePath && state.imageBytes == null) return;
+    emit(
+      state.copyWith(
+        ticket: state.ticket.copyWith(imagePath: path),
+        clearImageBytes: true,
+      ),
+    );
+  }
+
+  /// Sets the gallery path and optional bytes (required for Flutter Web preview).
+  void setPickedImage({required String path, required Uint8List bytes}) {
+    emit(
+      state.copyWith(
+        ticket: state.ticket.copyWith(imagePath: path),
+        imageBytes: bytes,
+      ),
+    );
   }
 
   void setEventDateTime(DateTime eventAt) {
@@ -218,15 +303,23 @@ class GenerateCubit extends Cubit<GenerateState> {
     );
   }
 
-  void generateTicketCode() {
-    final code = '${_four()}-${_four()}-${_three()}';
+  /// Ensures a valid guest code + Hosting `/verify/<code>` URL for Save/Share.
+  ///
+  /// Reuses the current code when it already matches the guest-code pattern so
+  /// the Generate QR matches the published Firestore doc.
+  void ensureTicketPayload() {
+    final existing = state.ticket.code.trim();
+    final code = TicketPayload.codePattern.hasMatch(existing)
+        ? existing
+        : _makeCode(_random);
+    final qrData = ticketPayloadUrl(code);
+    if (state.ticket.code == code && state.ticket.qrData == qrData) return;
     emit(
       state.copyWith(
         ticket: state.ticket.copyWith(
           code: code,
-          qrData: 'https://ticketmaker.app/t/$code',
+          qrData: qrData,
         ),
-        message: 'QR code generated',
       ),
     );
   }
@@ -246,6 +339,11 @@ class GenerateCubit extends Cubit<GenerateState> {
   void updateSubtitle(String subtitle) {
     if (subtitle == state.ticket.subtitle) return;
     emit(state.copyWith(ticket: state.ticket.copyWith(subtitle: subtitle)));
+  }
+
+  void updateVenue(String venue) {
+    if (venue == state.ticket.venue) return;
+    emit(state.copyWith(ticket: state.ticket.copyWith(venue: venue)));
   }
 
   void clearMessage() {
@@ -273,37 +371,8 @@ class GenerateCubit extends Cubit<GenerateState> {
     );
   }
 
-  /// Prefills the editor from a Discover [event] (Book a Spot).
-  void prefillFromEvent(Event event) {
-    final palette = TicketCategoryPalettes.forCategory(event.category);
-    final imagePath = event.hasAssetImage ? event.imageUrl! : '';
-    emit(
-      GenerateState(
-        selectedCategory: event.category,
-        ticket: state.ticket.copyWith(
-          headerLabel: event.host,
-          title: event.title,
-          subtitle: event.venue,
-          eventAt: event.eventAt,
-          dateLabel: formatDateLabel(event.eventAt),
-          timeLabel: formatTimeLabel(event.eventAt),
-          imagePath: imagePath,
-          eyeColor: palette.eyeColor,
-          dataModuleColor: palette.dataModuleColor,
-          topGradientStart: palette.backgroundStart,
-          topGradientEnd: palette.backgroundEnd,
-          bottomGradientStart: palette.backgroundStart,
-          bottomGradientEnd: palette.backgroundEnd,
-        ),
-      ),
-    );
-  }
-
   /// Restores the editor to the initial default ticket configuration.
   void resetToDefault() {
-    emit(GenerateState(ticket: _defaultTicket));
+    emit(GenerateState(ticket: _buildDefaultTicket(random: _random)));
   }
-
-  String _four() => (_random.nextInt(9000) + 1000).toString();
-  String _three() => (_random.nextInt(900) + 100).toString();
 }

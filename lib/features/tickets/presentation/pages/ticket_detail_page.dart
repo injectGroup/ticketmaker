@@ -22,12 +22,60 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
   final GlobalKey _ticketBoundaryKey = GlobalKey();
 
   Future<void> _share(BuildContext buttonContext, Ticket ticket) async {
-    await TicketShareHelper.share(
-      context,
-      ticket,
-      boundaryKey: _ticketBoundaryKey,
-      sharePositionOrigin: TicketShareHelper.shareOriginFrom(buttonContext),
-    );
+    try {
+      final bytes =
+          context.read<TicketsCubit>().state.imageBytesFor(ticket.id);
+      final origin = TicketShareHelper.shareOriginFrom(buttonContext);
+
+      // If the ticket card isn't painted / capture fails, never crash —
+      // fall back to link/text share (clipboard on web, share sheet native).
+      final png = await TicketShareHelper.capturePngBytes(_ticketBoundaryKey);
+      if (!mounted) return;
+
+      if (png == null || png.isEmpty) {
+        await TicketShareHelper.share(
+          context,
+          ticket,
+          sharePositionOrigin: origin,
+          eventImageBytes: bytes,
+          attachTicketImage: false,
+        );
+        return;
+      }
+
+      await TicketShareHelper.share(
+        context,
+        ticket,
+        boundaryKey: _ticketBoundaryKey,
+        sharePositionOrigin: origin,
+        eventImageBytes: bytes,
+      );
+    } catch (e, st) {
+      debugPrint('TicketDetailPage share failed: $e\n$st');
+      if (!mounted) return;
+      // Last-resort link share so the Share button still completes.
+      try {
+        final origin = buttonContext.mounted
+            ? TicketShareHelper.shareOriginFrom(buttonContext)
+            : null;
+        await TicketShareHelper.share(
+          context,
+          ticket,
+          sharePositionOrigin: origin,
+          attachTicketImage: false,
+        );
+      } catch (fallbackError, fallbackSt) {
+        debugPrint('TicketDetailPage link fallback failed: $fallbackError\n$fallbackSt');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Could not share ticket. Try again.'),
+            ),
+          );
+      }
+    }
   }
 
   @override
@@ -41,22 +89,46 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
             break;
           }
         }
+        final imageBytes =
+            ticket == null ? null : state.imageBytesFor(ticket.id);
 
         return Scaffold(
           backgroundColor: AppColors.primaryBackground,
           appBar: AppBar(
             title: Text(ticket?.title ?? 'Ticket'),
             actions: [
-              if (ticket != null)
+              if (ticket != null) ...[
+                IconButton(
+                  tooltip: 'Publish for door scan',
+                  onPressed: () async {
+                    final ok = await context
+                        .read<TicketsCubit>()
+                        .republishForDoorScan(ticket!.id);
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            ok
+                                ? 'Door scan ready: ${ticket.code}'
+                                : 'Could not publish door scan link.',
+                          ),
+                        ),
+                      );
+                  },
+                  icon: const Icon(Icons.qr_code_2_outlined),
+                ),
                 Builder(
                   builder: (buttonContext) {
                     return IconButton(
-                      tooltip: 'Share',
+                      tooltip: 'Share Ticket',
                       onPressed: () => _share(buttonContext, ticket!),
                       icon: const Icon(Icons.share_outlined),
                     );
                   },
                 ),
+              ],
             ],
           ),
           body: ticket == null
@@ -89,13 +161,52 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                   ),
                 )
               : SingleChildScrollView(
-                  child: RepaintBoundary(
-                    key: _ticketBoundaryKey,
-                    child: SavedTicketView(ticket: ticket),
+                  child: Column(
+                    children: [
+                      RepaintBoundary(
+                        key: _ticketBoundaryKey,
+                        child: SavedTicketView(
+                          ticket: ticket,
+                          imageBytes: imageBytes,
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(16, 12, 16, 24),
+                        child: _ScanHint(),
+                      ),
+                    ],
                   ),
                 ),
         );
       },
+    );
+  }
+}
+
+/// Door-scan affordance shown instead of the raw verification URL.
+class _ScanHint extends StatelessWidget {
+  const _ScanHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(
+          Icons.verified_user_outlined,
+          size: 16,
+          color: AppColors.secondaryText,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          'Scan at entrance',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.secondaryText,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.3,
+          ),
+        ),
+      ],
     );
   }
 }

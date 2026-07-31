@@ -1,19 +1,49 @@
-import 'dart:io';
+import 'dart:async';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../generate/domain/entities/ticket.dart';
 import '../presentation/widgets/saved_ticket_view.dart';
+import '../presentation/widgets/web_share_options_dialog.dart';
+import 'ticket_image_codec.dart';
+import 'ticket_image_store.dart';
+import 'ticket_network_image.dart';
+import 'ticket_raster_export.dart';
+import 'ticket_share_download_stub.dart'
+    if (dart.library.js_interop) 'ticket_share_download_web.dart';
 
-/// Captures a ticket as PNG and opens the native share sheet with image + caption.
+/// Captures a ticket image and opens the native share sheet (or downloads on web).
 class TicketShareHelper {
   TicketShareHelper._();
 
-  static const String _subject = 'My Custom Ticket Design';
+  static const String _subject = 'Your personal event ticket';
+  static const String _webFileName = 'ticket.jpg';
+  static const String _fallbackShareText =
+      "You're invited — open your personal guest ticket!";
+  static const String _prepareFailedMessage =
+      'Could not prepare ticket image to share.';
+  static const String _shareFailedMessage =
+      'Could not share ticket. Try again.';
+  static const String _downloadedMessage = 'Ticket downloaded successfully!';
+  static const String _linkCopiedMessage = 'Share link copied to clipboard';
+  static const String _downloadFailedMessage =
+      'Could not prepare ticket image to download.';
+  static const String _downloadRetryMessage =
+      'Preparing ticket image... please try again.';
+  static const String _copyFailedMessage =
+      'Could not copy share link. Try again.';
+
+  /// Sanitized web download name: `Ticket_<ticket.id>.png`.
+  static String downloadFileNameFor(Ticket ticket) {
+    final raw = ticket.id.trim();
+    final safe = raw.replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '_');
+    return 'Ticket_${safe.isEmpty ? 'ticket' : safe}.png';
+  }
 
   /// Share-sheet anchor rect for iOS/iPadOS popovers.
   static Rect shareOriginFrom(BuildContext context) {
@@ -28,134 +58,914 @@ class TicketShareHelper {
     return Rect.fromLTWH(size.width / 2 - 1, size.height / 2 - 1, 2, 2);
   }
 
-  /// Encodes [boundaryKey]'s [RepaintBoundary] to PNG bytes.
-  static Future<List<int>?> capturePngBytes(
-    GlobalKey boundaryKey, {
-    double pixelRatio = 3,
-  }) async {
-    final boundary =
-        boundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-    if (boundary == null) return null;
-    if (boundary.debugNeedsPaint) {
-      await Future<void>.delayed(const Duration(milliseconds: 50));
+  /// Resolves a [RenderRepaintBoundary] from [key] without `late` or unsafe casts.
+  ///
+  /// Returns `null` when the key is unmounted or the render object is not a
+  /// [RenderRepaintBoundary] — never throws [LateInitializationError].
+  static RenderRepaintBoundary? _boundaryFromKey(GlobalKey key) {
+    RenderRepaintBoundary? boundary;
+    final context = key.currentContext;
+    if (context != null) {
+      final renderObject = context.findRenderObject();
+      if (renderObject is RenderRepaintBoundary) {
+        boundary = renderObject;
+      }
     }
+    return boundary;
+  }
+
+  /// Encodes [boundaryKey]'s [RepaintBoundary] to JPEG bytes in memory.
+  /// Returns null on any failure (including Flutter Web LateInitializationError).
+  static Future<Uint8List?> captureJpegBytes(
+    GlobalKey boundaryKey, {
+    double? pixelRatio,
+    int quality = 72,
+  }) async {
+    final ratio = pixelRatio ?? (kIsWeb ? 1.0 : 1.5);
     try {
-      final image = await boundary.toImage(pixelRatio: pixelRatio);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      RenderRepaintBoundary? boundary = _boundaryFromKey(boundaryKey);
+      if (boundary == null) return null;
+      if (boundary.debugNeedsPaint) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        boundary = _boundaryFromKey(boundaryKey);
+        if (boundary == null || boundary.debugNeedsPaint) return null;
+      }
+      if (!boundary.hasSize ||
+          boundary.size.width <= 0 ||
+          boundary.size.height <= 0) {
+        return null;
+      }
+
+      ui.Image? image;
+      try {
+        image = await boundary.toImage(pixelRatio: ratio);
+      } catch (e, st) {
+        final message = e.toString();
+        if (!_isEngineLateInit(message)) {
+          debugPrint('captureJpegBytes toImage failed: $e\n$st');
+        }
+        return null;
+      }
+
+      final Uint8List? jpegBytes = await uiImageToJpeg(image, quality: quality);
       image.dispose();
-      return byteData?.buffer.asUint8List();
-    } catch (_) {
+      if (jpegBytes == null || jpegBytes.isEmpty) return null;
+      return jpegBytes;
+    } catch (e, st) {
+      final message = e.toString();
+      if (!_isEngineLateInit(message)) {
+        debugPrint('captureJpegBytes failed: $e\n$st');
+      }
       return null;
     }
   }
 
-  /// Shares [ticket] as a PNG (plus caption). Falls back to text-only on failure.
+  /// Encodes [repaintKey]'s [RepaintBoundary] to PNG bytes in memory.
+  ///
+  /// Returns `null` when the key is not attached, the boundary is missing /
+  /// never paints, or capture fails — never throws [LateInitializationError].
+  ///
+  /// No `late` locals — every render/image/byte reference is nullable and
+  /// checked before use. On web, default [pixelRatio] is 1.0 to reduce
+  /// CanvasKit OffscreenCanvas pressure.
+  ///
+  /// When CanvasKit throws LateInitializationError, [lastCaptureHitEngineLateInit]
+  /// is set so callers can fail-fast instead of retrying.
+  static bool lastCaptureHitEngineLateInit = false;
+
+  static Future<Uint8List?> capturePngBytes(
+    GlobalKey repaintKey, {
+    double? pixelRatio,
+  }) async {
+    lastCaptureHitEngineLateInit = false;
+    final effectiveRatio = pixelRatio ?? (kIsWeb ? 1.0 : 3.0);
+
+    RenderRepaintBoundary? boundary;
+    Uint8List? pngBytes;
+    ui.Image? image;
+    ByteData? byteData;
+
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      await _awaitFrameOrTimeout();
+
+      final BuildContext? keyContext = repaintKey.currentContext;
+      if (keyContext == null) return null;
+
+      final Element? element =
+          keyContext is Element ? keyContext : null;
+      if (element != null) {
+        WidgetsBinding.instance.buildOwner?.buildScope(element);
+      }
+      await _awaitFrameOrTimeout();
+
+      boundary = _boundaryFromKey(repaintKey);
+      if (boundary == null || boundary.debugNeedsPaint) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await _awaitFrameOrTimeout();
+        boundary = _boundaryFromKey(repaintKey);
+      }
+
+      if (boundary == null ||
+          boundary.debugNeedsPaint ||
+          !boundary.hasSize ||
+          boundary.size.width <= 0 ||
+          boundary.size.height <= 0) {
+        return null;
+      }
+
+      try {
+        image = await boundary.toImage(pixelRatio: effectiveRatio);
+        byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+        image.dispose();
+        image = null;
+        pngBytes = byteData?.buffer.asUint8List();
+        byteData = null;
+        if (pngBytes == null || pngBytes.isEmpty) return null;
+        return pngBytes;
+      } catch (e, st) {
+        final message = e.toString();
+        if (_isEngineLateInit(message)) {
+          lastCaptureHitEngineLateInit = true;
+          debugPrint(
+            'capturePngBytes: CanvasKit toImage LateInitializationError '
+            '(pixelRatio=$effectiveRatio) — skip retries / use raster fallback',
+          );
+        } else {
+          debugPrint('Failed to capture ticket image: $e\n$st');
+        }
+        image?.dispose();
+        return null;
+      }
+    } catch (e, st) {
+      final message = e.toString();
+      if (_isEngineLateInit(message)) {
+        lastCaptureHitEngineLateInit = true;
+      } else {
+        debugPrint('capturePngBytes failed: $e\n$st');
+      }
+      image?.dispose();
+      return null;
+    }
+  }
+
+  static bool _isEngineLateInit(String message) =>
+      message.contains('LateInitializationError') ||
+      message.contains('LateInitialization');
+
+  /// [endOfFrame] can hang in widget tests; bound the wait.
+  static Future<void> _awaitFrameOrTimeout() async {
+    try {
+      await WidgetsBinding.instance.endOfFrame.timeout(
+        const Duration(milliseconds: 500),
+      );
+    } catch (_) {}
+  }
+
+  /// Shares [ticket] as a JPEG of the **full ticket** when image capture is
+  /// available; otherwise shares/copies ticket link/details only.
+  ///
+  /// [eventImageBytes] is only used as the photo slot inside [SavedTicketView].
+  /// Prefer an on-screen [boundaryKey] (detail page); otherwise compose via a
+  /// opaque modal when [attachTicketImage] is true.
+  ///
+  /// Set [attachTicketImage] to `false` for My Tickets **list** rows (no full
+  /// ticket [RepaintBoundary] is painted there) — skips image capture and
+  /// shares link/details only, without throwing.
+  ///
+  /// **Web:** shows a dialog with **Download Ticket Image** and
+  /// **Copy Share Link**, then SnackBars that name the completed action.
   static Future<void> share(
     BuildContext context,
     Ticket ticket, {
     GlobalKey? boundaryKey,
     Rect? sharePositionOrigin,
+    Uint8List? eventImageBytes,
+    @Deprecated('Use eventImageBytes — never shared as the ticket file')
+    Uint8List? imageBytes,
+    bool attachTicketImage = true,
   }) async {
+    final messenger = ScaffoldMessenger.maybeOf(context);
     final origin = sharePositionOrigin ?? shareOriginFrom(context);
-    List<int>? pngBytes;
+    final photoBytes = eventImageBytes ?? imageBytes;
 
-    if (boundaryKey != null) {
-      pngBytes = await capturePngBytes(boundaryKey);
+    // Web: let the user choose download vs copy before any capture work.
+    if (kIsWeb) {
+      await _shareOnWeb(
+        context,
+        ticket,
+        boundaryKey: boundaryKey,
+        eventImageBytes: photoBytes,
+        messenger: messenger,
+      );
+      return;
     }
-    if (!context.mounted) return;
-    pngBytes ??= await _captureViaOverlay(context, ticket);
 
-    if (pngBytes != null && pngBytes.isNotEmpty) {
-      try {
-        final dir = await getTemporaryDirectory();
-        final file = File('${dir.path}/share_ticket_${ticket.id}.png');
-        await file.writeAsBytes(pngBytes, flush: true);
-        // ignore: deprecated_member_use
-        await Share.shareXFiles(
-          [XFile(file.path, mimeType: 'image/png')],
-          text: ticket.toShareText(),
-          subject: _subject,
-          sharePositionOrigin: origin,
+    messenger
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Preparing share…'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+    Uint8List? jpegBytes;
+
+    try {
+      if (attachTicketImage) {
+        jpegBytes = await _prepareTicketJpeg(
+          context,
+          ticket,
+          boundaryKey: boundaryKey,
+          eventImageBytes: photoBytes,
+        );
+      }
+      if (!context.mounted) return;
+
+      if (jpegBytes == null || jpegBytes.isEmpty) {
+        await _shareTextOrCopyLink(
+          context,
+          ticket,
+          origin: origin,
+          messenger: messenger,
         );
         return;
-      } catch (_) {
-        // Fall through to text-only share.
       }
-    }
 
-    // ignore: deprecated_member_use
-    await Share.share(
-      ticket.toShareText(),
-      subject: _subject,
-      sharePositionOrigin: origin,
-    );
+      final shareText = _linkOrShareText(ticket);
+      const fileName = _webFileName;
+      final xFile = XFile.fromData(
+        jpegBytes,
+        mimeType: 'image/jpeg',
+        name: fileName,
+      );
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [xFile],
+          fileNameOverrides: [fileName],
+          text: shareText,
+          subject: _subject,
+          sharePositionOrigin: origin,
+          downloadFallbackEnabled: true,
+        ),
+      );
+      if (!context.mounted) return;
+      messenger?.hideCurrentSnackBar();
+    } catch (e, st) {
+      // Catch Exception and Error (e.g. LateInitializationError).
+      debugPrint('Share failed: $e\n$st');
+      if (!context.mounted) return;
+
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(_friendlyErrorMessage(e))),
+        );
+    }
   }
 
-  static Future<List<int>?> _captureViaOverlay(
+  /// Web share entry: dialog with download image or copy link.
+  static Future<void> _shareOnWeb(
     BuildContext context,
-    Ticket ticket,
-  ) async {
-    final overlay = Overlay.maybeOf(context);
+    Ticket ticket, {
+    GlobalKey? boundaryKey,
+    Uint8List? eventImageBytes,
+    ScaffoldMessengerState? messenger,
+  }) async {
+    final choice = await showWebShareOptionsDialog(context);
+    if (!context.mounted || choice == null) return;
+
+    switch (choice) {
+      case WebShareOption.downloadImage:
+        messenger
+          ?..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Preparing ticket image…'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        // Let the share dialog finish dismissing before painting capture UI.
+        await _awaitFrameOrTimeout();
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        if (!context.mounted) return;
+
+        Uint8List? pngBytes;
+        try {
+          // List rows have no mounted ticket RepaintBoundary — compose from
+          // ticket model via on-screen Overlay / modal SavedTicketView.
+          final mountedKey = boundaryKey != null &&
+                  boundaryKey.currentContext != null
+              ? boundaryKey
+              : null;
+          pngBytes = await composeTicketPngBytes(
+            context,
+            ticket,
+            boundaryKey: mountedKey,
+            eventImageBytes: eventImageBytes,
+          );
+        } catch (e, st) {
+          debugPrint('Web ticket image prepare failed: $e\n$st');
+        }
+        if (!context.mounted) return;
+        if (pngBytes == null || pngBytes.isEmpty) {
+          messenger
+            ?..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(content: Text(_downloadRetryMessage)),
+            );
+          return;
+        }
+        try {
+          assert(kIsWeb, 'Download Ticket Image is web-only');
+          downloadBytesAsFile(
+            pngBytes,
+            downloadFileNameFor(ticket),
+            mimeType: 'image/png',
+          );
+          messenger
+            ?..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(content: Text(_downloadedMessage)),
+            );
+        } catch (e, st) {
+          debugPrint('Web ticket download failed: $e\n$st');
+          if (!context.mounted) return;
+          messenger
+            ?..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(content: Text(_downloadFailedMessage)),
+            );
+        }
+      case WebShareOption.copyLink:
+        final copied = await _copyShareableFallback(ticket);
+        if (!context.mounted) return;
+        messenger
+          ?..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                copied ? _linkCopiedMessage : _copyFailedMessage,
+              ),
+            ),
+          );
+    }
+  }
+
+  /// List / no-image path: native share sheet with text, or clipboard on web.
+  static Future<void> _shareTextOrCopyLink(
+    BuildContext context,
+    Ticket ticket, {
+    required Rect origin,
+    ScaffoldMessengerState? messenger,
+  }) async {
+    final text = _linkOrShareText(ticket);
+
+    if (kIsWeb) {
+      final copied = await _copyShareableFallback(ticket);
+      if (!context.mounted) return;
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              copied ? _linkCopiedMessage : _copyFailedMessage,
+            ),
+          ),
+        );
+      return;
+    }
+
+    try {
+      await SharePlus.instance.share(
+        ShareParams(
+          text: text,
+          subject: _subject,
+          sharePositionOrigin: origin,
+        ),
+      );
+      if (!context.mounted) return;
+      messenger?.hideCurrentSnackBar();
+    } catch (e, st) {
+      debugPrint('Text share failed: $e\n$st');
+      if (!context.mounted) return;
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text(_shareFailedMessage)),
+        );
+    }
+  }
+
+  static String _linkOrShareText(Ticket ticket) {
+    // toShareText already appends the http(s) payload URL when present.
+    return _shareTextFor(ticket);
+  }
+
+  /// Never surface raw LateInitializationError / pigeon strings to users.
+  static String _friendlyErrorMessage(Object error) {
+    final text = error.toString();
+    if (text.contains('LateInitializationError') ||
+        text.contains('LateInitialization') ||
+        text.contains('Null check operator')) {
+      return kIsWeb ? _prepareFailedMessage : _shareFailedMessage;
+    }
+    return kIsWeb ? _prepareFailedMessage : _shareFailedMessage;
+  }
+
+  static String _shareTextFor(Ticket ticket) {
+    try {
+      final text = ticket.toShareText().trim();
+      return text.isEmpty ? _fallbackShareText : text;
+    } catch (_) {
+      return _fallbackShareText;
+    }
+  }
+
+  /// Prefer QR / ticket URL; otherwise share caption text.
+  static Future<bool> _copyShareableFallback(Ticket ticket) async {
+    try {
+      final qr = ticket.qrData.trim();
+      final payload = (qr.startsWith('http://') || qr.startsWith('https://'))
+          ? qr
+          : _shareTextFor(ticket);
+      if (payload.isEmpty) return false;
+      await Clipboard.setData(ClipboardData(text: payload));
+      return true;
+    } catch (e, st) {
+      debugPrint('Clipboard share fallback failed: $e\n$st');
+      return false;
+    }
+  }
+
+  /// Builds PNG bytes for a full ticket composite from [ticket] model data.
+  ///
+  /// **Web:** one low-ratio widget capture attempt, then [TicketRasterExport]
+  /// (no CanvasKit `toImage`). **Native:** on-screen → overlay → modal.
+  /// Network photos are fetched to memory first (CORS-safe).
+  /// Never throws — returns null so callers can show a failure SnackBar.
+  static Future<Uint8List?> composeTicketPngBytes(
+    BuildContext context,
+    Ticket ticket, {
+    GlobalKey? boundaryKey,
+    Uint8List? eventImageBytes,
+  }) async {
+    try {
+      final photoBytes = await _resolveEventPhotoBytes(
+        ticket,
+        eventImageBytes: eventImageBytes,
+      );
+
+      if (kIsWeb) {
+        if (boundaryKey != null && boundaryKey.currentContext != null) {
+          final onScreen = await capturePngBytes(
+            boundaryKey,
+            pixelRatio: 1.0,
+          );
+          if (onScreen != null && onScreen.isNotEmpty) return onScreen;
+        }
+
+        if (context.mounted && !lastCaptureHitEngineLateInit) {
+          final viaOverlay = await _captureViaPaintedOverlay(
+            context,
+            ticket,
+            eventImageBytes: photoBytes,
+          );
+          if (viaOverlay != null && viaOverlay.isNotEmpty) return viaOverlay;
+        }
+
+        final raster = await TicketRasterExport.toPngBytes(
+          ticket,
+          eventImageBytes: photoBytes,
+        );
+        if (raster != null && raster.isNotEmpty) return raster;
+        return null;
+      }
+
+      if (boundaryKey != null && boundaryKey.currentContext != null) {
+        final onScreen = await _capturePngWithRetries(boundaryKey);
+        if (onScreen != null && onScreen.isNotEmpty) return onScreen;
+      }
+
+      if (!context.mounted) return null;
+
+      final viaOverlay = await _captureViaPaintedOverlay(
+        context,
+        ticket,
+        eventImageBytes: photoBytes,
+      );
+      if (viaOverlay != null && viaOverlay.isNotEmpty) return viaOverlay;
+
+      if (!context.mounted) return null;
+
+      final viaModal = await _captureViaOpaqueModal(
+        context,
+        ticket,
+        eventImageBytes: photoBytes,
+        preferPng: true,
+      );
+      if (viaModal != null && viaModal.isNotEmpty) return viaModal;
+      return null;
+    } catch (e, st) {
+      debugPrint('Ticket PNG compose failed: $e\n$st');
+      return null;
+    }
+  }
+
+  /// Prefer in-memory event photo bytes; otherwise HTTP-fetch network paths.
+  static Future<Uint8List?> _resolveEventPhotoBytes(
+    Ticket ticket, {
+    Uint8List? eventImageBytes,
+  }) async {
+    if (eventImageBytes != null && eventImageBytes.isNotEmpty) {
+      return eventImageBytes;
+    }
+    final path = ticket.photoUrl.trim();
+    if (path.isEmpty ||
+        path.startsWith('blob:') ||
+        TicketImageStore.isWebBytesPath(path)) {
+      return null;
+    }
+    if (path.startsWith('data:')) {
+      return decodeDataUrlBytes(path);
+    }
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return fetchImageBytesCorsSafe(path);
+    }
+    return null;
+  }
+
+  /// Builds JPEG bytes for share: always a **full ticket** composite.
+  ///
+  /// Order: on-screen [boundaryKey] → opaque modal [SavedTicketView].
+  /// [eventImageBytes] / [ticket.imagePath] feed the photo slot only — they
+  /// are never returned as the share file by themselves.
+  ///
+  /// Never throws: capture/LateInitializationError failures return null so
+  /// callers can fall back to text/link share.
+  static Future<Uint8List?> _prepareTicketJpeg(
+    BuildContext context,
+    Ticket ticket, {
+    GlobalKey? boundaryKey,
+    Uint8List? eventImageBytes,
+  }) async {
+    try {
+      final png = await composeTicketPngBytes(
+        context,
+        ticket,
+        boundaryKey: boundaryKey,
+        eventImageBytes: eventImageBytes,
+      );
+      if (png != null && png.isNotEmpty) {
+        final jpeg = await compressImageToJpeg(png);
+        if (jpeg.isNotEmpty) return jpeg;
+      }
+
+      if (boundaryKey != null && boundaryKey.currentContext != null) {
+        final captured = await captureJpegBytes(boundaryKey);
+        if (captured != null && captured.isNotEmpty) return captured;
+      }
+
+      if (!context.mounted) return null;
+
+      final jpeg = await _captureViaOpaqueModal(
+        context,
+        ticket,
+        eventImageBytes: eventImageBytes,
+        preferPng: false,
+      );
+      if (jpeg != null && jpeg.isNotEmpty) return jpeg;
+      return null;
+    } catch (e, st) {
+      // Catch Exception and Error (e.g. LateInitializationError).
+      debugPrint('Ticket JPEG prepare failed: $e\n$st');
+      return null;
+    }
+  }
+
+  static Future<Uint8List?> _capturePngWithRetries(
+    GlobalKey boundaryKey, {
+    int attempts = 5,
+    double? pixelRatio,
+  }) async {
+    final maxAttempts = kIsWeb ? 1 : attempts;
+    for (var i = 0; i < maxAttempts; i++) {
+      final png = await capturePngBytes(
+        boundaryKey,
+        pixelRatio: pixelRatio ?? (kIsWeb ? 1.0 : null),
+      );
+      if (png != null && png.isNotEmpty) return png;
+      // CanvasKit OffscreenCanvas LateInit will not recover on retry.
+      if (lastCaptureHitEngineLateInit) return null;
+      if (i + 1 < maxAttempts) {
+        await Future<void>.delayed(Duration(milliseconds: 80 + (i * 40)));
+      }
+    }
+    return null;
+  }
+
+  /// Clears remote photo URLs when bytes were not prefetched so capture
+  /// boundaries never mount a live network FutureBuilder.
+  static Ticket _ticketForCapture(Ticket ticket, Uint8List? eventImageBytes) {
+    if (eventImageBytes != null && eventImageBytes.isNotEmpty) return ticket;
+    final path = ticket.photoUrl.trim();
+    if (path.startsWith('http://') ||
+        path.startsWith('https://') ||
+        path.startsWith('gs://') ||
+        path.startsWith('data:')) {
+      return ticket.copyWith(imagePath: '');
+    }
+    return ticket;
+  }
+
+  /// Paints [SavedTicketView] in a Stateful overlay host, then captures PNG.
+  ///
+  /// On-screen layout is required on Flutter Web — off-screen / culled
+  /// widgets often fail [RenderRepaintBoundary.toImage].
+  static Future<Uint8List?> _captureViaPaintedOverlay(
+    BuildContext context,
+    Ticket ticket, {
+    Uint8List? eventImageBytes,
+  }) async {
+    if (!context.mounted) return null;
+
+    final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return null;
 
-    final boundaryKey = GlobalKey();
-    final width = MediaQuery.sizeOf(context).width.clamp(280.0, 420.0);
-    late OverlayEntry entry;
+    final GlobalKey boundaryKey = GlobalKey();
+    final mountedCompleter = Completer<void>();
+    OverlayEntry? entry;
+    try {
+      entry = OverlayEntry(
+        builder: (overlayContext) {
+          return _TicketCaptureOverlayHost(
+            boundaryKey: boundaryKey,
+            ticket: ticket,
+            eventImageBytes: eventImageBytes,
+            onMounted: () {
+              if (!mountedCompleter.isCompleted) {
+                mountedCompleter.complete();
+              }
+            },
+          );
+        },
+      );
+      overlay.insert(entry);
 
-    entry = OverlayEntry(
-      builder: (context) {
-        return IgnorePointer(
-          child: Opacity(
-            opacity: 0.01,
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: OverflowBox(
-                alignment: Alignment.topLeft,
-                minWidth: width,
-                maxWidth: width,
-                minHeight: 0,
-                maxHeight: double.infinity,
-                child: Material(
-                  color: Colors.transparent,
-                  child: RepaintBoundary(
-                    key: boundaryKey,
-                    child: SavedTicketView(ticket: ticket),
+      // Wait until the Stateful host reports first frame, then settle paint.
+      await mountedCompleter.future.timeout(
+        const Duration(seconds: 2),
+        onTimeout: () {},
+      );
+      await _awaitFrameOrTimeout();
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      await _awaitFrameOrTimeout();
+
+      final captureContext = boundaryKey.currentContext;
+      if (captureContext != null && captureContext.mounted) {
+        await _precacheTicketImages(
+          captureContext,
+          ticket,
+          eventImageBytes: eventImageBytes,
+        );
+      }
+      await _awaitFrameOrTimeout();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      return await _capturePngWithRetries(
+        boundaryKey,
+        attempts: kIsWeb ? 1 : 8,
+        pixelRatio: kIsWeb ? 1.0 : null,
+      );
+    } catch (e, st) {
+      debugPrint('Painted overlay ticket capture failed: $e\n$st');
+      return null;
+    } finally {
+      entry?.remove();
+    }
+  }
+
+  /// Full-opacity modal with [SavedTicketView] + [RepaintBoundary], then capture.
+  /// Prefer this over low-opacity overlays on Flutter Web (`toImage` is flaky).
+  static Future<Uint8List?> _captureViaOpaqueModal(
+    BuildContext context,
+    Ticket ticket, {
+    Uint8List? eventImageBytes,
+    bool preferPng = true,
+  }) async {
+    if (!context.mounted) return null;
+
+    final boundaryKey = GlobalKey();
+    Uint8List? captured;
+    var captureStarted = false;
+
+    try {
+      await Navigator.of(context, rootNavigator: true).push<void>(
+        PageRouteBuilder<void>(
+          opaque: true,
+          fullscreenDialog: true,
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (routeContext, animation, secondaryAnimation) {
+            if (!captureStarted) {
+              captureStarted = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                try {
+                  await _awaitFrameOrTimeout();
+                  await _awaitFrameOrTimeout();
+
+                  final captureContext = boundaryKey.currentContext;
+                  if (captureContext != null && captureContext.mounted) {
+                    await _precacheTicketImages(
+                      captureContext,
+                      ticket,
+                      eventImageBytes: eventImageBytes,
+                    );
+                  }
+
+                  await _awaitFrameOrTimeout();
+                  await Future<void>.delayed(const Duration(milliseconds: 400));
+
+                  Uint8List? bytes;
+                  if (preferPng) {
+                    bytes = await _capturePngWithRetries(
+                      boundaryKey,
+                      attempts: kIsWeb ? 1 : 8,
+                      pixelRatio: kIsWeb ? 1.0 : null,
+                    );
+                    if (bytes == null || bytes.isEmpty) {
+                      if (!lastCaptureHitEngineLateInit) {
+                        bytes = await captureJpegBytes(
+                          boundaryKey,
+                          pixelRatio: kIsWeb ? 1.0 : null,
+                        );
+                      }
+                    }
+                  } else {
+                    bytes = await captureJpegBytes(
+                      boundaryKey,
+                      pixelRatio: kIsWeb ? 1.0 : null,
+                    );
+                    if (bytes == null || bytes.isEmpty) {
+                      final png = await _capturePngWithRetries(
+                        boundaryKey,
+                        attempts: kIsWeb ? 1 : 5,
+                        pixelRatio: kIsWeb ? 1.0 : null,
+                      );
+                      if (png != null && png.isNotEmpty) {
+                        bytes = await compressImageToJpeg(png);
+                      }
+                    }
+                  }
+                  if (bytes != null && bytes.isNotEmpty) {
+                    captured = bytes;
+                  }
+                } catch (e, st) {
+                  debugPrint('Opaque modal ticket capture failed: $e\n$st');
+                } finally {
+                  if (routeContext.mounted) {
+                    Navigator.of(routeContext).pop();
+                  }
+                }
+              });
+            }
+
+            final width =
+                MediaQuery.sizeOf(routeContext).width.clamp(280.0, 420.0);
+            final hasPhoto =
+                eventImageBytes != null && eventImageBytes.isNotEmpty;
+            return Material(
+              color: Colors.white,
+              child: SafeArea(
+                child: Center(
+                  child: SingleChildScrollView(
+                    child: SizedBox(
+                      width: width,
+                      child: RepaintBoundary(
+                        key: boundaryKey,
+                        child: SavedTicketView(
+                          ticket: _ticketForCapture(ticket, eventImageBytes),
+                          imageBytes: hasPhoto ? eventImageBytes : null,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    } catch (e, st) {
+      debugPrint('Opaque modal navigation failed: $e\n$st');
+      return null;
+    }
+
+    return captured;
+  }
+
+  static Future<void> _precacheTicketImages(
+    BuildContext context,
+    Ticket ticket, {
+    Uint8List? eventImageBytes,
+  }) async {
+    if (!context.mounted) return;
+
+    if (eventImageBytes != null && eventImageBytes.isNotEmpty) {
+      try {
+        await precacheImage(MemoryImage(eventImageBytes), context);
+      } catch (_) {}
+      return;
+    }
+
+    final path = ticket.imagePath;
+    if (path.startsWith('http://') ||
+        path.startsWith('https://') ||
+        path.startsWith('data:')) {
+      // Prefer bytes → MemoryImage to avoid CORS-tainted NetworkImage on web.
+      final fetched = await fetchImageBytesCorsSafe(path);
+      if (!context.mounted) return;
+      if (fetched != null && fetched.isNotEmpty) {
+        try {
+          await precacheImage(MemoryImage(fetched), context);
+        } catch (_) {}
+      }
+      // Never precache NetworkImage — it can CORS-taint Flutter Web canvases.
+    }
+  }
+}
+
+/// Stateful overlay host that mounts [SavedTicketView] under a [RepaintBoundary]
+/// and signals [onMounted] after the first frame — used for web PNG capture.
+class _TicketCaptureOverlayHost extends StatefulWidget {
+  const _TicketCaptureOverlayHost({
+    required this.boundaryKey,
+    required this.ticket,
+    required this.eventImageBytes,
+    required this.onMounted,
+  });
+
+  final GlobalKey boundaryKey;
+  final Ticket ticket;
+  final Uint8List? eventImageBytes;
+  final VoidCallback onMounted;
+
+  @override
+  State<_TicketCaptureOverlayHost> createState() =>
+      _TicketCaptureOverlayHostState();
+}
+
+class _TicketCaptureOverlayHostState extends State<_TicketCaptureOverlayHost> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.onMounted();
+    });
+  }
+
+  /// Ticket used inside the capture boundary. Clears remote photo URLs when
+  /// bytes were not prefetched so the boundary never mounts a live network
+  /// FutureBuilder (avoids mid-capture loads / CORS taint races).
+  Ticket get _captureTicket =>
+      TicketShareHelper._ticketForCapture(widget.ticket, widget.eventImageBytes);
+
+  @override
+  Widget build(BuildContext context) {
+    try {
+      final width = MediaQuery.sizeOf(context).width.clamp(280.0, 420.0);
+      final photoBytes = widget.eventImageBytes;
+      final hasPhoto = photoBytes != null && photoBytes.isNotEmpty;
+
+      return Positioned.fill(
+        child: IgnorePointer(
+          child: Material(
+            color: Colors.white,
+            child: SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  child: SizedBox(
+                    width: width,
+                    child: RepaintBoundary(
+                      key: widget.boundaryKey,
+                      child: SavedTicketView(
+                        ticket: _captureTicket,
+                        // Explicit null when empty → placeholder, no network.
+                        imageBytes: hasPhoto ? photoBytes : null,
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        );
-      },
-    );
-
-    overlay.insert(entry);
-    try {
-      await WidgetsBinding.instance.endOfFrame;
-      final captureContext = boundaryKey.currentContext;
-      if (captureContext != null && captureContext.mounted) {
-        await _precacheTicketImages(captureContext, ticket);
-      }
-      await WidgetsBinding.instance.endOfFrame;
-      // Allow QR / network-free paints to settle.
-      await Future<void>.delayed(const Duration(milliseconds: 80));
-      return await capturePngBytes(boundaryKey);
-    } finally {
-      entry.remove();
-    }
-  }
-
-  static Future<void> _precacheTicketImages(
-    BuildContext context,
-    Ticket ticket,
-  ) async {
-    if (!context.mounted) return;
-
-    final path = ticket.imagePath;
-    if (path.isNotEmpty && File(path).existsSync()) {
-      try {
-        await precacheImage(FileImage(File(path)), context);
-      } catch (_) {}
+        ),
+      );
+    } catch (e, st) {
+      debugPrint('Ticket capture overlay build failed: $e\n$st');
+      return const SizedBox.shrink();
     }
   }
 }

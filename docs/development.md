@@ -85,6 +85,30 @@ If a secret is committed accidentally:
 2. Remove it from git history if required by Inject security process.
 3. Report via [SECURITY.md](../SECURITY.md).
 
+### Android upload signing (Play Console)
+
+Release builds must be signed with an **upload key**, never the debug keystore.
+
+1. Generate a PKCS12 keystore **outside the repo**, e.g. `~/.keystores/ticketmaker-upload.jks`.
+2. Create `android/key.properties` (gitignored) with:
+
+```text
+storePassword=<secret>
+keyPassword=<secret>
+keyAlias=upload
+storeFile=/absolute/path/to/ticketmaker-upload.jks
+```
+
+3. Build with `flutter build appbundle --release`. Gradle fails fast if `key.properties` is missing rather than falling back to the debug key.
+4. Never commit `*.jks`, `*.keystore`, or `key.properties`.
+5. Back up the keystore and passwords offline — losing them permanently locks you out of Play App Signing unless Play App Signing was already enrolled and the upload key is reset through Google Play Console.
+
+Package identity for the Internal Track:
+
+- `applicationId` / `namespace`: `com.agathakakalogical.quickticketmaker`
+- Launcher label: `Quick Ticket Maker`
+- Version comes from `pubspec.yaml` (`version: x.y.z+build` → `versionName` / `versionCode`)
+
 ---
 
 ## 8. Pull request hygiene

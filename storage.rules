@@ -1,0 +1,12 @@
+rules_version = '2';
+
+// Quick Ticket Maker — Storage security rules
+// NOTE: App runs on Spark without Storage initialized. Ticket flyers use
+// Firestore Base64 / local paths. These rules remain for if Storage is enabled later.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

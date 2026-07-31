@@ -1,0 +1,109 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "quick-ticket-maker-sandbox",
+          "appId": "1:107781542059:android:21121105f99c18fdc9e7ee",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "quick-ticket-maker-sandbox",
+          "appId": "1:107781542059:ios:3aee97098aa23948c9e7ee",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "quick-ticket-maker-sandbox",
+          "appId": "1:107781542059:ios:3aee97098aa23948c9e7ee",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "quick-ticket-maker-sandbox",
+          "configurations": {
+            "android": "1:107781542059:android:21121105f99c18fdc9e7ee",
+            "ios": "1:107781542059:ios:3aee97098aa23948c9e7ee",
+            "macos": "1:107781542059:ios:3aee97098aa23948c9e7ee",
+            "web": "1:107781542059:web:0dd1b1aa86d6f8e6c9e7ee",
+            "windows": "1:107781542059:web:8d8c50852494d2e4c9e7ee"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "site": "quick-ticket-maker-sandbox",
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "headers": [
+      {
+        "source": "/index.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/flutter_bootstrap.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/flutter.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/main.dart.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/flutter_service_worker.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  }
+}

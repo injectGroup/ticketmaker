@@ -3,40 +3,58 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/dashed_divider.dart';
 
-/// Ticket stub with side notches and a dashed perforation line.
+/// Ticket stub with white side notches and a dashed blue tear-line.
 class TicketPerforation extends StatelessWidget {
-  const TicketPerforation({super.key});
+  const TicketPerforation({
+    super.key,
+    this.notchColor = const Color(0xFFF8FAFC),
+    this.bandColor = AppColors.brandDarkPlum,
+    this.dashColor = const Color(0xFFCBD5E1),
+  });
+
+  /// Matches the canvas behind the pass so cutouts look punched out.
+  final Color notchColor;
+  final Color bandColor;
+
+  /// Soft slate dashed tear-line.
+  final Color dashColor;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: AppColors.secondary,
+      height: 28,
+      color: bandColor,
       child: Row(
         children: [
           Container(
-            width: 15,
-            height: 20,
-            decoration: const BoxDecoration(
-              color: AppColors.secondaryBackground,
-              borderRadius: BorderRadius.only(
+            width: 16,
+            height: 24,
+            decoration: BoxDecoration(
+              color: notchColor,
+              borderRadius: const BorderRadius.only(
                 topRight: Radius.circular(100),
                 bottomRight: Radius.circular(100),
               ),
             ),
           ),
-          const Expanded(
+          Expanded(
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              child: DashedDivider(thickness: 2, color: AppColors.primary),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: DashedDivider(
+                thickness: 2,
+                dashWidth: 6,
+                dashSpace: 4,
+                color: dashColor,
+              ),
             ),
           ),
           Container(
-            width: 15,
-            height: 20,
-            decoration: const BoxDecoration(
-              color: AppColors.secondaryBackground,
-              borderRadius: BorderRadius.only(
+            width: 16,
+            height: 24,
+            decoration: BoxDecoration(
+              color: notchColor,
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(100),
                 bottomLeft: Radius.circular(100),
               ),

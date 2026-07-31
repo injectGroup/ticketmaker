@@ -1,0 +1,51 @@
+name: Security CI
+
+on:
+  push:
+    branches: [main, gen-and-tickets-only]
+  pull_request:
+    branches: [main, gen-and-tickets-only]
+
+permissions:
+  contents: read
+
+jobs:
+  flutter-quality:
+    name: Flutter analyze and test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Analyze
+        # Exclude build/ via analysis_options.yaml; infos in app code are non-blocking.
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+  secret-scan:
+    name: Gitleaks secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Allowlists only the public Firebase client keys in the generated
+          # FlutterFire options file; see gitleaks.toml for the reasoning.
+          GITLEAKS_CONFIG: ${{ github.workspace }}/gitleaks.toml

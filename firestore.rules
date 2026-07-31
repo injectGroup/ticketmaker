@@ -1,0 +1,82 @@
+rules_version = '2';
+
+// Quick Ticket Maker — Firestore security rules
+// Paths:
+//   users/{uid}/tickets/{ticketId}  — owner private docs
+//   tickets/{guestCode}             — public QR verify docs (doc id = guest code)
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function checkInOnlyKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['checkedIn', 'checkedInAt', 'status', 'updatedAt']);
+    }
+
+    function isValidGuestCode(guestCode) {
+      return guestCode.matches('^[0-9]{4}-[0-9]{4}-[0-9]{3}$');
+    }
+
+    function isPublicTicketCreate(guestCode) {
+      return isValidGuestCode(guestCode)
+        && request.resource.data.ticketId == guestCode
+        && request.resource.data.status == 'valid'
+        && request.resource.data.eventName is string;
+    }
+
+    function isPublicCheckInTransition() {
+      return resource.data.get('status', 'valid') == 'valid'
+        && resource.data.get('checkedIn', false) != true
+        && request.resource.data.status == 'checked_in'
+        && request.resource.data.checkedIn == true
+        && checkInOnlyKeys();
+    }
+
+    function isPublicMetadataRefresh(guestCode) {
+      return resource.data.get('status', 'valid') == 'valid'
+        && request.resource.data.status == 'valid'
+        && request.resource.data.ticketId == guestCode
+        && request.resource.data.eventName is string;
+    }
+
+    function hostOwnsPublicTicket() {
+      return isSignedIn()
+        && resource.data.keys().hasAny(['hostUid'])
+        && resource.data.hostUid == request.auth.uid;
+    }
+
+    function isTicketDocCheckIn() {
+      return resource.data.get('checkedIn', false) != true
+        && request.resource.data.checkedIn == true
+        && checkInOnlyKeys();
+    }
+
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /tickets/{ticketId} {
+        allow read, write: if isOwner(userId);
+        allow update: if isTicketDocCheckIn();
+      }
+    }
+
+    match /tickets/{guestCode} {
+      allow read: if true;
+      allow create: if isPublicTicketCreate(guestCode);
+      allow update: if isPublicCheckInTransition()
+        || hostOwnsPublicTicket()
+        || isPublicMetadataRefresh(guestCode);
+      allow delete: if hostOwnsPublicTicket();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

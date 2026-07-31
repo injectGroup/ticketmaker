@@ -1,0 +1,27 @@
+# Gitleaks config for Quick Ticket Maker.
+# Client Firebase API keys in lib/firebase_options.dart are expected public
+# client config (not server secrets). Compensating controls: API key
+# restrictions + App Check — see docs/security/firebase-console-hardening.md
+
+title = "ticketmaker"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Firebase client config (public by design for mobile/web SDKs)"
+paths = [
+  '''lib/firebase_options\.dart''',
+]
+
+[[allowlists]]
+description = "Docs and scripts that name env vars without values"
+paths = [
+  '''\.github/workflows/.*''',
+  '''scripts/notify_app_update\.sh''',
+  '''CONTRIBUTING\.md''',
+  '''docs/.*''',
+  '''SECURITY\.md''',
+  '''\.cursor/rules/.*''',
+  '''\.taskmanager/.*''',
+]

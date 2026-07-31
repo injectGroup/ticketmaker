@@ -60,8 +60,11 @@ Optional platform checks:
 ```bash
 flutter build apk --debug
 flutter build ios --debug --no-codesign
-flutter build web
+# Web release (clean build + cache-bust main.dart.js):
+./scripts/build_web.sh
 ```
+
+Do **not** deploy a plain `flutter build web` without `./scripts/build_web.sh` (or an equivalent `flutter clean` + `scripts/patch_web_bootstrap.sh`) — browsers may keep a stale `main.dart.js`.
 
 ### 4. Commit messages
 

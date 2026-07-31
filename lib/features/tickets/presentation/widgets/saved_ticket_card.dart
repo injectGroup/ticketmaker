@@ -1,23 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../generate/domain/entities/ticket.dart';
 import '../../data/ticket_share_helper.dart';
+import '../bloc/tickets_cubit.dart';
 import '../pages/tickets_page.dart';
 
 /// List card for a persisted ticket, with a native share action.
 class SavedTicketCard extends StatelessWidget {
-  const SavedTicketCard({super.key, required this.ticket});
+  const SavedTicketCard({
+    super.key,
+    required this.ticket,
+    this.selecting = false,
+    this.selected = false,
+    this.onLongPress,
+    this.onSelectionToggle,
+  });
 
   final Ticket ticket;
+  final bool selecting;
+  final bool selected;
+  final VoidCallback? onLongPress;
+  final VoidCallback? onSelectionToggle;
 
   Future<void> _share(BuildContext buttonContext) async {
-    await TicketShareHelper.share(
-      buttonContext,
-      ticket,
-      sharePositionOrigin: TicketShareHelper.shareOriginFrom(buttonContext),
-    );
+    try {
+      // List rows have no on-screen ticket RepaintBoundary. Share still
+      // composes SavedTicketView off-screen / via modal from [ticket] data
+      // (and optional event photo bytes) for Download on web.
+      final eventBytes =
+          buttonContext.read<TicketsCubit>().state.imageBytesFor(ticket.id);
+      await TicketShareHelper.share(
+        buttonContext,
+        ticket,
+        sharePositionOrigin: TicketShareHelper.shareOriginFrom(buttonContext),
+        eventImageBytes: eventBytes,
+        // Allow compose for web Download; native list still falls back to
+        // link/text when image capture is unavailable.
+        attachTicketImage: true,
+      );
+    } catch (e, st) {
+      debugPrint('SavedTicketCard share failed: $e\n$st');
+      if (!buttonContext.mounted) return;
+      ScaffoldMessenger.of(buttonContext)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Could not share ticket. Try again.'),
+          ),
+        );
+    }
   }
 
   @override
@@ -25,17 +59,29 @@ class SavedTicketCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Material(
-      color: AppColors.secondaryBackground,
+      color: selected
+          ? AppColors.primary.withValues(alpha: 0.08)
+          : AppColors.secondaryBackground,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => context.push(
-          '${TicketsPage.routePath}/${Uri.encodeComponent(ticket.id)}',
-        ),
+        onTap: selecting
+            ? onSelectionToggle
+            : () => context.push(
+                '${TicketsPage.routePath}/${Uri.encodeComponent(ticket.id)}',
+              ),
+        onLongPress: selecting ? null : onLongPress,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
+              if (selecting) ...[
+                Checkbox(
+                  value: selected,
+                  onChanged: (_) => onSelectionToggle?.call(),
+                ),
+                const SizedBox(width: 4),
+              ],
               Container(
                 width: 48,
                 height: 48,
@@ -56,6 +102,10 @@ class SavedTicketCard extends StatelessWidget {
                     Text(ticket.title, style: theme.textTheme.titleSmall),
                     const SizedBox(height: 4),
                     Text(ticket.subtitle, style: theme.textTheme.bodySmall),
+                    if (ticket.venue.trim().isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(ticket.venue, style: theme.textTheme.bodySmall),
+                    ],
                     const SizedBox(height: 4),
                     Text(
                       '${ticket.dateLabel} · ${ticket.timeLabel}',
@@ -73,16 +123,17 @@ class SavedTicketCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Builder(
-                builder: (buttonContext) {
-                  return IconButton(
-                    tooltip: 'Share',
-                    onPressed: () => _share(buttonContext),
-                    icon: const Icon(Icons.share_outlined),
-                    color: AppColors.primary,
-                  );
-                },
-              ),
+              if (!selecting)
+                Builder(
+                  builder: (buttonContext) {
+                    return IconButton(
+                      tooltip: 'Share Ticket',
+                      onPressed: () => _share(buttonContext),
+                      icon: const Icon(Icons.share_outlined),
+                      color: AppColors.primary,
+                    );
+                  },
+                ),
             ],
           ),
         ),

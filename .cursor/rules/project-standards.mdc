@@ -1,0 +1,28 @@
+---
+description: Core Flutter & Sound Null Safety Standards
+globs: **/*
+alwaysApply: true
+---
+# Quick Ticket Maker — Project Cursor Rules
+
+## Architecture & Framework
+- Framework: Flutter Web & Mobile
+- Backend: Firebase (Auth, Cloud Firestore, Hosting)
+- Language: Sound Null-Safe Dart
+
+## Code Standards & Guidelines
+1. Null Safety & State Safety:
+   - NEVER use the `late` keyword unless strictly necessary. Favor nullable types (`?`) with explicit null checks (`if (x != null)`).
+   - Before accessing a `RepaintBoundary` or `GlobalKey` context, ALWAYS verify `key.currentContext != null`.
+
+2. Flutter Web Image & Capture Rules:
+   - When generating/downloading PNG or JPEG image bytes (`Uint8List`) on Flutter Web, ALWAYS use `web.HTMLAnchorElement` or `dart:html` blob download links to trigger a direct browser file download.
+   - Await frame rendering (`WidgetsBinding.instance.endOfFrame` or `Future.delayed`) before taking `toImage()` snapshots to prevent blank/unrendered image captures.
+   - Gracefully handle CORS and network image failures during canvas rendering.
+
+3. Firebase & Security:
+   - Always check Firebase initialization status before accessing `FirebaseAuth` or `FirebaseFirestore`.
+   - Ensure guest operations (e.g., saving or downloading tickets without login) fail gracefully with SnackBar notifications rather than throwing uncaught exceptions.
+
+4. UI & UX:
+   - Use clear user feedback (e.g., `ScaffoldMessenger.of(context).showSnackBar`) for success and failure actions.
