@@ -94,6 +94,7 @@ class TicketHeaderSection extends StatelessWidget {
             foreground: onText,
             background: Colors.white.withValues(alpha: 0.16),
             showInfo: true,
+            showIdLabel: true,
           ),
           Align(
             alignment: Alignment.centerRight,

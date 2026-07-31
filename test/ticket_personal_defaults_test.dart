@@ -23,6 +23,17 @@ void main() {
     cubit.close();
   });
 
+  test('formatFullDateLabel renders EEEE, d MMMM yyyy', () {
+    expect(
+      GenerateCubit.formatFullDateLabel(DateTime(2026, 7, 31)),
+      'Friday, 31 July 2026',
+    );
+    expect(
+      GenerateCubit.formatFullDateLabel(DateTime(2026, 1, 4)),
+      'Sunday, 4 January 2026',
+    );
+  });
+
   test('ensureTicketPayload reuses existing valid code', () {
     final cubit = GenerateCubit();
     final before = cubit.state.ticket.code;

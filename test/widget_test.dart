@@ -76,9 +76,13 @@ void main() {
     expect(find.text('Create Guest Link'), findsNothing);
     expect(find.text('Bg color'), findsOneWidget);
     expect(find.text('Save Ticket'), findsOneWidget);
-    // Date row defaults to today (GenerateCubit uses DateTime.now()).
-    final todayLabel = GenerateCubit.formatDateLabel(DateTime.now());
+    // Date row defaults to today (GenerateCubit uses DateTime.now()) and is
+    // rendered in long form, e.g. `Friday, 31 July 2026`.
+    final todayLabel = GenerateCubit.formatFullDateLabel(DateTime.now());
     expect(find.text(todayLabel), findsOneWidget);
+    expect(find.text('TICKET ID'), findsOneWidget);
+    expect(find.text('ABOUT THIS EVENT'), findsOneWidget);
+    expect(find.text('Powered by Quick Ticket'), findsOneWidget);
   });
 
   testWidgets('Tickets tab starts empty without saved records', (tester) async {

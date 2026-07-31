@@ -6,9 +6,12 @@ import 'package:flutter/material.dart';
 import '../../../../core/utils/color_contrast.dart';
 import '../../../../core/widgets/ticket_photo_placeholder.dart';
 import '../../../generate/domain/entities/ticket.dart';
+import '../../../generate/presentation/bloc/generate_cubit.dart';
 import '../../../generate/presentation/widgets/generate_qr_code.dart';
+import '../../../generate/presentation/widgets/ticket_branding_footer.dart';
 import '../../../generate/presentation/widgets/ticket_code_badge.dart';
 import '../../../generate/presentation/widgets/ticket_perforation.dart';
+import '../../../generate/presentation/widgets/ticket_section_label.dart';
 import '../../data/ticket_image_store.dart';
 import '../../data/ticket_network_image.dart';
 
@@ -152,6 +155,7 @@ class SavedTicketView extends StatelessWidget {
             code: ticket.code,
             foreground: onCard,
             background: onCard.withValues(alpha: 0.14),
+            showIdLabel: true,
           ),
           const SizedBox(height: 16),
           const TicketPerforation(),
@@ -171,19 +175,31 @@ class SavedTicketView extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             child: _eventImage(),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(30, 30, 30, 16),
-            child: SizedBox(
-              width: double.infinity,
-              child: Text(
-                ticket.subtitle,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: onCard,
-                ),
+          if (ticket.subtitle.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(30, 30, 30, 16),
+              child: Column(
+                children: [
+                  TicketSectionLabel(
+                    text: 'About this event',
+                    color: onCard,
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      ticket.subtitle,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: onCard,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ),
+            )
+          else
+            const SizedBox(height: 30),
           Padding(
             padding: const EdgeInsets.fromLTRB(30, 0, 30, 8),
             child: Row(
@@ -192,7 +208,7 @@ class SavedTicketView extends StatelessWidget {
                 const SizedBox(width: 16),
                 Flexible(
                   child: Text(
-                    ticket.dateLabel,
+                    GenerateCubit.formatFullDateLabel(ticket.eventAt),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: onCard,
                     ),
@@ -216,7 +232,7 @@ class SavedTicketView extends StatelessWidget {
           ),
           if (ticket.venue.trim().isNotEmpty)
             Padding(
-              padding: const EdgeInsets.fromLTRB(30, 0, 30, 32),
+              padding: const EdgeInsets.fromLTRB(30, 0, 30, 20),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -234,7 +250,8 @@ class SavedTicketView extends StatelessWidget {
               ),
             )
           else
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
+          TicketBrandingFooter(color: onCard),
         ],
       ),
     );

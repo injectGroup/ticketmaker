@@ -170,20 +170,43 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                           imageBytes: imageBytes,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                        child: Text(
-                          'Door scan: ${ticket.qrData}',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppColors.secondaryText),
-                        ),
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(16, 12, 16, 24),
+                        child: _ScanHint(),
                       ),
                     ],
                   ),
                 ),
         );
       },
+    );
+  }
+}
+
+/// Door-scan affordance shown instead of the raw verification URL.
+class _ScanHint extends StatelessWidget {
+  const _ScanHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(
+          Icons.verified_user_outlined,
+          size: 16,
+          color: AppColors.secondaryText,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          'Scan at entrance',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.secondaryText,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.3,
+          ),
+        ),
+      ],
     );
   }
 }

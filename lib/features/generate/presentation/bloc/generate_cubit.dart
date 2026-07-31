@@ -100,8 +100,42 @@ class GenerateCubit extends Cubit<GenerateState> {
     'Dec',
   ];
 
+  static const List<String> _weekdaysFull = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+
+  static const List<String> _monthsFull = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
   static String formatDateLabel(DateTime date) {
     return '${_weekdays[date.weekday - 1]}, ${_months[date.month - 1]} ${date.day}';
+  }
+
+  /// `EEEE, d MMMM yyyy` — e.g. `Friday, 31 July 2026`.
+  ///
+  /// Display-only long form; [formatDateLabel] stays the persisted
+  /// `Ticket.dateLabel` value.
+  static String formatFullDateLabel(DateTime date) {
+    return '${_weekdaysFull[date.weekday - 1]}, ${date.day} '
+        '${_monthsFull[date.month - 1]} ${date.year}';
   }
 
   static String formatTimeLabel(DateTime date) {

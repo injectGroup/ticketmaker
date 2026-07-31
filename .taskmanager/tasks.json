@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-07-28T10:56:36.000Z",
+      "updatedAt": "2026-07-31T09:55:00.000Z",
       "lastMilestone": {
-        "message": "Fixed web secure storage MissingPluginException; redeployed hosting",
-        "taskId": "task-fix-web-secure-storage-20260731",
-        "updatedAt": "2026-07-31T08:45:00.000Z"
+        "message": "Polished ticket detail and preview UI: TICKET ID caption, long-form date, ABOUT THIS EVENT header, Scan at entrance indicator, branding footer",
+        "taskId": "task-polish-ticket-detail-preview-ui-20260731",
+        "updatedAt": "2026-07-31T09:55:00.000Z"
       }
     }
   ],
@@ -1721,6 +1721,20 @@
       "createdAt": "2026-07-31T08:30:00.000Z",
       "updatedAt": "2026-07-31T08:45:00.000Z",
       "note": "Cloud MCP denied; local backup only."
+    },
+    {
+      "id": "task-polish-ticket-detail-preview-ui-20260731",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Polish ticket detail and preview UI",
+      "description": "Dimmed TICKET ID caption above the code badge, long-form date (EEEE, d MMMM yyyy), ABOUT THIS EVENT section header, 'Scan at entrance' indicator replacing the raw verify URL, and a 'Powered by Quick Ticket' card footer.",
+      "details": "New TicketSectionLabel and TicketBrandingFooter widgets; GenerateCubit.formatFullDateLabel renders the display-only long date from Ticket.eventAt while the persisted dateLabel stays short. Applied to SavedTicketView, TicketHeaderSection, TicketDetailsSection, TicketDetailPage. Pre-existing SpaceMono asset failures in ticket_share_helper_test.dart are unrelated and unchanged.",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-31T09:30:00.000Z",
+      "updatedAt": "2026-07-31T09:55:00.000Z",
+      "note": "Cloud MCP blocked by auto-review; local backup only."
     }
   ],
   "epics": [
@@ -1736,5 +1750,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-07-29T20:16:28.390Z"
+  "lastSync": "2026-07-31T09:37:36.226Z"
 }

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import 'ticket_section_label.dart';
 
 /// Compact, tappable ticket code chip that copies to the clipboard.
 class TicketCodeBadge extends StatelessWidget {
@@ -12,6 +13,7 @@ class TicketCodeBadge extends StatelessWidget {
     this.foreground,
     this.background,
     this.showInfo = false,
+    this.showIdLabel = false,
   });
 
   final String code;
@@ -20,6 +22,9 @@ class TicketCodeBadge extends StatelessWidget {
 
   /// Places an info icon inside the pill beside the code.
   final bool showInfo;
+
+  /// Adds a dimmed `TICKET ID` caption directly above the pill.
+  final bool showIdLabel;
 
   Future<void> _copy(BuildContext context) async {
     await Clipboard.setData(ClipboardData(text: code));
@@ -34,7 +39,7 @@ class TicketCodeBadge extends StatelessWidget {
     final fg = foreground ?? AppColors.primaryText;
     final bg = background ?? const Color(0xFFF1F5F9);
 
-    return Material(
+    final pill = Material(
       color: bg,
       elevation: 0,
       borderRadius: BorderRadius.circular(20),
@@ -79,6 +84,17 @@ class TicketCodeBadge extends StatelessWidget {
           ),
         ),
       ),
+    );
+
+    if (!showIdLabel) return pill;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TicketSectionLabel(text: 'Ticket ID', color: fg),
+        const SizedBox(height: 6),
+        pill,
+      ],
     );
   }
 }

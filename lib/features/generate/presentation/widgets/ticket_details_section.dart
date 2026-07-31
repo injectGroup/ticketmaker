@@ -15,6 +15,8 @@ import '../../../tickets/data/ticket_network_image.dart';
 import '../../domain/entities/ticket.dart';
 import '../bloc/generate_cubit.dart';
 import 'bracketed_ticket_field.dart';
+import 'ticket_branding_footer.dart';
+import 'ticket_section_label.dart';
 
 class TicketDetailsSection extends StatelessWidget {
   const TicketDetailsSection({
@@ -301,20 +303,29 @@ class TicketDetailsSection extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(30, 28, 30, 16),
-            child: BracketedTicketField(
-              controller: subtitleController,
-              resetToken: bracketResetToken,
-              textAlign: TextAlign.center,
-              minLines: 1,
-              maxLines: 4,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.pillText,
-                fontWeight: FontWeight.w800,
-                height: 1.35,
-              ),
-              cursorColor: onText,
-              hintText: 'Tap to edit…',
-              onChanged: cubit.updateSubtitle,
+            child: Column(
+              children: [
+                TicketSectionLabel(
+                  text: 'About this event',
+                  color: AppColors.pillText,
+                ),
+                const SizedBox(height: 8),
+                BracketedTicketField(
+                  controller: subtitleController,
+                  resetToken: bracketResetToken,
+                  textAlign: TextAlign.center,
+                  minLines: 1,
+                  maxLines: 4,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.pillText,
+                    fontWeight: FontWeight.w800,
+                    height: 1.35,
+                  ),
+                  cursorColor: onText,
+                  hintText: 'Tap to edit…',
+                  onChanged: cubit.updateSubtitle,
+                ),
+              ],
             ),
           ),
           Padding(
@@ -333,7 +344,7 @@ class TicketDetailsSection extends StatelessWidget {
                       const SizedBox(width: 12),
                       Flexible(
                         child: Text(
-                          ticket.dateLabel,
+                          GenerateCubit.formatFullDateLabel(ticket.eventAt),
                           style: GoogleFonts.spaceMono(
                             color: onText,
                             fontWeight: FontWeight.w600,
@@ -381,6 +392,7 @@ class TicketDetailsSection extends StatelessWidget {
               leading: Icon(Icons.place_outlined, color: onText, size: 24),
             ),
           ),
+          TicketBrandingFooter(color: onText),
         ],
       ),
     );
