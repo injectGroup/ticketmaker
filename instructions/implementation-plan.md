@@ -22,9 +22,9 @@ documentation that no longer describes the app.
 | Optional auth + cloud publish | Built (`features/auth`, `ticket_cloud_sync.dart`) |
 | Fonts | Bundled as assets; no runtime CDN fetch |
 | Android release config | **Done** — upload-key signed AAB builds; package `com.agathakakalogical.quickticketmaker` |
-| Test coverage | **132 tests**; Phase 1 + Phase 2 + Phase 3 coverage complete |
+| Test coverage | **143 tests**; Phases 1–4 coverage complete |
 | Product docs | **Done** — rewritten against shipped behaviour, pinned by `test/docs_accuracy_test.dart` |
-| Release to `main` | Not started — see Phase 4 |
+| Release to `main` | **Merged 31 Jul 2026** as `c155c80` via PR #6, tagged `v1.0.0`; Play Console upload still operator work |
 
 ---
 
@@ -106,11 +106,11 @@ no hardcoded credentials.
 - [x] 3.3 Add structural bugs to `USER_RESEARCH_REPORT.md`
 - [x] 3.4 Sweep `docs/features.md` and `docs/privacy.md` for the same drift
 
-### Phase 4 — Release and merge → [phase-4.md](phase-4.md)
-- [ ] 4.1 Full green gate (analyze, test, web plugin check)
-- [ ] 4.2 Open the PR to `main`
-- [ ] 4.3 Settle the version and tag
-- [ ] 4.4 Post-merge notifications and TaskManager backup
+### Phase 4 — Release and merge → [phase-4.md](phase-4.md) ✅ merged and tagged
+- [x] 4.1 Full green gate (analyze, test, web plugin check) — browser spot-check inconclusive
+- [x] 4.2 Open the PR to `main` — [#6](https://github.com/injectGroup/ticketmaker/pull/6), merged as `c155c80`
+- [x] 4.3 Settle the version and tag — annotated `v1.0.0`
+- [x] 4.4 Post-merge notifications and TaskManager backup — Chat skipped, webhook unset
 - [ ] 4.5 Play Console internal-track upload (operator checklist)
 
 Phase 2 has no dependency on Phase 1 and can proceed in parallel. Phase 4

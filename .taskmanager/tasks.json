@@ -23,10 +23,10 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-31T12:15:00.000Z",
       "lastMilestone": {
-        "message": "Phase 3 done: docs, privacy notice, and threat model now describe the shipped V1 app; 132 tests green",
-        "taskId": "task-phase3-docs-truth-up-20260731",
-        "updatedAt": "2026-07-31T14:05:00.000Z",
-        "note": "Local fallback: cloud milestone not posted (Firebase not configured for this project); Google Chat skipped (GOOGLE_CHAT_WEBHOOK_URL unset)."
+        "message": "V1 shipped: merged to main as c155c80 and tagged v1.0.0; 143 tests green",
+        "taskId": "task-phase4-v1-release-merge-20260731",
+        "updatedAt": "2026-07-31T14:35:00.000Z",
+        "note": "Local fallback: cloud milestone not posted (Firebase not configured for this project); Google Chat skipped (GOOGLE_CHAT_WEBHOOK_URL unset, workflow logged 'skipping Chat notify')."
       }
     }
   ],
@@ -1848,6 +1848,20 @@
       "createdAt": "2026-07-31T13:40:00.000Z",
       "updatedAt": "2026-07-31T14:05:00.000Z",
       "note": "Decisions still open for Phase 4: D3 version/tag, D4 merge style, D5 ScanPage wire-or-remove, D6 canonical QR host. Next: Phase 4 release and merge."
+    },
+    {
+      "id": "task-phase4-v1-release-merge-20260731",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Phase 4 — V1 release: merge to main and tag v1.0.0",
+      "description": "Green gate, PR #6 to main, merge commit preserving all 116 commits, annotated v1.0.0 tag, and post-merge backup. Decisions D3-D6 settled by the user.",
+      "details": "Gate: flutter analyze clean; flutter test 143 passing (132 -> 143); scripts/build_web.sh succeeded with 'OK: web_plugin_registrant.dart registers all 13 web plugins'. TDD: test/release_version_test.dart (2 red -> green) pins v1.0.0 across pubspec, Gradle, and the changelog; test/secret_scan_config_test.dart (5 red -> green) pins the Gitleaks allowlist narrow. CI initially failed: Gitleaks reported 5 gcp-api-key findings in lib/firebase_options.dart because PR scans cover every commit in the range while pushes only scan their own diff. Those are public FlutterFire client keys, already classified low-sensitivity in the threat model, so gitleaks.toml allowlists only AIza-shaped values in that one generated file with useDefault=true; GITLEAKS_CONFIG wired into security-ci.yml. Both checks then passed and PR #6 merged as c155c80 (merge commit, D4). Annotated tag v1.0.0 pushed; no v1.0.0 tag had ever existed, so the changelog's 1.0.0 - 2026-07-16 heading was consolidated into one dated 1.0.0 release (D3). D5: unrouted ScanPage kept. D6: quick-ticket-maker-sandbox.web.app confirmed canonical so no shared ticket breaks. Feature branch preserved, not deleted. Not done: Play Console internal-track upload (operator), CDN-blocked browser spot-check inconclusive, no approving review (reviewers not configured), and no Chat message (GOOGLE_CHAT_WEBHOOK_URL unset). Also surfaced: an unpushed local main commit ba8c18e added an Interactive Seating Map directly on main; feature commit 16999a3 had deliberately removed it, so the merge dropped it from the tip while keeping it in history.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-31T14:10:00.000Z",
+      "updatedAt": "2026-07-31T14:35:00.000Z",
+      "note": "Remaining: Play Console internal-track upload, Firebase Console App Check + API key restrictions, GOOGLE_CHAT_WEBHOOK_URL secret, required reviewers on the remote, and amending workflow-integrity.mdc so its base-URL wording matches D6."
     }
   ],
   "epics": [
@@ -1863,5 +1877,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-07-31T12:55:31.578Z"
+  "lastSync": "2026-07-31T14:00:46.286Z"
 }
