@@ -67,3 +67,8 @@ service-account*.json
 **/DerivedData/
 **/local.properties
 **/xcuserdata/
+
+# Temporary & build junk
+node_modules/
+.cursor-tmp/
+.firebase/
