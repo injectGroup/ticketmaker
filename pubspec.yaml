@@ -47,3 +47,11 @@ flutter:
   assets:
     - assets/images/ticket_event_placeholder.png
     - assets/images/app_logo_mark.png
+    # Pre-bundled Google Fonts. google_fonts resolves these from the asset
+    # manifest by `<Family>-<Variant>` filename, so no runtime fetch from
+    # fonts.gstatic.com is needed and web text never renders in a fallback
+    # font while a download is in flight (the source of the
+    # "Could not find a set of Noto fonts" console warning).
+    # Only the variants the app actually requests are bundled — see
+    # test/bundled_fonts_test.dart, which fails if a new variant is missing.
+    - assets/fonts/

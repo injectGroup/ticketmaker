@@ -23,9 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-31T09:55:00.000Z",
       "lastMilestone": {
-        "message": "Polished ticket detail and preview UI: TICKET ID caption, long-form date, ABOUT THIS EVENT header, Scan at entrance indicator, branding footer",
-        "taskId": "task-polish-ticket-detail-preview-ui-20260731",
-        "updatedAt": "2026-07-31T09:55:00.000Z"
+        "message": "Bundled Google Fonts assets so Flutter Web no longer fetches fonts at runtime; test suite fully green",
+        "taskId": "task-bundle-google-fonts-assets-20260731",
+        "updatedAt": "2026-07-31T11:10:00.000Z"
       }
     }
   ],
@@ -1735,6 +1735,20 @@
       "createdAt": "2026-07-31T09:30:00.000Z",
       "updatedAt": "2026-07-31T09:55:00.000Z",
       "note": "Cloud MCP blocked by auto-review; local backup only."
+    },
+    {
+      "id": "task-bundle-google-fonts-assets-20260731",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Bundle Google Fonts assets to stop web font fallback warnings",
+      "description": "Pre-bundle the six font variants the app requests (Readex Pro Regular/Medium/SemiBold, Outfit Medium/SemiBold, Space Mono Bold) under assets/fonts/ and declare them in pubspec.yaml so google_fonts resolves from the asset manifest instead of fetching from fonts.gstatic.com.",
+      "details": "Files downloaded from the exact gstatic URLs google_fonts uses and verified by SHA-256 + byte length. Added test/bundled_fonts_test.dart, which disables GoogleFonts runtime fetching so a newly requested variant fails the suite. Confirmed all bundled fonts cover the punctuation the UI renders (… • · —). Headless Chrome on the release build shows no Noto warning. Remaining known gap: the Flutter web engine still fetches its own default Roboto from fonts.gstatic.com, which is independent of google_fonts.",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-31T10:15:00.000Z",
+      "updatedAt": "2026-07-31T11:10:00.000Z",
+      "note": "Also fixed 3 pre-existing ticket_share_helper_test failures (SpaceMono-Bold asset); suite now 49/49. Cloud MCP unavailable; local backup only."
     }
   ],
   "epics": [
@@ -1750,5 +1764,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-07-31T09:37:36.226Z"
+  "lastSync": "2026-07-31T10:10:20.751Z"
 }
