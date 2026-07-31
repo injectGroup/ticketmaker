@@ -23,9 +23,10 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-31T12:15:00.000Z",
       "lastMilestone": {
-        "message": "Android release readiness: upload-key signed AAB for com.agathakakalogical.quickticketmaker",
-        "taskId": "task-phase1-android-release-20260731",
-        "updatedAt": "2026-07-31T13:30:00.000Z"
+        "message": "Phase 3 done: docs, privacy notice, and threat model now describe the shipped V1 app; 132 tests green",
+        "taskId": "task-phase3-docs-truth-up-20260731",
+        "updatedAt": "2026-07-31T14:05:00.000Z",
+        "note": "Local fallback: cloud milestone not posted (Firebase not configured for this project); Google Chat skipped (GOOGLE_CHAT_WEBHOOK_URL unset)."
       }
     }
   ],
