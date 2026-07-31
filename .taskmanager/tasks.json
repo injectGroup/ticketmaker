@@ -1791,6 +1791,34 @@
       "createdAt": "2026-07-31T12:25:00.000Z",
       "updatedAt": "2026-07-31T12:30:00.000Z",
       "note": "Docs/config only; no app code touched. Local backup only."
+    },
+    {
+      "id": "task-v1-implementation-plan-20260731",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Prepare V1 implementation plan and phase breakdowns",
+      "description": "Create instructions/implementation-plan.md plus phase-1..4 checklists covering Android release readiness, TDD coverage, documentation truth-up, and the merge to main.",
+      "details": "Grounded in a repo survey: 51-test green baseline, branch 108 commits ahead of main, uncommitted Android release-prep config, release build still signed with the debug keystore, five logic units without specs, and stale docs (architecture.md contradicts shipped behaviour; privacy.md omits Firebase). Six open decisions recorded; D1 (generate upload keystore) and D2 (align Gradle namespace) settled by the host.",
+      "operationalPhase": "PLAN",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-31T12:35:00.000Z",
+      "updatedAt": "2026-07-31T12:45:00.000Z",
+      "note": "Triggered by the tdd-workflow rule's 'please prepare my tasks'."
+    },
+    {
+      "id": "task-phase2-logic-test-coverage-20260731",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Phase 2 — TDD specs for the five untested logic units",
+      "description": "Add specs for TicketConfig, SecureStorageService, AuthCubit, TicketPublicVerify, and the app router, taking the suite from 51 to 109 passing tests.",
+      "details": "New files: test/ticket_config_test.dart (9), test/secure_storage_service_test.dart (9), test/auth_cubit_test.dart (18), test/ticket_public_verify_test.dart (14), test/app_router_test.dart (8). Added fake_cloud_firestore and mock_exceptions dev dependencies. Fixed a real defect the specs exposed: SecureStorageService.clearAllTickets mutated the store while iterating the keys readAll() returned, throwing Concurrent modification during iteration; it now deletes from a snapshot. flutter analyze clean. Findings logged as decisions D5 (ScanPage is unreachable) and D6 (documented ticketmaker.app base URL differs from the implemented sandbox host).",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-31T12:45:00.000Z",
+      "updatedAt": "2026-07-31T13:10:00.000Z",
+      "note": "Phase 1 (Android release readiness) is next; D1 and D2 already settled."
     }
   ],
   "epics": [

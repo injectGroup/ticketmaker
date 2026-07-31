@@ -32,10 +32,10 @@ class SecureStorageService {
 
   Future<void> clearAllTickets() async {
     final all = await _store.readAll();
-    for (final key in all.keys) {
-      if (key.startsWith(_keyPrefix)) {
-        await _store.delete(key);
-      }
+    // Snapshot the keys: deleting can mutate the map readAll() handed back.
+    final keys = all.keys.where((k) => k.startsWith(_keyPrefix)).toList();
+    for (final key in keys) {
+      await _store.delete(key);
     }
   }
 }
