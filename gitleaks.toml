@@ -1,0 +1,28 @@
+# Gitleaks configuration for Quick Ticket Maker.
+#
+# Why this file exists: pull-request scans cover every commit in the range, so
+# they reach the commit that added `lib/firebase_options.dart`. Gitleaks flags
+# the Firebase client API keys there as `gcp-api-key`, but FlutterFire generates
+# that file expecting it to be committed, and the keys are public client
+# identifiers rather than credentials — see docs/security/threat-model.md, which
+# classifies them as low sensitivity, and section 5.5 on why they must not be
+# treated as server secrets.
+#
+# These keys still need Firebase Console restrictions and App Check enforcement;
+# that is tracked as an open gap in docs/compliance/iso-alignment.md. Allowlisting
+# them here suppresses a known false positive, not the underlying hardening work.
+#
+# The exemption is deliberately narrow: default rules stay enabled, and only
+# Google API-key-shaped values in that one generated file are exempt, so any
+# other secret committed to it is still caught. test/secret_scan_config_test.dart
+# fails if this is widened.
+
+title = "Quick Ticket Maker"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Public Firebase client API keys in generated FlutterFire options (rule: gcp-api-key)"
+paths = ['''lib/firebase_options\.dart''']
+regexes = ['''AIza[0-9A-Za-z_\-]{35}''']

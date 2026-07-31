@@ -84,6 +84,7 @@ allowed by `firestore.rules`. Everything private stays under `users/{uid}`.
 | Information disclosure | Code enumeration across the 10<sup>11</sup> space | Impractical at scale, not prevented | Low–Medium |
 | Information disclosure | Ticket data readable on a lost device | `FlutterSecureStorage` (Keychain / EncryptedSharedPreferences) | Low; Medium where the prefs fallback engages |
 | Information disclosure | Secrets in git | `.gitignore` (incl. `key.properties`, keystores), gitleaks CI, push protection | Medium if discipline fails |
+| Information disclosure | A real secret hidden behind the gitleaks allowlist | `gitleaks.toml` exempts only Google API-key shapes in the generated `lib/firebase_options.dart`; `test/secret_scan_config_test.dart` fails if that is widened | Low |
 | Denial of service | Large Base64 flyer inflates documents | Client-side image sizing; Firestore 1 MiB doc limit | Low–Medium |
 | Elevation of privilege | Cross-user Firestore access | Deny-by-default rules | Low if rules deployed |
 

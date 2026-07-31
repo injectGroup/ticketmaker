@@ -46,3 +46,6 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Allowlists only the public Firebase client keys in the generated
+          # FlutterFire options file; see gitleaks.toml for the reasoning.
+          GITLEAKS_CONFIG: ${{ github.workspace }}/gitleaks.toml
