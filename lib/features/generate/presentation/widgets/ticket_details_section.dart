@@ -16,6 +16,7 @@ import '../../domain/entities/ticket.dart';
 import '../bloc/generate_cubit.dart';
 import 'bracketed_ticket_field.dart';
 import 'ticket_branding_footer.dart';
+import 'ticket_date_text.dart';
 import 'ticket_section_label.dart';
 
 class TicketDetailsSection extends StatelessWidget {
@@ -307,7 +308,7 @@ class TicketDetailsSection extends StatelessWidget {
               children: [
                 TicketSectionLabel(
                   text: 'About this event',
-                  color: AppColors.pillText,
+                  color: onText,
                 ),
                 const SizedBox(height: 8),
                 BracketedTicketField(
@@ -340,33 +341,29 @@ class TicketDetailsSection extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Icon(Icons.date_range_sharp, color: onText, size: 24),
-                      const SizedBox(width: 12),
-                      Flexible(
-                        child: Text(
-                          GenerateCubit.formatFullDateLabel(ticket.eventAt),
+                      Icon(Icons.date_range_sharp, color: onText, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TicketDateText(
+                          eventAt: ticket.eventAt,
                           style: GoogleFonts.spaceMono(
                             color: onText,
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                             height: 1.2,
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Icon(Icons.access_time_rounded, color: onText, size: 24),
                       const SizedBox(width: 10),
-                      Flexible(
-                        child: Text(
-                          ticket.timeLabel,
-                          style: GoogleFonts.spaceMono(
-                            color: onText,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                            height: 1.2,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+                      Icon(Icons.access_time_rounded, color: onText, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        ticket.timeLabel,
+                        style: GoogleFonts.spaceMono(
+                          color: onText,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          height: 1.2,
                         ),
                       ),
                     ],

@@ -6,10 +6,10 @@ import 'package:flutter/material.dart';
 import '../../../../core/utils/color_contrast.dart';
 import '../../../../core/widgets/ticket_photo_placeholder.dart';
 import '../../../generate/domain/entities/ticket.dart';
-import '../../../generate/presentation/bloc/generate_cubit.dart';
 import '../../../generate/presentation/widgets/generate_qr_code.dart';
 import '../../../generate/presentation/widgets/ticket_branding_footer.dart';
 import '../../../generate/presentation/widgets/ticket_code_badge.dart';
+import '../../../generate/presentation/widgets/ticket_date_text.dart';
 import '../../../generate/presentation/widgets/ticket_perforation.dart';
 import '../../../generate/presentation/widgets/ticket_section_label.dart';
 import '../../data/ticket_image_store.dart';
@@ -204,27 +204,23 @@ class SavedTicketView extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(30, 0, 30, 8),
             child: Row(
               children: [
-                Icon(Icons.date_range_sharp, color: onCard, size: 24),
-                const SizedBox(width: 16),
-                Flexible(
-                  child: Text(
-                    GenerateCubit.formatFullDateLabel(ticket.eventAt),
+                Icon(Icons.date_range_sharp, color: onCard, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TicketDateText(
+                    eventAt: ticket.eventAt,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: onCard,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(width: 16),
-                Icon(Icons.access_time_rounded, color: onCard, size: 24),
-                const SizedBox(width: 12),
-                Flexible(
-                  child: Text(
-                    ticket.timeLabel,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: onCard,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+                const SizedBox(width: 10),
+                Icon(Icons.access_time_rounded, color: onCard, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  ticket.timeLabel,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: onCard,
                   ),
                 ),
               ],

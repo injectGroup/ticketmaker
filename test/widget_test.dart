@@ -85,6 +85,28 @@ void main() {
     expect(find.text('Powered by Quick Ticket'), findsOneWidget);
   });
 
+  testWidgets(
+    'Generate date row uses compact form on phone-width viewport',
+    (tester) async {
+      // Match a typical iPhone logical size so TicketDateText falls back.
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestApp());
+      await tester.pumpAndSettle();
+
+      final now = DateTime.now();
+      final compact = GenerateCubit.formatCompactDateLabel(now);
+      final full = GenerateCubit.formatFullDateLabel(now);
+
+      expect(find.text(compact), findsOneWidget);
+      expect(find.text(full), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('Tickets tab starts empty without saved records', (tester) async {
     await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();

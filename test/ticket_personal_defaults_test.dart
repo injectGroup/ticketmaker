@@ -34,6 +34,17 @@ void main() {
     );
   });
 
+  test('formatCompactDateLabel renders EEE, d MMM yyyy', () {
+    expect(
+      GenerateCubit.formatCompactDateLabel(DateTime(2026, 7, 31)),
+      'Fri, 31 Jul 2026',
+    );
+    expect(
+      GenerateCubit.formatCompactDateLabel(DateTime(2026, 1, 4)),
+      'Sun, 4 Jan 2026',
+    );
+  });
+
   test('ensureTicketPayload reuses existing valid code', () {
     final cubit = GenerateCubit();
     final before = cubit.state.ticket.code;

@@ -138,6 +138,13 @@ class GenerateCubit extends Cubit<GenerateState> {
         '${_monthsFull[date.month - 1]} ${date.year}';
   }
 
+  /// `EEE, d MMM yyyy` — e.g. `Fri, 31 Jul 2026`. Display-only fallback for when
+  /// the long form does not fit on one line.
+  static String formatCompactDateLabel(DateTime date) {
+    return '${_weekdays[date.weekday - 1]}, ${date.day} '
+        '${_months[date.month - 1]} ${date.year}';
+  }
+
   static String formatTimeLabel(DateTime date) {
     final hour12 = date.hour % 12 == 0 ? 12 : date.hour % 12;
     final minute = date.minute.toString().padLeft(2, '0');

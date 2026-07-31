@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-07-31T09:55:00.000Z",
+      "updatedAt": "2026-07-31T12:15:00.000Z",
       "lastMilestone": {
-        "message": "Flutter Web now loads every font from the app bundle; no font CDN requests and no Noto fallback warning",
-        "taskId": "task-bundle-engine-default-roboto-20260731",
-        "updatedAt": "2026-07-31T11:35:00.000Z"
+        "message": "Responsive ticket date: Expanded leftover width + compact Fri, 31 Jul 2026 fallback; fixed ABOUT THIS EVENT contrast",
+        "taskId": "task-responsive-ticket-date-20260731",
+        "updatedAt": "2026-07-31T12:15:00.000Z"
       }
     }
   ],
@@ -1763,6 +1763,20 @@
       "createdAt": "2026-07-31T11:15:00.000Z",
       "updatedAt": "2026-07-31T11:35:00.000Z",
       "note": "Follow-up chosen by user after the google_fonts bundling task. Cloud MCP unavailable; local backup only."
+    },
+    {
+      "id": "task-responsive-ticket-date-20260731",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Responsive ticket date and ABOUT THIS EVENT contrast",
+      "description": "Stop phone ellipsis on the date row by giving the date Expanded leftover width and falling back to Fri, 31 Jul 2026 when the long form does not fit. Fix ABOUT THIS EVENT label to use onText contrast color.",
+      "details": "Added GenerateCubit.formatCompactDateLabel and TicketDateText (LayoutBuilder + TextPainter). Wired into TicketDetailsSection and SavedTicketView. Optional headroom: 20px icons and tighter gaps. Narrow 390pt widget regression + compact format unit test. Suite 51/51.",
+      "operationalPhase": "CONSTRUCT",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-07-31T12:05:00.000Z",
+      "updatedAt": "2026-07-31T12:15:00.000Z",
+      "note": "Local backup; cloud MCP not used for this task."
     }
   ],
   "epics": [
