@@ -61,17 +61,33 @@ void main() {
     expect(ColorContrast.onGradient(fill, fill), ColorContrast.onDark);
   });
 
-  test('white QR modules get dark plum pad', () {
-    expect(
-      ColorContrast.qrPadForPattern(Colors.white),
-      const Color(0xFF1A1A2E),
-    );
-  });
+  group('qrInk', () {
+    test('keeps a module colour dark enough to read', () {
+      const navy = Color(0xFF0F3460);
+      expect(ColorContrast.qrInk(navy), navy);
+    });
 
-  test('dark QR modules get white pad', () {
-    expect(
-      ColorContrast.qrPadForPattern(const Color(0xFF1A1A2E)),
-      Colors.white,
-    );
+    test('swaps in ink for colours that would fade into the field', () {
+      for (final pale in const [
+        Colors.white,
+        Color(0xFFF9CF58), // comedy yellow
+        Color(0xFFC9A227), // wedding gold
+        Color(0xFF4ECDC4), // birthday teal
+      ]) {
+        expect(
+          ColorContrast.qrInk(pale),
+          ColorContrast.onLight,
+          reason: '$pale is too pale to scan',
+        );
+      }
+    });
+
+    test('judges a translucent colour by how it lands on the field', () {
+      // Alpha is lost on paper, so a wash is measured once blended.
+      expect(
+        ColorContrast.qrInk(const Color(0x220F172A)),
+        ColorContrast.onLight,
+      );
+    });
   });
 }

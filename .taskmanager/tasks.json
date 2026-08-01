@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-08-01T09:11:20Z",
+      "updatedAt": "2026-08-01T11:40:00Z",
       "lastMilestone": {
-        "message": "PDF export keeps the QR code on the page: a long ticket or an event photo can no longer print a blank pass",
-        "taskId": "task-pdf-qr-layout-fix-20260801",
-        "updatedAt": "2026-08-01T09:11:20Z"
+        "message": "A ticket’s QR code now scans everywhere it is shown — on screen, in the shared PNG and in print — checked against a real reader on all twelve palettes in both formats",
+        "taskId": "task-qr-scannable-everywhere-20260801",
+        "updatedAt": "2026-08-01T11:40:00Z"
       }
     }
   ],
@@ -1889,6 +1889,34 @@
       "createdAt": "2026-08-01T09:10:27Z",
       "updatedAt": "2026-08-01T09:10:27Z",
       "note": "Branch feature/v1-personal-ticket-share. Cloud task_create_in_db denied (project not shared with this MCP user); local backup only."
+    },
+    {
+      "id": "task-pdf-qr-scannable-20260801",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Printed ticket QR code is scannable",
+      "description": "The exported PDF printed the \"Scan at entrance\" caption with no usable code above it. The code is now embedded as an image in print colours — dark modules on white with a quiet zone — and every shipped palette was checked against a real barcode reader.",
+      "details": "Two faults sat on top of each other. (1) The PDF drew the code as vector modules in ticket.dataModuleColor; the default palette and several category palettes use white or pale modules, which are invisible on the white card. (2) Drawing it the way the app does on screen — light modules on a dark pad, edge to edge — is no better: a page rasterised at 900px and at 2400px was fed to Apple's Vision barcode reader and neither found a code, because readers expect dark modules on a light field with a quiet zone around them.\n\nFix: TicketPdfExport builds the code as a 512px PNG before the document and embeds it with pw.Image(pw.MemoryImage(...)) directly above the 'Scan at entrance' caption. TicketRasterExport.qrPngBytes renders it. New ColorContrast.qrInkForPrint keeps the guest's colour while it stays under maxQrInkLuminance (0.3) blended on white and falls back to ink otherwise; the paper runs four modules past the code as a quiet zone. Vector modules remain only as a fallback and follow the same colour rule.\n\nVerified: all twelve shipped palettes re-rendered to PDF, rasterised and decoded with Apple Vision — twelve of twelve return the verify URL.\n\nTests: ticket_pdf_export_test.dart asserts the hero photo and the QR arrive as separate image objects, that the QR image sits above the caption with and without a photo, that no vector modules are left behind, and that the pixels change with the payload. ticket_raster_export_test.dart checks the picture against the payload module for module, dark on light for pale, mid and dark palettes, quiet zone intact. color_contrast_test.dart covers qrInkForPrint. test/pdf_content_probe.dart now reports where images were drawn and no longer mistakes an ASCII85 image stream for page content.\n\nStill open: the on-screen ticket and the PNG share draw the same inverted code and are equally unreadable to a scanner. Only the print path changed.\n\nDocs: features.md, README, architecture.md, CHANGELOG (### Fixed), USER_RESEARCH_REPORT section 4.5.\n\nGate: flutter analyze clean; flutter test 176 passing (167 → 176).",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-08-01T10:55:00Z",
+      "updatedAt": "2026-08-01T10:55:00Z",
+      "note": "Branch feature/v1-personal-ticket-share. Cloud task_create_in_db denied (project not shared with this MCP user); local backup only."
+    },
+    {
+      "id": "task-qr-scannable-everywhere-20260801",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "QR code is scannable on screen and in the shared PNG",
+      "description": "The ticket drew an inverted QR code with no quiet zone, which readers do not decode, and the raster renderer overdrew each module so the code broke down at the size the shared PNG uses. Every surface now draws the code dark on a light field, verified against a real barcode reader.",
+      "details": "Follow-on from task-pdf-qr-scannable-20260801, which fixed only the printed ticket. The same code was unreadable on screen and in the shared PNG, and a third fault turned up once the colours were corrected.\n\nFaults: (1) the code was inverted — light modules on a dark pad, with no quiet zone — which no reader decodes; (2) the raster renderer grew each module outwards to the next whole pixel, so at the 150px the shared PNG draws at, dark modules swallowed the light ones between them. After the colour fix alone, seven of the twelve palettes still failed to decode.\n\nFix: GenerateQrCode draws on ColorContrast.qrField with modules and eyes through ColorContrast.qrInk (formerly qrInkForPrint, now the rule everywhere). TicketRasterExport._drawScannableQr is the single renderer for the shared PNG and the PDF image, adding the four-module quiet zone. Module edges are rounded so cells tile exactly instead of overlapping. ColorContrast.qrPadForPattern, which chose the dark pad, is gone.\n\nVerified: twelve palettes × two share formats re-rendered and decoded with Apple Vision — 24 of 24 return the verify URL, against 5 of 12 shared PNGs before the module geometry fix.\n\nTests: generate_qr_code_test.dart (new — pale palettes drawn in ink on the light field, dark enough colours kept, caller can still name the field); ticket_raster_export_test.dart now checks the payload module for module at 150px as well as 512px and requires every light module to be clear across its whole cell, which is what the old geometry broke, plus the shared ticket PNG carrying the same code; color_contrast_test.dart covers qrInk.\n\nDocs: features.md (F-GEN-002 and the share section), CHANGELOG, USER_RESEARCH_REPORT section 4.5 rewritten to cover all three faults.\n\nGate: flutter analyze clean; flutter test 178 passing (176 → 178).",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-08-01T11:40:00Z",
+      "updatedAt": "2026-08-01T11:40:00Z",
+      "note": "Branch feature/v1-personal-ticket-share. Cloud task_create_in_db denied (project not shared with this MCP user); local backup only."
     }
   ],
   "epics": [
@@ -1904,5 +1932,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-08-01T09:10:35.856Z"
+  "lastSync": "2026-08-01T10:35:11.214Z"
 }

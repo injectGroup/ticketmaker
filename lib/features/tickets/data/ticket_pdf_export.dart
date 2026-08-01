@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../../../core/utils/color_contrast.dart';
 import '../../generate/domain/entities/ticket.dart';
+import 'ticket_raster_export.dart';
 
 /// Builds a printable PDF of a ticket entirely in memory.
 ///
@@ -11,17 +13,24 @@ import '../../generate/domain/entities/ticket.dart';
 /// a ticket never leaves a copy behind in device storage.
 ///
 /// The page is drawn from the ticket model rather than wrapped around a
-/// screenshot: the details are real text and the QR code is vector artwork, so
-/// the ticket stays legible and scannable at any print size. The optional event
-/// photo is the only raster element.
+/// screenshot, so the details print as real text. The QR code is rasterised
+/// well above print density and in the colours a door scanner can read,
+/// which is not always the palette the ticket wears on screen.
 class TicketPdfExport {
   TicketPdfExport._();
 
   /// A4 keeps the ticket printable on ordinary paper at the door.
   static const PdfPageFormat pageFormat = PdfPageFormat.a4;
 
-  /// Side of the square QR block, in points.
+  /// Width of the QR block: the code plus the caption underneath it.
   static const double qrSize = 132;
+
+  /// Printed size of the QR image, in points.
+  static const double qrImageSize = 70;
+
+  /// Raster resolution of that image. Well above print density at
+  /// [qrImageSize], so the modules stay square-edged on paper.
+  static const int qrImagePixels = 512;
 
   /// The event photo is capped both in points and as a share of the printable
   /// height, so a tall page never spends more room on decoration than on the
@@ -64,12 +73,14 @@ class TicketPdfExport {
   }) async {
     final theme = embedBundledFonts ? await _loadBundledTheme() : null;
     final photo = _usableImage(eventImageBytes);
+    final qr = _qrImage(ticket);
 
     final bytes = await _save(
       ticket,
       theme: theme,
       monoFont: theme == null ? null : _cachedMonoFont,
       photo: photo,
+      qr: qr,
       compress: compress,
       format: format ?? pageFormat,
     );
@@ -81,9 +92,29 @@ class TicketPdfExport {
       theme: theme,
       monoFont: theme == null ? null : _cachedMonoFont,
       photo: null,
+      qr: qr,
       compress: compress,
       format: format ?? pageFormat,
     );
+  }
+
+  /// Rasterises the code for print. Painting the modules in the ticket's own
+  /// colour left white ones invisible on the white card, and inverting them
+  /// onto a dark pad — the way the code looks on screen — is not something a
+  /// scanner will read back.
+  static pw.MemoryImage? _qrImage(Ticket ticket) {
+    if (ticket.qrData.trim().isEmpty) return null;
+    final bytes = TicketRasterExport.qrPngBytes(
+      ticket,
+      pixels: qrImagePixels,
+    );
+    if (bytes == null) return null;
+    try {
+      return pw.MemoryImage(bytes);
+    } catch (e) {
+      debugPrint('Ticket PDF QR image skipped, falling back to vector: $e');
+      return null;
+    }
   }
 
   static Future<Uint8List?> _save(
@@ -91,6 +122,7 @@ class TicketPdfExport {
     required pw.ThemeData? theme,
     required pw.Font? monoFont,
     required pw.MemoryImage? photo,
+    required pw.MemoryImage? qr,
     required bool compress,
     required PdfPageFormat format,
   }) async {
@@ -106,6 +138,7 @@ class TicketPdfExport {
       final layout = _TicketPdfLayout(
         ticket: ticket,
         photo: photo,
+        qr: qr,
         monoFont: monoFont,
         // Standard fonts only cover Latin-1, so typographic punctuation has to
         // be folded down when the bundled TrueType faces are unavailable.
@@ -185,12 +218,14 @@ class _TicketPdfLayout {
   _TicketPdfLayout({
     required this.ticket,
     required this.photo,
+    required this.qr,
     required this.monoFont,
     required this.sanitizeText,
   });
 
   final Ticket ticket;
   final pw.MemoryImage? photo;
+  final pw.MemoryImage? qr;
   final pw.Font? monoFont;
   final bool sanitizeText;
 
@@ -368,16 +403,7 @@ class _TicketPdfLayout {
       child: pw.Column(
         mainAxisSize: pw.MainAxisSize.min,
         children: [
-          pw.SizedBox(
-            width: TicketPdfExport.qrSize,
-            height: TicketPdfExport.qrSize,
-            child: pw.BarcodeWidget(
-              barcode: pw.Barcode.qrCode(),
-              data: ticket.qrData.trim(),
-              drawText: false,
-              color: _toPdfColor(ticket.dataModuleColor),
-            ),
-          ),
+          _qrArtwork(),
           pw.SizedBox(height: 8),
           pw.Text(
             _text('Scan at entrance'),
@@ -395,6 +421,35 @@ class _TicketPdfLayout {
       ),
     );
   }
+
+  /// The rasterised code carries the guest's colours on their contrast pad.
+  /// Vector modules are the fallback rather than the default: they are drawn
+  /// in the module colour alone, which is invisible when that colour is light.
+  pw.Widget _qrArtwork() {
+    final image = qr;
+    if (image != null) {
+      return pw.Image(
+        image,
+        width: TicketPdfExport.qrImageSize,
+        height: TicketPdfExport.qrImageSize,
+      );
+    }
+    return pw.SizedBox(
+      width: TicketPdfExport.qrImageSize,
+      height: TicketPdfExport.qrImageSize,
+      child: pw.BarcodeWidget(
+        barcode: pw.Barcode.qrCode(),
+        data: ticket.qrData.trim(),
+        drawText: false,
+        color: _legibleModuleColor,
+      ),
+    );
+  }
+
+  /// Vector modules are drawn straight onto the white card, so they follow
+  /// the same rule the printed image does.
+  PdfColor get _legibleModuleColor =>
+      _toPdfColor(ColorContrast.qrInk(ticket.dataModuleColor));
 
   pw.Widget _field(String label, String value, {bool mono = false}) {
     return pw.Padding(

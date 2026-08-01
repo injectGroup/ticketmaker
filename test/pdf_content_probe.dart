@@ -35,14 +35,19 @@ class ProbeText {
 /// tests can assert on where things actually landed instead of only checking
 /// that bytes exist.
 class PdfPageProbe {
-  PdfPageProbe._(this.rects, this.texts, this.rectRuns);
+  PdfPageProbe._(this.rects, this.texts, this.rectRuns, this.images);
 
   final List<ProbeRect> rects;
   final List<ProbeText> texts;
 
   /// Rectangles grouped by the uninterrupted run they were emitted in. A QR
-  /// code is drawn as one long run of module squares.
+  /// code drawn as vector modules arrives as one long run of squares.
   final List<List<ProbeRect>> rectRuns;
+
+  /// Where each embedded image was painted, in page coordinates. A `cover`
+  /// image reports the rectangle it was painted into before the surrounding
+  /// clip trimmed it, so this is placement rather than visible extent.
+  final List<ProbeRect> images;
 
   static PdfPageProbe parse(Uint8List bytes) {
     final content = _contentStream(bytes);
@@ -51,6 +56,7 @@ class PdfPageProbe {
     final rects = <ProbeRect>[];
     final texts = <ProbeText>[];
     final runs = <List<ProbeRect>>[];
+    final images = <ProbeRect>[];
     var currentRun = <ProbeRect>[];
 
     final stack = <List<double>>[];
@@ -125,6 +131,19 @@ class PdfPageProbe {
               ProbeText(_unescape(drawn), point[0], point[1]),
             );
           }
+        case 'Do':
+          // An image is painted by drawing the unit square under the current
+          // transform, so the transform is the placement.
+          final a = _apply(ctm, 0, 0);
+          final b = _apply(ctm, 1, 1);
+          images.add(
+            ProbeRect(
+              a[0] < b[0] ? a[0] : b[0],
+              a[1] < b[1] ? a[1] : b[1],
+              a[0] > b[0] ? a[0] : b[0],
+              a[1] > b[1] ? a[1] : b[1],
+            ),
+          );
         case 'f':
         case 'f*':
         case 'F':
@@ -142,7 +161,7 @@ class PdfPageProbe {
     rects.addAll(currentRun);
     closeRun();
 
-    return PdfPageProbe._(rects, texts, runs);
+    return PdfPageProbe._(rects, texts, runs, images);
   }
 
   /// Bounding box of the QR code: the longest uninterrupted run of drawn
@@ -167,6 +186,12 @@ class PdfPageProbe {
     return ProbeRect(left, bottom, right, top);
   }
 
+  /// Drawn images with a square placement. A ticket's QR code is the only
+  /// square image it embeds, unless a test feeds it a square event photo.
+  List<ProbeRect> get squareImages => images
+      .where((image) => (image.width - image.height).abs() < 0.5)
+      .toList();
+
   /// First text run whose content contains [needle].
   ProbeText? textAt(String needle) {
     for (final text in texts) {
@@ -176,7 +201,9 @@ class PdfPageProbe {
   }
 
   /// The page content stream: the readable operator block, told apart from
-  /// embedded image and font streams by how much of it is printable text.
+  /// font streams by how much of it is printable text, and from image streams
+  /// by their dictionary — an ASCII85 image is printable and far longer than
+  /// the operators, so length alone would pick the wrong block.
   static String _contentStream(Uint8List bytes) {
     final source = String.fromCharCodes(bytes);
     var best = '';
@@ -188,12 +215,21 @@ class PdfPageProbe {
       final end = source.indexOf('endstream', start);
       if (end < 0) break;
       final block = source.substring(start, end);
-      if (_looksLikeOperators(block) && block.length > best.length) {
+      if (!_isImageObject(source, index) &&
+          _looksLikeOperators(block) &&
+          block.length > best.length) {
         best = block;
       }
       index = source.indexOf('stream', end + 'endstream'.length);
     }
     return best;
+  }
+
+  static bool _isImageObject(String source, int streamKeyword) {
+    final from = streamKeyword < 400 ? 0 : streamKeyword - 400;
+    return source
+        .substring(from, streamKeyword)
+        .contains('/Subtype/Image');
   }
 
   static bool _looksLikeOperators(String block) {

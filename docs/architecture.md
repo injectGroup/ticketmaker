@@ -217,7 +217,7 @@ Pro + Space Mono, **bundled as assets** rather than fetched at runtime — see
 | `flutter_secure_storage` | Encrypted local store | Fallback chain above |
 | `shared_preferences` | Non-sensitive indexes, fallback store | Plaintext — never for ticket data by default |
 | `share_plus` / `path_provider` / `image` / `image_picker` | PNG export and share | Local file access |
-| `pdf` / `printing` | Vector ticket PDF and its share sheet | Document built in memory; only the PDF standard fonts and the app's bundled typefaces are used, never a font CDN |
+| `pdf` / `printing` | Printable ticket PDF and its share sheet | Document built in memory; only the PDF standard fonts and the app's bundled typefaces are used, never a font CDN |
 | `geolocator` / `geocoding` | Venue convenience | Location permission required |
 | `google_fonts` | Typography | Resolves from bundled assets; runtime fetch not relied on |
 | `equatable` | Value equality | Pure Dart |

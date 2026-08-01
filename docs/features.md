@@ -75,7 +75,7 @@ The Generate page shows a scrollable ticket composed of:
 | Date / time labels | Derived from "now" at first launch |
 | Ticket code | Randomised `####-####-###` |
 | QR data | `https://quick-ticket-maker-sandbox.web.app/verify/<code>` |
-| QR style | Brand pink eyes, white circular modules, dark plum card |
+| QR style | Brand pink eyes, circular modules, light field on the dark plum card |
 
 These V1 defaults are pinned by `.cursor/rules/workflow-integrity.mdc` §2 and
 by `test/ticket_personal_defaults_test.dart`.
@@ -91,8 +91,12 @@ by `test/ticket_personal_defaults_test.dart`.
 #### F-GEN-002 — Change QR colors
 
 - **Trigger:** “Change color” control.
-- **Behaviour:** Cycles through a fixed palette of eye/module color pairs.
-- **Acceptance:** QR colors update immediately without restarting the app.
+- **Behaviour:** Cycles through a fixed palette of eye/module color pairs. A
+  chosen colour reaches the code only while it stays dark enough to scan on
+  the light field (`ColorContrast.qrInk`); a paler one is drawn in ink
+  instead, on screen, in the shared PNG and in the PDF alike.
+- **Acceptance:** QR colors update immediately without restarting the app, and
+  the code stays readable to a scanner in every palette.
 
 #### F-GEN-003 — Change QR shape
 
@@ -186,10 +190,14 @@ by `test/ticket_personal_defaults_test.dart`.
     canvas/CORS dependency), degrading to a JPEG capture and finally to a link
     share if the ticket cannot be painted.
   - *PDF:* `TicketPdfExport` draws an A4 page from the ticket model — the
-    details as real text and the QR as vector artwork — using the app's bundled
-    typefaces, so it stays legible and scannable when printed. Any event photo
-    is embedded, and unusable photo bytes are dropped rather than failing the
-    export.
+    details as real text — using the app's bundled typefaces, so it stays
+    legible when printed. The QR code is embedded as a high-resolution image
+    rendered by the same code path the PNG uses. Any event photo is embedded,
+    and unusable photo bytes are dropped rather than failing the export.
+
+  Both formats draw the code as a reader expects to find it — dark modules on
+  a light field, ringed by a quiet zone — because a pale or inverted code is
+  not decoded at all.
 - **Web:** `WebShareOptionsDialog` offers **Download Ticket Image**, **Share as
   PDF** (Web Share API, falling back to a browser download) and **Copy Share
   Link**.

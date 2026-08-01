@@ -30,12 +30,25 @@ abstract final class ColorContrast {
     return opaque.computeLuminance() > 0.5 ? onLight : onDark;
   }
 
-  /// QR pad behind modules/eyes so patterns stay scanner-legible.
-  /// Light modules (e.g. white) sit on dark plum; dark modules on white.
-  static Color qrPadForPattern(Color dataModuleColor) {
-    return dataModuleColor.computeLuminance() > 0.5
-        ? AppColors.brandDarkPlum
-        : Colors.white;
+  /// The field a QR code sits on, on screen and on paper alike.
+  ///
+  /// Readers look for dark modules on a light field, so a code cannot be
+  /// inverted onto a dark pad however well that suits the ticket.
+  static const Color qrField = Colors.white;
+
+  /// Darkest a module may be while still reading as ink on [qrField]. Set at
+  /// a ~3.5:1 contrast ratio, below which readers start to miss the code
+  /// entirely.
+  static const double maxQrInkLuminance = 0.3;
+
+  /// [pattern] if it is dark enough to scan, otherwise [onLight].
+  ///
+  /// Keeps the guest's colour whenever it survives being scanned and swaps in
+  /// ink when it would not, which matters most for the pale palettes: white
+  /// modules on a white field are simply not there.
+  static Color qrInk(Color pattern) {
+    final opaque = Color.alphaBlend(pattern, qrField);
+    return opaque.computeLuminance() <= maxQrInkLuminance ? opaque : onLight;
   }
 
   /// Contrasting color for a two-stop gradient.

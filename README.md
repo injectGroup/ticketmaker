@@ -64,7 +64,7 @@ The application presents a two-tab experience plus a public verification link:
 ### Tickets
 
 - Saved tickets persisted in **encrypted** local storage, with a detail page
-- Share in the format the recipient needs: a PNG rendered in pure Dart, or a printable PDF drawn as text plus a vector QR code
+- Share in the format the recipient needs: a PNG rendered in pure Dart, or a printable PDF drawn as text plus a QR code in scanner-safe print colours
 - Both formats are built in memory and handed straight to the native share sheet — no copy is saved to the device first — with a Web Share API path and browser download fallback on web
 
 ### Verify
