@@ -9,20 +9,23 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../generate/domain/entities/ticket.dart';
 import '../presentation/widgets/saved_ticket_view.dart';
+import '../presentation/widgets/share_format_dialog.dart';
 import '../presentation/widgets/web_share_options_dialog.dart';
 import 'ticket_image_codec.dart';
 import 'ticket_image_store.dart';
 import 'ticket_network_image.dart';
+import 'ticket_pdf_export.dart';
 import 'ticket_raster_export.dart';
 import 'ticket_share_download_stub.dart'
     if (dart.library.js_interop) 'ticket_share_download_web.dart';
+import 'ticket_share_transport.dart';
 
 /// Captures a ticket image and opens the native share sheet (or downloads on web).
 class TicketShareHelper {
   TicketShareHelper._();
 
   static const String _subject = 'Your personal event ticket';
-  static const String _webFileName = 'ticket.jpg';
+  static const String _jpegFileName = 'ticket.jpg';
   static const String _fallbackShareText =
       "You're invited — open your personal guest ticket!";
   static const String _prepareFailedMessage =
@@ -37,8 +40,23 @@ class TicketShareHelper {
       'Preparing ticket image... please try again.';
   static const String _copyFailedMessage =
       'Could not copy share link. Try again.';
+  static const String _pdfFailedMessage =
+      'Could not prepare ticket PDF. Try sharing as an image.';
 
-  /// Sanitized web download name: `Ticket_<ticket.id>.png`.
+  static TicketShareTransport _transport = const PlatformTicketShareTransport();
+
+  /// Where finished bytes go: native share sheet, or Web Share API with a
+  /// browser download fallback.
+  static TicketShareTransport get transport => _transport;
+
+  @visibleForTesting
+  static set transport(TicketShareTransport value) => _transport = value;
+
+  @visibleForTesting
+  static void resetTransport() =>
+      _transport = const PlatformTicketShareTransport();
+
+  /// Sanitized share name: `Ticket_<ticket.id>.png`.
   static String downloadFileNameFor(Ticket ticket) {
     final raw = ticket.id.trim();
     final safe = raw.replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '_');
@@ -222,19 +240,20 @@ class TicketShareHelper {
     } catch (_) {}
   }
 
-  /// Shares [ticket] as a JPEG of the **full ticket** when image capture is
-  /// available; otherwise shares/copies ticket link/details only.
+  /// Shares [ticket] in the format the guest picks: a PNG of the **full
+  /// ticket**, or a printable PDF. Falls back to sharing the link and details
+  /// when neither can be produced.
   ///
   /// [eventImageBytes] is only used as the photo slot inside [SavedTicketView].
   /// Prefer an on-screen [boundaryKey] (detail page); otherwise compose via a
   /// opaque modal when [attachTicketImage] is true.
   ///
   /// Set [attachTicketImage] to `false` for My Tickets **list** rows (no full
-  /// ticket [RepaintBoundary] is painted there) — skips image capture and
+  /// ticket [RepaintBoundary] is painted there) — skips the format question and
   /// shares link/details only, without throwing.
   ///
-  /// **Web:** shows a dialog with **Download Ticket Image** and
-  /// **Copy Share Link**, then SnackBars that name the completed action.
+  /// **Web:** shows a dialog with **Download Ticket Image**, **Share as PDF**
+  /// and **Copy Share Link**, then SnackBars that name the completed action.
   static Future<void> share(
     BuildContext context,
     Ticket ticket, {
@@ -261,6 +280,52 @@ class TicketShareHelper {
       return;
     }
 
+    if (!attachTicketImage) {
+      await _shareTextOrCopyLink(
+        context,
+        ticket,
+        origin: origin,
+        messenger: messenger,
+      );
+      return;
+    }
+
+    final format = await showShareFormatDialog(context);
+    if (!context.mounted || format == null) return;
+
+    switch (format) {
+      case TicketShareFormat.image:
+        await shareAsImage(
+          context,
+          ticket,
+          boundaryKey: boundaryKey,
+          sharePositionOrigin: origin,
+          eventImageBytes: photoBytes,
+        );
+      case TicketShareFormat.pdf:
+        await shareAsPdf(
+          context,
+          ticket,
+          sharePositionOrigin: origin,
+          eventImageBytes: photoBytes,
+        );
+    }
+  }
+
+  /// Shares a PNG of the whole ticket straight from memory.
+  ///
+  /// Degrades in order: PNG capture, then JPEG capture, then link and details —
+  /// so the Share button always completes with something useful.
+  static Future<void> shareAsImage(
+    BuildContext context,
+    Ticket ticket, {
+    GlobalKey? boundaryKey,
+    Rect? sharePositionOrigin,
+    Uint8List? eventImageBytes,
+  }) async {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final origin = sharePositionOrigin ?? shareOriginFrom(context);
+
     messenger
       ?..hideCurrentSnackBar()
       ..showSnackBar(
@@ -270,20 +335,30 @@ class TicketShareHelper {
         ),
       );
 
-    Uint8List? jpegBytes;
-
     try {
-      if (attachTicketImage) {
-        jpegBytes = await _prepareTicketJpeg(
+      var fileName = downloadFileNameFor(ticket);
+      var mimeType = 'image/png';
+      Uint8List? bytes = await composeTicketPngBytes(
+        context,
+        ticket,
+        boundaryKey: boundaryKey,
+        eventImageBytes: eventImageBytes,
+      );
+      if (!context.mounted) return;
+
+      if (bytes == null || bytes.isEmpty) {
+        bytes = await _prepareTicketJpeg(
           context,
           ticket,
           boundaryKey: boundaryKey,
-          eventImageBytes: photoBytes,
+          eventImageBytes: eventImageBytes,
         );
+        fileName = _jpegFileName;
+        mimeType = 'image/jpeg';
+        if (!context.mounted) return;
       }
-      if (!context.mounted) return;
 
-      if (jpegBytes == null || jpegBytes.isEmpty) {
+      if (bytes == null || bytes.isEmpty) {
         await _shareTextOrCopyLink(
           context,
           ticket,
@@ -293,22 +368,13 @@ class TicketShareHelper {
         return;
       }
 
-      final shareText = _linkOrShareText(ticket);
-      const fileName = _webFileName;
-      final xFile = XFile.fromData(
-        jpegBytes,
-        mimeType: 'image/jpeg',
-        name: fileName,
-      );
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [xFile],
-          fileNameOverrides: [fileName],
-          text: shareText,
-          subject: _subject,
-          sharePositionOrigin: origin,
-          downloadFallbackEnabled: true,
-        ),
+      await transport.shareImage(
+        bytes: bytes,
+        fileName: fileName,
+        mimeType: mimeType,
+        text: _linkOrShareText(ticket),
+        subject: _subject,
+        sharePositionOrigin: origin,
       );
       if (!context.mounted) return;
       messenger?.hideCurrentSnackBar();
@@ -321,6 +387,69 @@ class TicketShareHelper {
         ?..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(content: Text(_friendlyErrorMessage(e))),
+        );
+    }
+  }
+
+  /// Builds the ticket PDF in memory and shares it.
+  ///
+  /// The document is drawn from the ticket model, so this path needs no painted
+  /// [RepaintBoundary] and works from the list as well as the detail page.
+  static Future<void> shareAsPdf(
+    BuildContext context,
+    Ticket ticket, {
+    Rect? sharePositionOrigin,
+    Uint8List? eventImageBytes,
+  }) async {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final origin = sharePositionOrigin ?? shareOriginFrom(context);
+
+    messenger
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Preparing PDF…'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+    try {
+      final photoBytes = await _resolveEventPhotoBytes(
+        ticket,
+        eventImageBytes: eventImageBytes,
+      );
+      final pdfBytes = await TicketPdfExport.buildDocumentBytes(
+        ticket,
+        eventImageBytes: photoBytes,
+      );
+      if (!context.mounted) return;
+
+      if (pdfBytes == null || pdfBytes.isEmpty) {
+        messenger
+          ?..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(content: Text(_pdfFailedMessage)),
+          );
+        return;
+      }
+
+      await transport.sharePdf(
+        bytes: pdfBytes,
+        fileName: TicketPdfExport.fileNameFor(ticket),
+        text: _linkOrShareText(ticket),
+        subject: _subject,
+        sharePositionOrigin: origin,
+      );
+      if (!context.mounted) return;
+      messenger?.hideCurrentSnackBar();
+    } catch (e, st) {
+      debugPrint('Ticket PDF share failed: $e\n$st');
+      if (!context.mounted) return;
+
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text(_pdfFailedMessage)),
         );
     }
   }
@@ -398,6 +527,12 @@ class TicketShareHelper {
               const SnackBar(content: Text(_downloadFailedMessage)),
             );
         }
+      case WebShareOption.sharePdf:
+        // shareAsPdf shows its own progress SnackBar; the transport then tries
+        // the Web Share API and downloads the file if the browser cannot share.
+        await _awaitFrameOrTimeout();
+        if (!context.mounted) return;
+        await shareAsPdf(context, ticket, eventImageBytes: eventImageBytes);
       case WebShareOption.copyLink:
         final copied = await _copyShareableFallback(ticket);
         if (!context.mounted) return;

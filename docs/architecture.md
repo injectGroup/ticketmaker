@@ -19,7 +19,7 @@ Describe the software architecture of Quick Ticket Maker for maintainers and rev
 │  │  Secure local store + image store      │  │
 │  └───────┬────────────────────────┬───────┘  │
 └──────────┼────────────────────────┼──────────┘
-           │ HTTPS                  │ PNG via OS share sheet
+           │ HTTPS                  │ PNG or PDF via OS share sheet
            ▼                        ▼
   ┌────────────────────┐     Guest's phone / chat app
   │ Firebase           │              │
@@ -116,9 +116,10 @@ lib/
 `GenerateCubit` holds the draft → `TicketPayload` builds the
 `https://quick-ticket-maker-sandbox.web.app/verify/<code>` QR string → save writes through
 `TicketLocalRepository` (secure) and publishes a public `tickets/{guestCode}`
-document via `TicketCloudSync` → share rasterises `SavedTicketView` to PNG →
-the door opens `/verify/:id`, which reads the public document and performs a
-single-use check-in.
+document via `TicketCloudSync` → share asks for a format and either rasterises
+`SavedTicketView` to PNG or draws a PDF from the ticket model, handing the bytes
+to `TicketShareTransport` → the door opens `/verify/:id`, which reads the public
+document and performs a single-use check-in.
 
 ---
 
@@ -193,7 +194,9 @@ Implemented with `go_router`:
    entrance` hint, and the `Powered by Quick Ticket` footer
 
 `SavedTicketView` is the read-only twin of this composition and is what the PNG
-export rasterises, so the shared image matches the preview.
+export rasterises, so the shared image matches the preview. The PDF is drawn
+independently by `TicketPdfExport` from the same ticket model, so it needs no
+painted widget and can be shared from the list as well as the detail page.
 
 Shared visual language is defined in `AppColors` / `AppTheme` (Outfit + Readex
 Pro + Space Mono, **bundled as assets** rather than fetched at runtime — see
@@ -214,6 +217,7 @@ Pro + Space Mono, **bundled as assets** rather than fetched at runtime — see
 | `flutter_secure_storage` | Encrypted local store | Fallback chain above |
 | `shared_preferences` | Non-sensitive indexes, fallback store | Plaintext — never for ticket data by default |
 | `share_plus` / `path_provider` / `image` / `image_picker` | PNG export and share | Local file access |
+| `pdf` / `printing` | Vector ticket PDF and its share sheet | Document built in memory; only the PDF standard fonts and the app's bundled typefaces are used, never a font CDN |
 | `geolocator` / `geocoding` | Venue convenience | Location permission required |
 | `google_fonts` | Typography | Resolves from bundled assets; runtime fetch not relied on |
 | `equatable` | Value equality | Pure Dart |

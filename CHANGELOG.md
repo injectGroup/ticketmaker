@@ -7,7 +7,16 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- **Direct multi-format share.** Share Ticket now asks for a format first: a PNG image, or a printable PDF. Both are built in memory and handed straight to the native share sheet, so no copy is saved to the device first
+- **Vector ticket PDF.** `TicketPdfExport` draws an A4 page from the ticket model — details as real text, the QR as vector artwork, the app's bundled typefaces embedded — so a printed ticket stays legible and scannable. Any event photo is embedded, and unusable photo bytes are dropped instead of failing the export
+- **Web PDF path.** The web share dialog gains **Share as PDF**, which uses the Web Share API and falls back to a browser download
+
+### Changed
+
+- The ticket detail page no longer pre-captures an image before offering to share; a capture failure used to also deny the PDF, which needs no painted widget
+- `TicketShareHelper` sends images as PNG (previously JPEG), keeping the JPEG capture only as a fallback, and routes every platform hand-off through `TicketShareTransport`
 
 ## [1.0.0] - 2026-07-31
 

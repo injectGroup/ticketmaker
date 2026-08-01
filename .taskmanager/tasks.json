@@ -23,10 +23,9 @@
       "createdAt": "2026-07-22T08:32:00.000Z",
       "updatedAt": "2026-07-31T12:15:00.000Z",
       "lastMilestone": {
-        "message": "V1 shipped: merged to main as c155c80 and tagged v1.0.0; 143 tests green",
-        "taskId": "task-phase4-v1-release-merge-20260731",
-        "updatedAt": "2026-07-31T14:35:00.000Z",
-        "note": "Local fallback: cloud milestone not posted (Firebase not configured for this project); Google Chat skipped (GOOGLE_CHAT_WEBHOOK_URL unset, workflow logged 'skipping Chat notify')."
+        "message": "Direct multi-format share (PNG + in-memory PDF) shipped on feature/v1-personal-ticket-share",
+        "taskId": "task-direct-multi-format-share-20260731",
+        "updatedAt": "2026-07-31T19:29:25Z"
       }
     }
   ],
@@ -1862,6 +1861,20 @@
       "createdAt": "2026-07-31T14:10:00.000Z",
       "updatedAt": "2026-07-31T14:35:00.000Z",
       "note": "Remaining: Play Console internal-track upload, Firebase Console App Check + API key restrictions, GOOGLE_CHAT_WEBHOOK_URL secret, required reviewers on the remote, and amending workflow-integrity.mdc so its base-URL wording matches D6."
+    },
+    {
+      "id": "task-direct-multi-format-share-20260731",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Direct multi-format share (PNG + in-memory PDF)",
+      "description": "Share a personal ticket straight to WhatsApp, Email or Messages as either a PNG image or a printable PDF, with nothing written to device storage first. Web keeps working through the Web Share API with a browser download fallback.",
+      "details": "TDD order: unit tests for the PDF document builder, then TicketPdfExport (vector layout, bundled fonts, no runtime font fetch); widget tests for the format chooser and both share paths, then the share wiring; docs/README limitation lines that still say PDF export is out of scope; finally flutter analyze + full suite and a release app bundle for Play Console. Cloud task_create_in_db was refused because the Quick Ticket Maker project is local-only for this MCP user, so this row was written straight to .taskmanager/tasks.json per the workflow rule.\n\nDone 2026-07-31T19:29:25Z. pdf ^3.13.0 + printing ^5.15.0. TicketPdfExport builds an A4 vector PDF in memory (bundled fonts, no PdfGoogleFonts). Share format chooser (image/PDF) on native; web dialog adds Share as PDF with Web Share API + download fallback. TicketShareTransport keeps share sheet hand-offs injectable for tests. Ticket detail no longer pre-captures before offering PDF. Gate: flutter analyze clean; flutter test 162 passing (143→162); scripts/build_web.sh OK with 14 web plugins; flutter build appbundle --release produced build/app/outputs/bundle/release/app-release.aab (68M).",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-07-31T18:31:55.742975Z",
+      "updatedAt": "2026-07-31T19:29:25Z",
+      "note": "Branch feature/v1-personal-ticket-share. AAB ready for Play Console upload."
     }
   ],
   "epics": [

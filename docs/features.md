@@ -176,11 +176,25 @@ by `test/ticket_personal_defaults_test.dart`.
 
 #### F-TKT-004 — Export and share
 
-- **Behaviour:** `TicketRasterExport` rasterises the ticket to PNG in memory
-  (pure Dart, no canvas/CORS dependency); `TicketShareHelper` hands it to the
-  native share sheet. On web, `WebShareOptionsDialog` offers share or download
-  where the platform cannot share directly.
-- **Acceptance:** The recipient gets a high-resolution image with a scannable QR.
+- **Trigger:** Share Ticket, from either the ticket detail page or a My Tickets
+  row.
+- **Behaviour:** The host is asked for a format first — **Share as image** or
+  **Share as PDF** — and `TicketShareHelper` produces that format in memory and
+  hands the bytes to the platform. Nothing is written to device storage on the
+  way to the share sheet.
+  - *Image:* `TicketRasterExport` rasterises the ticket to PNG (pure Dart, no
+    canvas/CORS dependency), degrading to a JPEG capture and finally to a link
+    share if the ticket cannot be painted.
+  - *PDF:* `TicketPdfExport` draws an A4 page from the ticket model — the
+    details as real text and the QR as vector artwork — using the app's bundled
+    typefaces, so it stays legible and scannable when printed. Any event photo
+    is embedded, and unusable photo bytes are dropped rather than failing the
+    export.
+- **Web:** `WebShareOptionsDialog` offers **Download Ticket Image**, **Share as
+  PDF** (Web Share API, falling back to a browser download) and **Copy Share
+  Link**.
+- **Acceptance:** The recipient gets either a high-resolution image or a
+  printable PDF, both with a scannable QR.
 
 ---
 
@@ -244,7 +258,8 @@ The following are **not** provided:
   reaches it; door staff use a phone camera and `/verify/:id`
 - Push notifications
 - Admin console or door-staff accounts
-- PDF export (PNG only)
+- Printing from inside the app — the shared PDF is handed to the OS, which owns
+  the print dialog
 
 ---
 
@@ -257,7 +272,7 @@ The following are **not** provided:
 | QR widget / payload | `generate/presentation/widgets/generate_qr_code.dart`, `tickets/data/ticket_payload.dart` |
 | F-TKT-001, F-TKT-003 | `features/tickets/presentation/` (`tickets_page.dart`, `ticket_detail_page.dart`, `saved_ticket_view.dart`) |
 | F-TKT-002 | `tickets/data/ticket_local_repository.dart`, `services/secure_key_value_store.dart`, `tickets/data/ticket_image_store.dart` |
-| F-TKT-004 | `tickets/data/ticket_raster_export.dart`, `ticket_share_helper.dart` |
+| F-TKT-004 | `tickets/data/ticket_raster_export.dart`, `ticket_pdf_export.dart`, `ticket_share_helper.dart`, `ticket_share_transport.dart`, `tickets/presentation/widgets/share_format_dialog.dart` |
 | F-GEN-008 cloud copy | `tickets/data/ticket_cloud_sync.dart` |
 | F-VER-001..002 | `tickets/data/ticket_public_verify.dart`, `features/verify/presentation/pages/ticket_verification_screen.dart` |
 | F-ACC-001 | `features/auth/` |
