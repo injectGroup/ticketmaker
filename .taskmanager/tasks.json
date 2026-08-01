@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-07-31T12:15:00.000Z",
+      "updatedAt": "2026-08-01T09:11:20Z",
       "lastMilestone": {
-        "message": "Direct multi-format share (PNG + in-memory PDF) shipped on feature/v1-personal-ticket-share",
-        "taskId": "task-direct-multi-format-share-20260731",
-        "updatedAt": "2026-07-31T19:29:25Z"
+        "message": "PDF export keeps the QR code on the page: a long ticket or an event photo can no longer print a blank pass",
+        "taskId": "task-pdf-qr-layout-fix-20260801",
+        "updatedAt": "2026-08-01T09:11:20Z"
       }
     }
   ],
@@ -1875,6 +1875,20 @@
       "createdAt": "2026-07-31T18:31:55.742975Z",
       "updatedAt": "2026-07-31T19:29:25Z",
       "note": "Branch feature/v1-personal-ticket-share. AAB ready for Play Console upload."
+    },
+    {
+      "id": "task-pdf-qr-layout-fix-20260801",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Fix PDF export layout so the QR code always prints",
+      "description": "A ticket whose card grew taller than the printable page exported as a completely blank PDF: the pdf package's Column drops every child it cannot fit, and the fixed 190pt event photo band brought that limit ~190pt closer. Guests with a long title, subtitle or venue — especially with a host photo uploaded — shared a page with no QR code on it.",
+      "details": "lib/features/tickets/data/ticket_pdf_export.dart: the card is laid out at its natural height inside an Expanded FittedBox(scaleDown, topCenter), so an oversized ticket shrinks to fit instead of being dropped; title, subtitle and field values are capped with maxLines so ordinary content never needs shrinking; the photo band is measured against the printable height (22%, clamped 96–172pt) instead of a fixed 190pt; the QR code and its 'Scan at entrance' caption sit in one fixed-width block so the caption always reads as a label for the code above it. buildDocumentBytes gained an optional page format so tests can print onto a page too small for the card.\n\ntest/pdf_content_probe.dart (new): reads the PDF content stream back, tracks the transform stack and reports where rectangles and text runs actually landed. test/ticket_pdf_export_test.dart: new 'page layout' group asserts the QR is drawn above its caption with and without an event photo, stays inside the page box for a ticket with every field overlong, scales down rather than vanishing on a small page, and still renders with the bundled fonts embedded. Three of those tests fail against the old layout.\n\nGate: flutter analyze clean; flutter test 167 passing (162 → 167).",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-08-01T09:10:27Z",
+      "updatedAt": "2026-08-01T09:10:27Z",
+      "note": "Branch feature/v1-personal-ticket-share. Cloud task_create_in_db denied (project not shared with this MCP user); local backup only."
     }
   ],
   "epics": [
@@ -1890,5 +1904,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-07-31T14:00:46.286Z"
+  "lastSync": "2026-08-01T09:10:35.856Z"
 }

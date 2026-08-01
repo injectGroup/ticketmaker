@@ -20,6 +20,16 @@ class TicketPdfExport {
   /// A4 keeps the ticket printable on ordinary paper at the door.
   static const PdfPageFormat pageFormat = PdfPageFormat.a4;
 
+  /// Side of the square QR block, in points.
+  static const double qrSize = 132;
+
+  /// The event photo is capped both in points and as a share of the printable
+  /// height, so a tall page never spends more room on decoration than on the
+  /// details and the QR code underneath it.
+  static const double photoMaxHeight = 172;
+  static const double photoMinHeight = 96;
+  static const double photoHeightRatio = 0.22;
+
   static const PdfColor _ink = PdfColor.fromInt(0xFF15161E);
   static const PdfColor _muted = PdfColor.fromInt(0xFF757780);
   static const PdfColor _hairline = PdfColor.fromInt(0xFFE0E3E7);
@@ -43,11 +53,14 @@ class TicketPdfExport {
   /// Pass `compress: false` to keep the content streams readable, and
   /// `embedBundledFonts: false` to fall back to the PDF standard fonts — the
   /// same path taken automatically if the bundled font assets cannot be loaded.
+  /// `format` overrides the A4 page, which lets tests print onto a page too
+  /// small for the card and check the ticket still comes out whole.
   static Future<Uint8List?> buildDocumentBytes(
     Ticket ticket, {
     Uint8List? eventImageBytes,
     bool compress = true,
     bool embedBundledFonts = true,
+    PdfPageFormat? format,
   }) async {
     final theme = embedBundledFonts ? await _loadBundledTheme() : null;
     final photo = _usableImage(eventImageBytes);
@@ -58,6 +71,7 @@ class TicketPdfExport {
       monoFont: theme == null ? null : _cachedMonoFont,
       photo: photo,
       compress: compress,
+      format: format ?? pageFormat,
     );
     if (bytes != null || photo == null) return bytes;
 
@@ -68,6 +82,7 @@ class TicketPdfExport {
       monoFont: theme == null ? null : _cachedMonoFont,
       photo: null,
       compress: compress,
+      format: format ?? pageFormat,
     );
   }
 
@@ -77,6 +92,7 @@ class TicketPdfExport {
     required pw.Font? monoFont,
     required pw.MemoryImage? photo,
     required bool compress,
+    required PdfPageFormat format,
   }) async {
     try {
       final document = pw.Document(
@@ -98,7 +114,7 @@ class TicketPdfExport {
 
       document.addPage(
         pw.Page(
-          pageFormat: pageFormat,
+          pageFormat: format,
           margin: const pw.EdgeInsets.all(32),
           build: (context) => layout.build(),
         ),
@@ -192,27 +208,52 @@ class _TicketPdfLayout {
   }
 
   pw.Widget build() {
+    return pw.LayoutBuilder(
+      builder: (context, constraints) => _page(
+        width: constraints?.maxWidth ??
+            TicketPdfExport.pageFormat.availableWidth,
+        height: constraints?.maxHeight ??
+            TicketPdfExport.pageFormat.availableHeight,
+      ),
+    );
+  }
+
+  pw.Widget _page({required double width, required double height}) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.stretch,
       children: [
-        pw.Container(
-          decoration: pw.BoxDecoration(
-            color: TicketPdfExport._paper,
-            border: pw.Border.all(color: TicketPdfExport._hairline),
-            borderRadius: pw.BorderRadius.circular(14),
-          ),
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-            children: [
-              _header(),
-              if (photo != null) _photo(),
-              _body(),
-            ],
+        // A pdf Column drops every child it cannot fit rather than spilling
+        // over, so a ticket grown tall by a long title or an event photo used
+        // to print as a blank page. Laying the card out at its natural height
+        // and scaling it down only when it does not fit keeps the QR code on
+        // the page, at full size for every ticket that never needed shrinking.
+        pw.Expanded(
+          child: pw.FittedBox(
+            fit: pw.BoxFit.scaleDown,
+            alignment: pw.Alignment.topCenter,
+            child: pw.SizedBox(width: width, child: _card(height)),
           ),
         ),
-        pw.Spacer(),
         _footer(),
       ],
+    );
+  }
+
+  pw.Widget _card(double availableHeight) {
+    return pw.Container(
+      decoration: pw.BoxDecoration(
+        color: TicketPdfExport._paper,
+        border: pw.Border.all(color: TicketPdfExport._hairline),
+        borderRadius: pw.BorderRadius.circular(14),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+        children: [
+          _header(),
+          if (photo != null) _photo(availableHeight),
+          _body(),
+        ],
+      ),
     );
   }
 
@@ -240,8 +281,12 @@ class _TicketPdfLayout {
             ),
           ),
           pw.SizedBox(height: 8),
+          // The banner is capped so a long title cannot push the details and
+          // the QR code off the bottom of the page.
           pw.Text(
             _text(TicketPdfExport._title(ticket)),
+            maxLines: 3,
+            overflow: pw.TextOverflow.clip,
             style: pw.TextStyle(
               fontSize: 24,
               fontWeight: pw.FontWeight.bold,
@@ -252,6 +297,8 @@ class _TicketPdfLayout {
             pw.SizedBox(height: 4),
             pw.Text(
               _text(ticket.subtitle.trim()),
+              maxLines: 2,
+              overflow: pw.TextOverflow.clip,
               style: pw.TextStyle(
                 fontSize: 12,
                 color: PdfColor(onBand.red, onBand.green, onBand.blue, 0.9),
@@ -263,12 +310,26 @@ class _TicketPdfLayout {
     );
   }
 
-  pw.Widget _photo() {
+  pw.Widget _photo(double availableHeight) {
     return pw.Container(
-      height: 190,
+      height: _photoHeight(availableHeight),
       width: double.infinity,
       child: pw.Image(photo!, fit: pw.BoxFit.cover),
     );
+  }
+
+  /// The photo is the one element worth trading for room, so it is measured
+  /// against the printable height instead of being pinned to a fixed band.
+  static double _photoHeight(double availableHeight) {
+    if (!availableHeight.isFinite || availableHeight <= 0) {
+      return TicketPdfExport.photoMaxHeight;
+    }
+    return (availableHeight * TicketPdfExport.photoHeightRatio)
+        .clamp(
+          TicketPdfExport.photoMinHeight,
+          TicketPdfExport.photoMaxHeight,
+        )
+        .toDouble();
   }
 
   pw.Widget _body() {
@@ -299,30 +360,39 @@ class _TicketPdfLayout {
     );
   }
 
+  /// The code and its caption travel together in a block of a known size, so
+  /// the caption always sits directly under the code it belongs to.
   pw.Widget _qrBlock() {
-    return pw.Column(
-      children: [
-        pw.Container(
-          width: 132,
-          height: 132,
-          child: pw.BarcodeWidget(
-            barcode: pw.Barcode.qrCode(),
-            data: ticket.qrData.trim(),
-            drawText: false,
-            color: _toPdfColor(ticket.dataModuleColor),
+    return pw.SizedBox(
+      width: TicketPdfExport.qrSize,
+      child: pw.Column(
+        mainAxisSize: pw.MainAxisSize.min,
+        children: [
+          pw.SizedBox(
+            width: TicketPdfExport.qrSize,
+            height: TicketPdfExport.qrSize,
+            child: pw.BarcodeWidget(
+              barcode: pw.Barcode.qrCode(),
+              data: ticket.qrData.trim(),
+              drawText: false,
+              color: _toPdfColor(ticket.dataModuleColor),
+            ),
           ),
-        ),
-        pw.SizedBox(height: 8),
-        pw.Text(
-          _text('Scan at entrance'),
-          style: pw.TextStyle(
-            fontSize: 9,
-            fontWeight: pw.FontWeight.bold,
-            letterSpacing: 0.4,
-            color: TicketPdfExport._muted,
+          pw.SizedBox(height: 8),
+          pw.Text(
+            _text('Scan at entrance'),
+            maxLines: 1,
+            textAlign: pw.TextAlign.center,
+            overflow: pw.TextOverflow.clip,
+            style: pw.TextStyle(
+              fontSize: 9,
+              fontWeight: pw.FontWeight.bold,
+              letterSpacing: 0.4,
+              color: TicketPdfExport._muted,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -334,6 +404,8 @@ class _TicketPdfLayout {
         children: [
           pw.Text(
             _text(label),
+            maxLines: 1,
+            overflow: pw.TextOverflow.clip,
             style: pw.TextStyle(
               fontSize: 8,
               letterSpacing: 1.4,
@@ -343,6 +415,8 @@ class _TicketPdfLayout {
           pw.SizedBox(height: 3),
           pw.Text(
             _text(value),
+            maxLines: 3,
+            overflow: pw.TextOverflow.clip,
             style: pw.TextStyle(
               font: mono ? monoFont : null,
               fontSize: mono ? 13 : 12,
