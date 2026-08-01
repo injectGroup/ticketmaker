@@ -21,43 +21,17 @@ class TicketRasterExport {
   /// The margin a scanner needs around a code, measured in modules.
   static const int _quietZoneModules = 4;
 
-  /// Draws just the ticket's QR code as square PNG bytes for printing, or
-  /// null on failure.
+  /// Draws just the ticket's QR code as square PNG bytes, or null on failure.
   ///
-  /// Printed codes are held to what a reader can actually decode rather than
-  /// to the ticket's palette: dark modules on white paper, ringed by the
-  /// quiet zone a reader needs to find the code at all. The on-screen ticket
-  /// can afford to invert those colours; a door scanner cannot read it.
+  /// The PDF export prints this image; [_composeSync] paints the same code
+  /// onto the shared PNG.
   static Uint8List? qrPngBytes(Ticket ticket, {int pixels = 512}) {
     try {
       final side = pixels < 64 ? 64 : pixels;
-      final data = ticket.qrData.trim().isEmpty ? ticket.code : ticket.qrData;
-      final paper = _toImgColor(ColorContrast.qrPrintPaper);
-
-      // Opaque: the paper covers the whole square, and an alpha channel would
+      // Opaque: the field covers the whole square, and an alpha channel would
       // only add a soft mask for a printer to interpret.
       final canvas = img.Image(width: side, height: side, numChannels: 3);
-      img.fillRect(
-        canvas,
-        x1: 0,
-        y1: 0,
-        x2: side,
-        y2: side,
-        color: paper,
-      );
-
-      final margin = _quietZoneWidth(data, side);
-      _drawQr(
-        canvas,
-        data: data,
-        left: margin,
-        top: margin,
-        size: side - margin * 2,
-        moduleColor:
-            _toImgColor(ColorContrast.qrInkForPrint(ticket.dataModuleColor)),
-        eyeColor: _toImgColor(ColorContrast.qrInkForPrint(ticket.eyeColor)),
-        background: paper,
-      );
+      _drawScannableQr(canvas, ticket, left: 0, top: 0, size: side);
       final encoded = img.encodePng(canvas);
       if (encoded.isEmpty) return null;
       return Uint8List.fromList(encoded);
@@ -65,6 +39,43 @@ class TicketRasterExport {
       debugPrint('Ticket QR PNG failed: $e\n$st');
       return null;
     }
+  }
+
+  /// Draws [ticket]'s code as a reader expects to find it: dark modules on a
+  /// light field, ringed by a quiet zone.
+  ///
+  /// The ticket's palette only reaches the modules when it is dark enough to
+  /// scan. Wearing the card's own colours — pale modules inverted onto a dark
+  /// pad — produced a code that readers do not decode at all.
+  static void _drawScannableQr(
+    img.Image canvas,
+    Ticket ticket, {
+    required int left,
+    required int top,
+    required int size,
+  }) {
+    final data = ticket.qrData.trim().isEmpty ? ticket.code : ticket.qrData;
+    final field = _toImgColor(ColorContrast.qrField);
+    img.fillRect(
+      canvas,
+      x1: left,
+      y1: top,
+      x2: left + size,
+      y2: top + size,
+      color: field,
+    );
+
+    final margin = _quietZoneWidth(data, size);
+    _drawQr(
+      canvas,
+      data: data,
+      left: left + margin,
+      top: top + margin,
+      size: size - margin * 2,
+      moduleColor: _toImgColor(ColorContrast.qrInk(ticket.dataModuleColor)),
+      eyeColor: _toImgColor(ColorContrast.qrInk(ticket.eyeColor)),
+      background: field,
+    );
   }
 
   /// Splits [side] between the code and the quiet zone on either side of it,
@@ -103,7 +114,6 @@ class TicketRasterExport {
 
     final onCard = _onGradient(ticket.topGradientStart, ticket.topGradientEnd);
     final textColor = _toImgColor(onCard);
-    final pad = _qrPad(ticket.dataModuleColor);
 
     var y = 24;
     _drawCentered(
@@ -116,16 +126,7 @@ class TicketRasterExport {
     y += 40;
 
     final qrLeft = (_width - _qrSize) ~/ 2;
-    _drawQr(
-      canvas,
-      data: ticket.qrData.trim().isEmpty ? ticket.code : ticket.qrData,
-      left: qrLeft,
-      top: y,
-      size: _qrSize,
-      moduleColor: _toImgColor(ticket.dataModuleColor),
-      eyeColor: _toImgColor(ticket.eyeColor),
-      background: _toImgColor(pad),
-    );
+    _drawScannableQr(canvas, ticket, left: qrLeft, top: y, size: _qrSize);
     y += _qrSize + 16;
 
     final code = _safeText(ticket.code, fallback: '----');
@@ -245,15 +246,6 @@ class TicketRasterExport {
             0.587 * ((ag + bg) / 2) +
             0.114 * ((ab + bb) / 2)) /
         255.0;
-    return lum > 0.55 ? const Color(0xFF0F172A) : const Color(0xFFFFFFFF);
-  }
-
-  static Color _qrPad(Color module) {
-    final v = module.toARGB32();
-    final r = (v >> 16) & 0xFF;
-    final g = (v >> 8) & 0xFF;
-    final b = v & 0xFF;
-    final lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0;
     return lum > 0.55 ? const Color(0xFF0F172A) : const Color(0xFFFFFFFF);
   }
 
@@ -412,10 +404,14 @@ class TicketRasterExport {
       for (var row = 0; row < modules; row++) {
         for (var col = 0; col < modules; col++) {
           if (!qrImage.isDark(row, col)) continue;
-          final x1 = left + (col * cell).floor();
-          final y1 = top + (row * cell).floor();
-          final x2 = left + ((col + 1) * cell).ceil();
-          final y2 = top + ((row + 1) * cell).ceil();
+          // Rounded edges tile exactly: no gaps, and no module spilling into
+          // its neighbour. Growing each one outwards instead swallows the
+          // light modules between them once the cells are only a few pixels
+          // wide, and a reader sees no code at all.
+          final x1 = left + (col * cell).round();
+          final y1 = top + (row * cell).round();
+          final x2 = left + ((col + 1) * cell).round() - 1;
+          final y2 = top + ((row + 1) * cell).round() - 1;
           final isFinder = (row < 7 && col < 7) ||
               (row < 7 && col >= modules - 7) ||
               (row >= modules - 7 && col < 7);

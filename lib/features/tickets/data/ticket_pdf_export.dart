@@ -449,7 +449,7 @@ class _TicketPdfLayout {
   /// Vector modules are drawn straight onto the white card, so they follow
   /// the same rule the printed image does.
   PdfColor get _legibleModuleColor =>
-      _toPdfColor(ColorContrast.qrInkForPrint(ticket.dataModuleColor));
+      _toPdfColor(ColorContrast.qrInk(ticket.dataModuleColor));
 
   pw.Widget _field(String label, String value, {bool mono = false}) {
     return pw.Padding(

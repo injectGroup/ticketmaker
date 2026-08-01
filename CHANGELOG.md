@@ -15,7 +15,7 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 ### Fixed
 
-- **The QR code on an exported PDF can be scanned.** It was drawn in the ticket's own module colour, so the default white modules printed invisibly on the white card. The code is now embedded as a high-resolution image in print colours — dark modules on white, ringed by a quiet zone — and every shipped palette was checked against a real reader. The on-screen ticket and the PNG share still use the ticket's palette and are unaffected
+- **The ticket's QR code can actually be scanned.** On the exported PDF it was drawn in the ticket's own module colour, so the default white modules printed invisibly on the white card. Underneath that, the code was drawn the way it looks on screen — light modules inverted onto a dark pad, with no quiet zone — which no reader decodes, and each module was painted a pixel or two beyond its cell, which rubbed out the light modules between them at the size the shared PNG draws. The code now appears dark on a light field with a quiet zone everywhere it is shown, keeping the guest's colour only while it stays dark enough to read, and modules tile exactly. All twelve category palettes were re-rendered in both formats and decoded with a real barcode reader
 
 ### Changed
 

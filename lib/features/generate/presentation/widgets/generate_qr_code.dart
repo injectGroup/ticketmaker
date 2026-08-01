@@ -4,6 +4,11 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/utils/color_contrast.dart';
 
 /// Renders a styled QR code with configurable eye/module colors and shapes.
+///
+/// The ticket's palette is honoured only as far as a reader can still follow
+/// it: the code is drawn dark on [ColorContrast.qrField], and a colour too
+/// pale to scan gives way to ink. A guest whose code will not open the door
+/// has no ticket, however well it matches the card.
 class GenerateQrCode extends StatelessWidget {
   const GenerateQrCode({
     super.key,
@@ -23,14 +28,13 @@ class GenerateQrCode extends StatelessWidget {
   final Color dataModuleStyleColor;
   final bool isSquare;
 
-  /// When null, picks a high-contrast pad from [dataModuleStyleColor].
+  /// When null, the light field a reader expects behind the modules.
   final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context) {
     final size = width ?? height ?? 150;
-    final pad =
-        backgroundColor ?? ColorContrast.qrPadForPattern(dataModuleStyleColor);
+    final pad = backgroundColor ?? ColorContrast.qrField;
 
     // Nearest-neighbor / high filter quality keeps module edges crisp when
     // the QR layer is composited or scaled (avoids soft blur).
@@ -46,11 +50,11 @@ class GenerateQrCode extends StatelessWidget {
           gapless: true,
           backgroundColor: pad,
           eyeStyle: QrEyeStyle(
-            color: eyeStyleColor,
+            color: ColorContrast.qrInk(eyeStyleColor),
             eyeShape: isSquare ? QrEyeShape.square : QrEyeShape.circle,
           ),
           dataModuleStyle: QrDataModuleStyle(
-            color: dataModuleStyleColor,
+            color: ColorContrast.qrInk(dataModuleStyleColor),
             dataModuleShape: isSquare
                 ? QrDataModuleShape.square
                 : QrDataModuleShape.circle,
