@@ -87,6 +87,46 @@ Uint8List _onePixelPng() {
 
 String _asLatin1(Uint8List bytes) => String.fromCharCodes(bytes);
 
+/// The event photo a host would actually upload, so "the hero image object"
+/// means something more than a placeholder pixel.
+Uint8List _heroPhoto() =>
+    File('assets/images/ticket_event_placeholder.png').readAsBytesSync();
+
+/// Width and height from a PNG's IHDR header, so the expected image object
+/// dimensions follow the asset instead of being pinned to today's copy.
+({int width, int height}) _pngSize(Uint8List png) {
+  final data = ByteData.sublistView(png);
+  return (width: data.getUint32(16), height: data.getUint32(20));
+}
+
+/// Every picture embedded in an uncompressed document, as its `<width>x<height>`
+/// dictionary size and its encoded pixels.
+///
+/// Only the colour planes count: the encoder writes a DeviceGray soft mask
+/// beside each one, which is a companion of that picture rather than a
+/// picture in its own right.
+List<({String size, String pixels})> _imageObjects(Uint8List bytes) {
+  final content = _asLatin1(bytes);
+  final pattern = RegExp(
+    r'/Subtype/Image/Width (\d+)/Height (\d+)'
+    r'[^>]*/ColorSpace/DeviceRGB[^>]*>>\s*stream\r?\n',
+  );
+
+  final images = <({String size, String pixels})>[];
+  for (final match in pattern.allMatches(content)) {
+    final end = content.indexOf('endstream', match.end);
+    if (end < 0) continue;
+    images.add((
+      size: '${match[1]}x${match[2]}',
+      pixels: content.substring(match.end, end),
+    ));
+  }
+  return images;
+}
+
+List<String> _imageSizes(Uint8List bytes) =>
+    _imageObjects(bytes).map((image) => image.size).toList();
+
 void _expectValidPdf(Uint8List? bytes) {
   expect(bytes, isNotNull);
   expect(bytes!, isNotEmpty);
@@ -104,6 +144,14 @@ void _expectValidPdf(Uint8List? bytes) {
 
 /// Anything drawn outside the page box is invisible to a reader and to a
 /// printer, so a ticket that "exists" off-page is a ticket the guest lost.
+/// The caption belongs to the code, so it has to start inside the block the
+/// code is centred in rather than drifting over to the details column.
+void _expectUnderTheCode(ProbeText caption, ProbeRect qr) {
+  final blockLeft = qr.left - (TicketPdfExport.qrSize - qr.width) / 2;
+  expect(caption.x, greaterThanOrEqualTo(blockLeft - 1));
+  expect(caption.x, lessThanOrEqualTo(blockLeft + TicketPdfExport.qrSize));
+}
+
 void _expectOnPage(ProbeRect rect, PdfPageFormat format) {
   expect(rect.left, greaterThanOrEqualTo(0));
   expect(rect.bottom, greaterThanOrEqualTo(0));
@@ -164,8 +212,7 @@ void main() {
       );
     });
 
-    test('draws the QR payload as vector content that grows with the payload',
-        () async {
+    test('draws a QR image that encodes the payload it was given', () async {
       final short = await TicketPdfExport.buildDocumentBytes(
         _ticket(qrData: 'x'),
         compress: false,
@@ -181,10 +228,53 @@ void main() {
       _expectValidPdf(short);
       _expectValidPdf(long);
       expect(
-        long!.length,
-        greaterThan(short!.length),
-        reason: 'a denser QR code should add drawing operations, which is only '
-            'true if the code is generated rather than pasted as an image',
+        _imageObjects(long!).single.pixels,
+        isNot(equals(_imageObjects(short!).single.pixels)),
+        reason: 'both documents embed one image; if the pixels match, the code '
+            "is a fixed picture rather than the guest's payload",
+      );
+    });
+
+    test('embeds the hero photo and the QR code as separate image objects',
+        () async {
+      final hero = _heroPhoto();
+      final size = _pngSize(hero);
+      final bytes = await TicketPdfExport.buildDocumentBytes(
+        _ticket(),
+        eventImageBytes: hero,
+        compress: false,
+      );
+      _expectValidPdf(bytes);
+
+      final sizes = _imageSizes(bytes!);
+      expect(
+        sizes,
+        contains('${size.width}x${size.height}'),
+        reason: 'the hero photo should be embedded at its own size',
+      );
+      expect(
+        sizes,
+        contains(
+          '${TicketPdfExport.qrImagePixels}x${TicketPdfExport.qrImagePixels}',
+        ),
+        reason: 'the QR code must reach the page as its own image object, not '
+            'as drawing operations that can inherit an invisible colour',
+      );
+    });
+
+    test('embeds the QR image even when no event photo is supplied', () async {
+      final bytes = await TicketPdfExport.buildDocumentBytes(
+        _ticket(),
+        compress: false,
+      );
+      _expectValidPdf(bytes);
+
+      expect(
+        _imageSizes(bytes!),
+        equals([
+          '${TicketPdfExport.qrImagePixels}x${TicketPdfExport.qrImagePixels}',
+        ]),
+        reason: 'the code should be the one image on a photo-less ticket',
       );
     });
 
@@ -255,43 +345,50 @@ void main() {
       return PdfPageProbe.parse(bytes!);
     }
 
-    test('draws the QR code above the scan caption', () async {
+    test('draws the QR image directly above the scan caption', () async {
       final page = await probe(_ticket());
 
-      final qr = page.qrBounds();
+      expect(
+        page.squareImages,
+        hasLength(1),
+        reason: 'the code should reach the page as exactly one image',
+      );
+      expect(
+        page.qrBounds(),
+        isNull,
+        reason: 'no vector modules should be left behind: drawn in the '
+            "guest's own colour they disappear into white paper",
+      );
+
+      final qr = page.squareImages.single;
       final caption = page.textAt('Scan');
-      expect(qr, isNotNull, reason: 'no QR code was drawn on the page');
+      expect(qr.width, closeTo(TicketPdfExport.qrImageSize, 0.5));
       expect(caption, isNotNull, reason: 'the scan caption is missing');
       expect(
         caption!.y,
-        lessThan(qr!.bottom),
+        lessThan(qr.bottom),
         reason: 'the caption must read as a label for the code above it',
       );
-      expect(caption.x, greaterThanOrEqualTo(qr.left));
-      expect(caption.x, lessThanOrEqualTo(qr.right));
-      expect(qr.width, closeTo(TicketPdfExport.qrSize, 2));
-      expect(qr.height, closeTo(TicketPdfExport.qrSize, 2));
+      _expectUnderTheCode(caption, qr);
     });
 
-    test('keeps the QR code above the caption when a photo is embedded',
+    test('keeps the QR image above the caption when a photo is embedded',
         () async {
       final bare = await probe(_ticket());
-      final illustrated = await probe(_ticket(), photo: _onePixelPng());
+      final illustrated = await probe(_ticket(), photo: _heroPhoto());
 
-      final bareQr = bare.qrBounds();
-      final qr = illustrated.qrBounds();
+      final qr = illustrated.squareImages.single;
       final caption = illustrated.textAt('Scan');
-      expect(qr, isNotNull, reason: 'the photo displaced the QR code');
-      expect(caption, isNotNull);
-      expect(caption!.y, lessThan(qr!.bottom));
+      expect(caption!.y, lessThan(qr.bottom));
       expect(
-        qr.height,
-        closeTo(TicketPdfExport.qrSize, 2),
+        qr.width,
+        closeTo(TicketPdfExport.qrImageSize, 0.5),
         reason: 'the code must not be squeezed to make room for the photo',
       );
+      _expectUnderTheCode(caption, qr);
       _expectOnPage(qr, TicketPdfExport.pageFormat);
 
-      final displaced = bareQr!.bottom - qr.bottom;
+      final displaced = bare.squareImages.single.bottom - qr.bottom;
       expect(displaced, greaterThan(0));
       expect(
         displaced,
@@ -303,15 +400,15 @@ void main() {
 
     test('keeps the whole ticket on the page when every field is long',
         () async {
-      final page = await probe(_wordyTicket(), photo: _onePixelPng());
+      final page = await probe(_wordyTicket(), photo: _heroPhoto());
 
-      final qr = page.qrBounds();
       expect(
-        qr,
-        isNotNull,
+        page.squareImages,
+        hasLength(1),
         reason: 'a wordy ticket must not cost the guest their QR code',
       );
-      _expectOnPage(qr!, TicketPdfExport.pageFormat);
+      final qr = page.squareImages.single;
+      _expectOnPage(qr, TicketPdfExport.pageFormat);
       expect(page.textAt('Scan')!.y, lessThan(qr.bottom));
       expect(
         page.textAt('Powered'),
@@ -326,32 +423,30 @@ void main() {
       const small = PdfPageFormat(300, 380);
       final page = await probe(
         _wordyTicket(),
-        photo: _onePixelPng(),
+        photo: _heroPhoto(),
         format: small,
       );
 
-      final qr = page.qrBounds();
-      expect(qr, isNotNull, reason: 'the code must survive a cramped page');
-      _expectOnPage(qr!, small);
+      final qr = page.squareImages.single;
+      _expectOnPage(qr, small);
       expect(page.textAt('Scan')!.y, lessThan(qr.bottom));
       expect(
         qr.width,
-        lessThan(TicketPdfExport.qrSize),
+        lessThan(TicketPdfExport.qrImageSize),
         reason: 'a card taller than the page should shrink to fit',
       );
     });
 
-    test('draws the QR code with the bundled fonts in place', () async {
+    test('draws the QR image with the bundled fonts in place', () async {
       final page = await probe(
         _wordyTicket(),
-        photo: _onePixelPng(),
+        photo: _heroPhoto(),
         embedBundledFonts: true,
       );
 
-      final qr = page.qrBounds();
-      expect(qr, isNotNull);
-      _expectOnPage(qr!, TicketPdfExport.pageFormat);
-      expect(qr.height, closeTo(TicketPdfExport.qrSize, 2));
+      final qr = page.squareImages.single;
+      _expectOnPage(qr, TicketPdfExport.pageFormat);
+      expect(qr.width, closeTo(TicketPdfExport.qrImageSize, 0.5));
     });
   });
 

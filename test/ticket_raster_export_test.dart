@@ -2,8 +2,14 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image/image.dart' as img;
+import 'package:qr/qr.dart';
 import 'package:ticket_maker/features/generate/domain/entities/ticket.dart';
 import 'package:ticket_maker/features/tickets/data/ticket_raster_export.dart';
+
+/// Perceived brightness, on the same 0–1 scale the renderer picks its pad on.
+double _luminance(img.Pixel pixel) =>
+    (0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b) / 255.0;
 
 void main() {
   final sampleTicket = Ticket(
@@ -56,5 +62,129 @@ void main() {
     expect(withPhoto!, isNotEmpty);
     // Composite with photo should differ from placeholder version.
     expect(withPhoto.length, isNot(withoutPhoto!.length));
+  });
+
+  /// The QR image these tests read is the one the PDF export prints, so a
+  /// code that is wrong or invisible here is a guest turned away at the door.
+  group('qrPngBytes', () {
+    QrImage matrixFor(String data) => QrImage(
+          QrCode.fromData(data: data, errorCorrectLevel: QrErrorCorrectLevel.M),
+        );
+
+    /// Where module ([row], [col]) was drawn, given the quiet zone the
+    /// renderer reserves on all four sides.
+    ({int x, int y}) centreOf(int row, int col, int modules, int side) {
+      final margin = (4 * side / (modules + 8)).floor();
+      final cell = (side - margin * 2) / modules;
+      return (
+        x: margin + ((col + 0.5) * cell).floor(),
+        y: margin + ((row + 0.5) * cell).floor(),
+      );
+    }
+
+    /// A module away from the three finder squares, which are drawn in the
+    /// eye colour rather than the module colour.
+    ({int row, int col}) findModule(QrImage matrix, {required bool dark}) {
+      final modules = matrix.moduleCount;
+      for (var row = 8; row < modules - 8; row++) {
+        for (var col = 8; col < modules - 8; col++) {
+          if (matrix.isDark(row, col) == dark) return (row: row, col: col);
+        }
+      }
+      throw StateError('no ${dark ? 'dark' : 'light'} module in the body');
+    }
+
+    test('paints the payload module for module', () {
+      final bytes = TicketRasterExport.qrPngBytes(sampleTicket);
+      expect(bytes, isNotNull);
+
+      final image = img.decodePng(bytes!);
+      expect(image, isNotNull);
+
+      final matrix = matrixFor(sampleTicket.qrData);
+      final modules = matrix.moduleCount;
+
+      // Modules are drawn in the guest's colours — data and finder squares in
+      // different ones — so a module counts as drawn when it is anything
+      // other than the pad behind it.
+      final pad = image!.getPixel(0, 0);
+      final wrong = <String>[];
+      for (var row = 0; row < modules; row++) {
+        for (var col = 0; col < modules; col++) {
+          final at = centreOf(row, col, modules, image.width);
+          final pixel = image.getPixel(at.x, at.y);
+          final drawn =
+              pixel.r != pad.r || pixel.g != pad.g || pixel.b != pad.b;
+          if (drawn != matrix.isDark(row, col)) wrong.add('$row,$col');
+        }
+      }
+      expect(
+        wrong,
+        isEmpty,
+        reason: 'the picture must be the payload, not decoration: '
+            '${wrong.length} of ${modules * modules} modules are wrong',
+      );
+    });
+
+    test('surrounds the code with a quiet zone a reader can find it by', () {
+      final bytes = TicketRasterExport.qrPngBytes(sampleTicket);
+      final image = img.decodePng(bytes!)!;
+      final pad = _luminance(image.getPixel(0, 0));
+      final edge = image.width - 1;
+
+      for (final corner in [
+        image.getPixel(edge, 0),
+        image.getPixel(0, edge),
+        image.getPixel(edge, edge),
+      ]) {
+        expect(
+          _luminance(corner),
+          closeTo(pad, 0.01),
+          reason: 'the margin around the code must be clear of modules',
+        );
+      }
+    });
+
+    test('prints dark modules on light paper whatever the palette holds', () {
+      // The default palette draws white modules on a dark card. Printed as
+      // they look on screen they are either invisible on white paper or an
+      // inverted code, which readers do not decode.
+      for (final palette in const [
+        (module: Color(0xFFFFFFFF), eye: Color(0xFFFF5963)),
+        (module: Color(0xFFF9CF58), eye: Color(0xFFEE8B60)),
+        (module: Color(0xFF0F172A), eye: Color(0xFF0F3460)),
+      ]) {
+        final bytes = TicketRasterExport.qrPngBytes(
+          sampleTicket.copyWith(
+            dataModuleColor: palette.module,
+            eyeColor: palette.eye,
+          ),
+        );
+        final image = img.decodePng(bytes!)!;
+        final matrix = matrixFor(sampleTicket.qrData);
+        final modules = matrix.moduleCount;
+
+        final module = findModule(matrix, dark: true);
+        final background = findModule(matrix, dark: false);
+        final inked = centreOf(module.row, module.col, modules, image.width);
+        final bare = centreOf(
+          background.row,
+          background.col,
+          modules,
+          image.width,
+        );
+
+        expect(
+          _luminance(image.getPixel(inked.x, inked.y)),
+          lessThan(0.4),
+          reason: 'a module printed in ${palette.module} is too pale to read',
+        );
+        expect(
+          _luminance(image.getPixel(bare.x, bare.y)),
+          greaterThan(0.9),
+          reason: 'the field behind the code must stay light',
+        );
+      }
+    });
   });
 }

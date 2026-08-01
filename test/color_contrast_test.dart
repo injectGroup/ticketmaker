@@ -74,4 +74,34 @@ void main() {
       Colors.white,
     );
   });
+
+  group('qrInkForPrint', () {
+    test('keeps a module colour dark enough to read on paper', () {
+      const navy = Color(0xFF0F3460);
+      expect(ColorContrast.qrInkForPrint(navy), navy);
+    });
+
+    test('swaps in ink for colours that would fade into the page', () {
+      for (final pale in const [
+        Colors.white,
+        Color(0xFFF9CF58), // comedy yellow
+        Color(0xFFC9A227), // wedding gold
+        Color(0xFF4ECDC4), // birthday teal
+      ]) {
+        expect(
+          ColorContrast.qrInkForPrint(pale),
+          ColorContrast.onLight,
+          reason: '$pale prints too pale to scan',
+        );
+      }
+    });
+
+    test('judges a translucent colour by how it lands on the page', () {
+      // Alpha is lost on paper, so a wash is measured once blended.
+      expect(
+        ColorContrast.qrInkForPrint(const Color(0x220F172A)),
+        ColorContrast.onLight,
+      );
+    });
+  });
 }

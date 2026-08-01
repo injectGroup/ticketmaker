@@ -3,6 +3,7 @@ import 'package:flutter/material.dart' show Color;
 import 'package:image/image.dart' as img;
 import 'package:qr/qr.dart';
 
+import '../../../core/utils/color_contrast.dart';
 import '../../generate/domain/entities/ticket.dart';
 
 /// Builds a downloadable ticket PNG with [package:image] + [package:qr].
@@ -16,6 +17,68 @@ class TicketRasterExport {
   static const int _photoW = 300;
   static const int _photoH = 200;
   static const int _qrSize = 150;
+
+  /// The margin a scanner needs around a code, measured in modules.
+  static const int _quietZoneModules = 4;
+
+  /// Draws just the ticket's QR code as square PNG bytes for printing, or
+  /// null on failure.
+  ///
+  /// Printed codes are held to what a reader can actually decode rather than
+  /// to the ticket's palette: dark modules on white paper, ringed by the
+  /// quiet zone a reader needs to find the code at all. The on-screen ticket
+  /// can afford to invert those colours; a door scanner cannot read it.
+  static Uint8List? qrPngBytes(Ticket ticket, {int pixels = 512}) {
+    try {
+      final side = pixels < 64 ? 64 : pixels;
+      final data = ticket.qrData.trim().isEmpty ? ticket.code : ticket.qrData;
+      final paper = _toImgColor(ColorContrast.qrPrintPaper);
+
+      // Opaque: the paper covers the whole square, and an alpha channel would
+      // only add a soft mask for a printer to interpret.
+      final canvas = img.Image(width: side, height: side, numChannels: 3);
+      img.fillRect(
+        canvas,
+        x1: 0,
+        y1: 0,
+        x2: side,
+        y2: side,
+        color: paper,
+      );
+
+      final margin = _quietZoneWidth(data, side);
+      _drawQr(
+        canvas,
+        data: data,
+        left: margin,
+        top: margin,
+        size: side - margin * 2,
+        moduleColor:
+            _toImgColor(ColorContrast.qrInkForPrint(ticket.dataModuleColor)),
+        eyeColor: _toImgColor(ColorContrast.qrInkForPrint(ticket.eyeColor)),
+        background: paper,
+      );
+      final encoded = img.encodePng(canvas);
+      if (encoded.isEmpty) return null;
+      return Uint8List.fromList(encoded);
+    } catch (e, st) {
+      debugPrint('Ticket QR PNG failed: $e\n$st');
+      return null;
+    }
+  }
+
+  /// Splits [side] between the code and the quiet zone on either side of it,
+  /// so both are measured in the same modules.
+  static int _quietZoneWidth(String data, int side) {
+    final modules = QrImage(
+      QrCode.fromData(
+        data: data.isEmpty ? 'ticket' : data,
+        errorCorrectLevel: QrErrorCorrectLevel.M,
+      ),
+    ).moduleCount;
+    return (_quietZoneModules * side / (modules + _quietZoneModules * 2))
+        .floor();
+  }
 
   /// Returns PNG bytes, or null on failure.
   static Future<Uint8List?> toPngBytes(

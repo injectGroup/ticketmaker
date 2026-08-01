@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-08-01T09:11:20Z",
+      "updatedAt": "2026-08-01T10:55:00Z",
       "lastMilestone": {
-        "message": "PDF export keeps the QR code on the page: a long ticket or an event photo can no longer print a blank pass",
-        "taskId": "task-pdf-qr-layout-fix-20260801",
-        "updatedAt": "2026-08-01T09:11:20Z"
+        "message": "The QR code on a printed ticket can be scanned: it now prints as dark modules on white with a quiet zone, verified against a real reader on all twelve palettes",
+        "taskId": "task-pdf-qr-scannable-20260801",
+        "updatedAt": "2026-08-01T10:55:00Z"
       }
     }
   ],
@@ -1889,6 +1889,20 @@
       "createdAt": "2026-08-01T09:10:27Z",
       "updatedAt": "2026-08-01T09:10:27Z",
       "note": "Branch feature/v1-personal-ticket-share. Cloud task_create_in_db denied (project not shared with this MCP user); local backup only."
+    },
+    {
+      "id": "task-pdf-qr-scannable-20260801",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Printed ticket QR code is scannable",
+      "description": "The exported PDF printed the \"Scan at entrance\" caption with no usable code above it. The code is now embedded as an image in print colours — dark modules on white with a quiet zone — and every shipped palette was checked against a real barcode reader.",
+      "details": "Two faults sat on top of each other. (1) The PDF drew the code as vector modules in ticket.dataModuleColor; the default palette and several category palettes use white or pale modules, which are invisible on the white card. (2) Drawing it the way the app does on screen — light modules on a dark pad, edge to edge — is no better: a page rasterised at 900px and at 2400px was fed to Apple's Vision barcode reader and neither found a code, because readers expect dark modules on a light field with a quiet zone around them.\n\nFix: TicketPdfExport builds the code as a 512px PNG before the document and embeds it with pw.Image(pw.MemoryImage(...)) directly above the 'Scan at entrance' caption. TicketRasterExport.qrPngBytes renders it. New ColorContrast.qrInkForPrint keeps the guest's colour while it stays under maxQrInkLuminance (0.3) blended on white and falls back to ink otherwise; the paper runs four modules past the code as a quiet zone. Vector modules remain only as a fallback and follow the same colour rule.\n\nVerified: all twelve shipped palettes re-rendered to PDF, rasterised and decoded with Apple Vision — twelve of twelve return the verify URL.\n\nTests: ticket_pdf_export_test.dart asserts the hero photo and the QR arrive as separate image objects, that the QR image sits above the caption with and without a photo, that no vector modules are left behind, and that the pixels change with the payload. ticket_raster_export_test.dart checks the picture against the payload module for module, dark on light for pale, mid and dark palettes, quiet zone intact. color_contrast_test.dart covers qrInkForPrint. test/pdf_content_probe.dart now reports where images were drawn and no longer mistakes an ASCII85 image stream for page content.\n\nStill open: the on-screen ticket and the PNG share draw the same inverted code and are equally unreadable to a scanner. Only the print path changed.\n\nDocs: features.md, README, architecture.md, CHANGELOG (### Fixed), USER_RESEARCH_REPORT section 4.5.\n\nGate: flutter analyze clean; flutter test 176 passing (167 → 176).",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-08-01T10:55:00Z",
+      "updatedAt": "2026-08-01T10:55:00Z",
+      "note": "Branch feature/v1-personal-ticket-share. Cloud task_create_in_db denied (project not shared with this MCP user); local backup only."
     }
   ],
   "epics": [
@@ -1904,5 +1918,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-08-01T09:10:35.856Z"
+  "lastSync": "2026-08-01T09:59:07.379Z"
 }

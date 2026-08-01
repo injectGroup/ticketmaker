@@ -38,6 +38,26 @@ abstract final class ColorContrast {
         : Colors.white;
   }
 
+  /// Paper behind a printed QR code. Scanners look for dark modules on a
+  /// light field, so a printed code cannot be inverted the way the on-screen
+  /// one is.
+  static const Color qrPrintPaper = Colors.white;
+
+  /// Darkest a module may be while still reading as ink on [qrPrintPaper].
+  /// Set at a ~3.5:1 contrast ratio, below which readers start to miss the
+  /// code entirely.
+  static const double maxQrInkLuminance = 0.3;
+
+  /// [pattern] if it is dark enough to scan on paper, otherwise [onLight].
+  ///
+  /// Keeps the guest's colour whenever it survives printing and swaps in ink
+  /// when it would not, which matters most for the pale palettes: white
+  /// modules printed on white paper are simply not there.
+  static Color qrInkForPrint(Color pattern) {
+    final opaque = Color.alphaBlend(pattern, qrPrintPaper);
+    return opaque.computeLuminance() <= maxQrInkLuminance ? opaque : onLight;
+  }
+
   /// Contrasting color for a two-stop gradient.
   ///
   /// Prefers luminance of alpha-blended stops (what shows on [surface]).

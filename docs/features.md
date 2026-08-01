@@ -186,10 +186,12 @@ by `test/ticket_personal_defaults_test.dart`.
     canvas/CORS dependency), degrading to a JPEG capture and finally to a link
     share if the ticket cannot be painted.
   - *PDF:* `TicketPdfExport` draws an A4 page from the ticket model — the
-    details as real text and the QR as vector artwork — using the app's bundled
-    typefaces, so it stays legible and scannable when printed. Any event photo
-    is embedded, and unusable photo bytes are dropped rather than failing the
-    export.
+    details as real text — using the app's bundled typefaces, so it stays
+    legible when printed. The QR code is embedded as a high-resolution image
+    in print colours: dark modules on white, with a quiet zone, whatever
+    palette the ticket wears on screen, because a reader will not decode a
+    pale or inverted code. Any event photo is embedded, and unusable photo
+    bytes are dropped rather than failing the export.
 - **Web:** `WebShareOptionsDialog` offers **Download Ticket Image**, **Share as
   PDF** (Web Share API, falling back to a browser download) and **Copy Share
   Link**.

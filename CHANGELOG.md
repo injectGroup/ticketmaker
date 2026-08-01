@@ -10,8 +10,12 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 ### Added
 
 - **Direct multi-format share.** Share Ticket now asks for a format first: a PNG image, or a printable PDF. Both are built in memory and handed straight to the native share sheet, so no copy is saved to the device first
-- **Vector ticket PDF.** `TicketPdfExport` draws an A4 page from the ticket model — details as real text, the QR as vector artwork, the app's bundled typefaces embedded — so a printed ticket stays legible and scannable. Any event photo is embedded, and unusable photo bytes are dropped instead of failing the export
+- **Printable ticket PDF.** `TicketPdfExport` draws an A4 page from the ticket model — details as real text, the app's bundled typefaces embedded — so a printed ticket stays legible. Any event photo is embedded, and unusable photo bytes are dropped instead of failing the export
 - **Web PDF path.** The web share dialog gains **Share as PDF**, which uses the Web Share API and falls back to a browser download
+
+### Fixed
+
+- **The QR code on an exported PDF can be scanned.** It was drawn in the ticket's own module colour, so the default white modules printed invisibly on the white card. The code is now embedded as a high-resolution image in print colours — dark modules on white, ringed by a quiet zone — and every shipped palette was checked against a real reader. The on-screen ticket and the PNG share still use the ticket's palette and are unaffected
 
 ### Changed
 

@@ -62,3 +62,10 @@ each now has a test that fails if it returns.
 - **Root cause:** It deleted keys while iterating the map returned by `readAll()`, which can be a live view.
 - **Resolution:** Iterate a `toList()` snapshot of the keys before deleting. Found by writing the unit spec first, before any user hit it.
 - **Guarding test:** `test/secure_storage_service_test.dart`.
+
+### 4.5 Exported PDF carried a QR code nobody could scan
+- **Symptom:** The printed ticket showed the `Scan at entrance` caption with no code above it. Two separate faults were sitting on top of each other.
+- **Root cause:** The PDF drew the code as vector modules in `ticket.dataModuleColor`. The default palette and several category palettes use white or pale modules, which are invisible on the white card. Rendering them the way the app does on screen — light modules on a dark pad — is no better: a page rasterised at 900px and at 2400px was fed to Apple's Vision barcode reader and neither found a code at all, because readers expect dark modules on a light field, and the code was drawn edge to edge with no quiet zone.
+- **Resolution:** The PDF now embeds the code as a 512px image drawn for print: modules and finder squares keep the guest's colour only while it stays under `ColorContrast.maxQrInkLuminance` on white, otherwise they fall back to ink, and the paper runs on four modules past the code as a quiet zone. Every one of the twelve shipped palettes was re-rendered and decoded with Vision.
+- **Still open:** the on-screen ticket and the PNG share draw the same inverted code and are equally unreadable to a scanner. Only the print path was changed here.
+- **Guarding tests:** `test/ticket_pdf_export_test.dart` (the code reaches the page as its own image object, above the caption, alongside the hero photo) and `test/ticket_raster_export_test.dart` (the pixels match the payload module for module, dark on light, quiet zone intact).
