@@ -1,21 +1,19 @@
 ---
-description: Enforce Git branch safety, feature isolation, and milestone tracking compliance
+description: Enforce Git branch safety, conventional commit messages, and milestone compliance
 globs: **/*
-alwaysApply: true
 ---
+
 # Project Milestone & Git Workflow Rules
 
-## 1. Feature Branch Discipline
-- **Isolate Code Changes**: Write and modify code *only* within the active feature branch (`feature/v1-personal-ticket-share`).
+## 1. Feature Branch & Commit Discipline
+- **Isolate Code Changes**: Write and modify code only within active feature branches (e.g., `feature/v1-personal-ticket-share`).
 - **Protect Main Baseline**: Never push changes or generate code directly on the `main` branch.
+- **Commit Conventions**: Remind the developer to use structured branch/commit naming conventions using prefixes like `subtask/`, `task/`, `phase/`, or standard Conventional Commits (`feat:`, `fix:`, `test:`).
 
 ## 2. Milestone Alignment (V1 Scope)
 - **Reject Out-of-Scope Code**: Block the addition of enterprise, commercial, or payment features in this phase.
-- **Enforce V1 Defaults**: Flag and reject code adjustments that alter the hardcoded corporate configuration defaults:
-  - Host Event: "Ejike's Birthday Bash"
-  - Subtitle: "VIP Guest Pass"
-  - Base URL: "https://ticketmaker.app"
+- **Enforce V1 Defaults**: Flag and reject code adjustments that alter the hardcoded corporate configuration defaults.
 
-## 3. Test & Deployment Integrity
+## 3. Build & Test Integrity
 - **Research Compliance**: Ensure that any structural bugs discovered during local simulation are documented in `USER_RESEARCH_REPORT.md`.
-- **Build Configurations**: Do not change the `applicationId` (`com.agathakakalogical.quickticketmaker`) or version parameters inside `android/app/build.gradle` unless preparing for a specific Play Console Internal Track release build.
+- **Build Configurations**: Do not change `applicationId` or version parameters inside `android/app/build.gradle` unless instructed for a specific release.

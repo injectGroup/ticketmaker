@@ -1,28 +1,37 @@
 ---
-description: Core Flutter & Sound Null Safety Standards
+description: Core Flutter Expert, Firebase, Web Canvas & Clean Architecture Standards
 globs: **/*
 alwaysApply: true
 ---
+
 # Quick Ticket Maker — Project Cursor Rules
 
 ## Architecture & Framework
 - Framework: Flutter Web & Mobile
 - Backend: Firebase (Auth, Cloud Firestore, Hosting)
 - Language: Sound Null-Safe Dart
+- Design Pattern: Clean Architecture separation (Models, Repositories, Cubits/Providers, UI)
 
-## Code Standards & Guidelines
+## Core Coding & Performance Standards
 1. Null Safety & State Safety:
+   - Enforce Sound Null Safety across all Dart files.
    - NEVER use the `late` keyword unless strictly necessary. Favor nullable types (`?`) with explicit null checks (`if (x != null)`).
    - Before accessing a `RepaintBoundary` or `GlobalKey` context, ALWAYS verify `key.currentContext != null`.
 
-2. Flutter Web Image & Capture Rules:
+2. Anti-Sycophancy & Honest Code Discipline:
+   - Do NOT invent or hallucinate non-existent Flutter/Firebase package methods or properties.
+   - Always verify method signatures against official SDK standards before writing code.
+   - Never write placebo/stub code or comment out required checks to trick test runners.
+
+3. Code Quality & Analysis:
+   - Maintain ZERO static analysis warnings or errors during build (`flutter analyze`).
+   - Clean up unused imports, dead code, and unhandled async futures before completing tasks.
+
+4. Flutter Web Image & Capture Rules:
    - When generating/downloading PNG or JPEG image bytes (`Uint8List`) on Flutter Web, ALWAYS use `web.HTMLAnchorElement` or `dart:html` blob download links to trigger a direct browser file download.
    - Await frame rendering (`WidgetsBinding.instance.endOfFrame` or `Future.delayed`) before taking `toImage()` snapshots to prevent blank/unrendered image captures.
    - Gracefully handle CORS and network image failures during canvas rendering.
 
-3. Firebase & Security:
+5. Firebase & Security:
    - Always check Firebase initialization status before accessing `FirebaseAuth` or `FirebaseFirestore`.
-   - Ensure guest operations (e.g., saving or downloading tickets without login) fail gracefully with SnackBar notifications rather than throwing uncaught exceptions.
-
-4. UI & UX:
-   - Use clear user feedback (e.g., `ScaffoldMessenger.of(context).showSnackBar`) for success and failure actions.
+   - Ensure guest operations fail gracefully with SnackBar notifications rather than throwing uncaught exceptions.

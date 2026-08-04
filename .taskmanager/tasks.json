@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-08-01T11:40:00Z",
+      "updatedAt": "2026-08-04T16:11:19Z",
       "lastMilestone": {
-        "message": "A ticket’s QR code now scans everywhere it is shown — on screen, in the shared PNG and in print — checked against a real reader on all twelve palettes in both formats",
-        "taskId": "task-qr-scannable-everywhere-20260801",
-        "updatedAt": "2026-08-01T11:40:00Z"
+        "message": "Cursor rules refreshed: Flutter Expert, DevSecOps, anti-over-engineering, and TDD/TaskManager presets",
+        "taskId": "task-cursor-rules-update-20260804",
+        "updatedAt": "2026-08-04T16:11:19Z"
       }
     }
   ],
@@ -1917,6 +1917,20 @@
       "createdAt": "2026-08-01T11:40:00Z",
       "updatedAt": "2026-08-01T11:40:00Z",
       "note": "Branch feature/v1-personal-ticket-share. Cloud task_create_in_db denied (project not shared with this MCP user); local backup only."
+    },
+    {
+      "id": "task-cursor-rules-update-20260804",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Update 4 primary Cursor rule files",
+      "description": "Synthesize Flutter Expert, DevSecOps, Anti-Over-Engineering/Anti-Sycophancy, and TDD/TaskManager presets into `.cursor/rules/` (project-standards, tdd-workflow, ticket-security, workflow-integrity).",
+      "details": "Wrote/updated four always-scoped rule files from selected presets. Cloud task_create_in_db denied (project not shared with this MCP user); local backup only.\n\nDone 2026-08-04T16:11:19Z.",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-08-04T16:11:19Z",
+      "updatedAt": "2026-08-04T16:11:19Z",
+      "note": "Branch feature/v1-personal-ticket-share. Preserved taskmanager-app-notifications.mdc unchanged."
     }
   ],
   "epics": [
@@ -1932,5 +1946,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-08-01T10:35:11.214Z"
+  "lastSync": "2026-08-04T16:11:31.930Z"
 }

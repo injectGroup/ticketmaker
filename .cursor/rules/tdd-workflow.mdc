@@ -1,23 +1,33 @@
 ---
-description: Project TDD & Architecture Workflow Rules
+description: TDD Execution, Task Manager CLI (tkl), MCP Server & Instruction Plan Rules
 globs: **/*
 alwaysApply: true
 ---
 
-# Project & TDD Workflow Rules
+# Project TDD & Execution Workflow Rules
 
-## Trigger: Task Preparation
+## 1. Task Manager & MCP Server Execution
+- **Task CLI Initialization**: Run `tkl init` before initializing project task boards.
+- **Start MCP Server**: Run `tkl start-mcp-server` to keep Cursor AI connected to the local task manager server.
+- **Task Tracking UI**: ALWAYS add and display tasks in the task manager before executing implementation (ensure the Cursor UI updates task progress visually).
+
+## 2. Anti-Over-Engineering Principles
+- Only change what was explicitly requested.
+- Pick the simplest solution first—do not introduce unnecessary abstractions, extra dependencies, or unused design patterns.
+- Do not modify unrequested files or rewrite existing working code unless strictly required.
+
+## 3. Trigger: Task Preparation
 When the user says "please prepare my tasks":
-1. Create `instructions/implementation-plan.md` with high-level architecture and master checklist.
-2. Create phase breakdown files (e.g., `instructions/phase-1.md`, `instructions/phase-2.md`) with structured subtask checklists.
-3. DO NOT write implementation code yet. Stop and ask for confirmation before writing files outside `instructions/`.
+1. Initialize task manager with `tkl init` and launch `tkl start-mcp-server`.
+2. Create `instructions/implementation-plan.md` with high-level architecture and master checklist.
+3. Create phase breakdown files (e.g., `instructions/phase-1.md`) with subtask checklists.
+4. DO NOT write implementation code yet. Stop and ask for confirmation before writing files outside `instructions/`.
 
-## Execution Phase (TDD Rules)
-1. STRICT TDD FOR LOGIC: Always create/update unit/widget test specs before writing feature code (Models, Cubits, Repositories, Services).
+## 4. Execution Phase (Strict TDD Rules)
+1. ALWAYS create or update unit/widget test specs before writing feature logic (Models, Cubits, Repositories, Services).
 2. For every subtask:
    - Step 1: Write failing test code based on the spec.
    - Step 2: Write minimal implementation code to pass the test.
    - Step 3: Run `flutter test` to confirm green (100% passing).
    - Step 4: Check off completed items in the `.md` checklist files (`- [x]`).
-3. Never start a new task if current tests fail or checklist items are incomplete.
-4. Git Rule: Remind the user to commit using `subtask/`, `task/`, or `phase/` branch/commit naming conventions. Never instruct to delete branches.
+3. Never start a new subtask if current tests fail or checklist items remain incomplete.
