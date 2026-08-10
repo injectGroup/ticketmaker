@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-08-01T11:40:00Z",
+      "updatedAt": "2026-08-10T09:28:00Z",
       "lastMilestone": {
-        "message": "A ticket’s QR code now scans everywhere it is shown — on screen, in the shared PNG and in print — checked against a real reader on all twelve palettes in both formats",
-        "taskId": "task-qr-scannable-everywhere-20260801",
-        "updatedAt": "2026-08-01T11:40:00Z"
+        "message": "Google Sign-In on web uses Firebase popup; blocked/closed popups show clear errors",
+        "taskId": "task-google-signin-web-20260810",
+        "updatedAt": "2026-08-10T09:28:00Z"
       }
     }
   ],
@@ -1917,6 +1917,20 @@
       "createdAt": "2026-08-01T11:40:00Z",
       "updatedAt": "2026-08-01T11:40:00Z",
       "note": "Branch feature/v1-personal-ticket-share. Cloud task_create_in_db denied (project not shared with this MCP user); local backup only."
+    },
+    {
+      "id": "task-google-signin-web-20260810",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Google Sign-In works on Flutter Web via Firebase popup",
+      "description": "On web, Continue with Google uses FirebaseAuth.signInWithPopup(GoogleAuthProvider). Popup blocked/closed errors surface as SnackBar copy; native keeps google_sign_in + ID token credential.",
+      "details": "Branch feature/google-signin-web. Cloud task_create denied; local backup only.\n\nFirebaseAuthRepository: kIsWeb → signInWithPopup(GoogleAuthProvider); native → google_sign_in.authenticate. mapFirebaseAuthError covers popup-closed-by-user, popup-blocked, cancelled-popup-request, web-context-cancelled. Docs updated. Gate: google_sign_in_web_error_test + auth_cubit_test green; analyze clean.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-08-10T09:25:01Z",
+      "updatedAt": "2026-08-10T09:28:00Z",
+      "note": "Auth sheet button already calls AuthCubit.signInWithGoogle → repository."
     }
   ],
   "epics": [
@@ -1932,5 +1946,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-08-01T10:35:11.214Z"
+  "lastSync": "2026-08-10T09:26:17.141Z"
 }
