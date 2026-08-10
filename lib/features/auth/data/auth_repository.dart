@@ -131,7 +131,7 @@ class FirebaseAuthRepository implements AuthRepository {
       rethrow;
     } on FirebaseAuthException catch (e) {
       debugPrint('FIREBASE AUTH ERROR: ${e.code} - ${e.message}');
-      throw AuthException(_mapFirebaseAuthError(e));
+      throw AuthException(mapFirebaseAuthError(e));
     } catch (e, st) {
       debugPrint('AUTH SIGN-IN ERROR: $e\n$st');
       throw AuthException(_mapGenericAuthError(e, fallback: 'Could not sign in. Try again.'));
@@ -178,7 +178,7 @@ class FirebaseAuthRepository implements AuthRepository {
       rethrow;
     } on FirebaseAuthException catch (e) {
       debugPrint('FIREBASE AUTH ERROR: ${e.code} - ${e.message}');
-      throw AuthException(_mapFirebaseAuthError(e));
+      throw AuthException(mapFirebaseAuthError(e));
     } catch (e, st) {
       debugPrint('AUTH SIGN-UP ERROR: $e\n$st');
       throw AuthException(
@@ -190,25 +190,10 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<AppUser> signInWithGoogle() async {
     try {
-      await _ensureGoogleInitialized();
-      final account = await _googleSignIn.authenticate();
-      final idToken = account.authentication.idToken;
-      if (idToken == null || idToken.isEmpty) {
-        throw AuthException(
-          'Google Sign-In did not return an ID token. Check OAuth client setup.',
-        );
+      if (kIsWeb) {
+        return await _signInWithGoogleOnWeb();
       }
-      final credential = GoogleAuthProvider.credential(idToken: idToken);
-      final userCredential = await _auth.signInWithCredential(credential);
-      final firebaseUser = userCredential.user;
-      if (firebaseUser == null) {
-        throw AuthException('Google Sign-In failed. Try again.');
-      }
-      return _finalizeSocialUser(
-        firebaseUser,
-        displayName: account.displayName,
-        isNewUser: userCredential.additionalUserInfo?.isNewUser ?? false,
-      );
+      return await _signInWithGoogleNative();
     } on AuthException {
       rethrow;
     } on GoogleSignInException catch (e) {
@@ -219,12 +204,60 @@ class FirebaseAuthRepository implements AuthRepository {
         'Google Sign-In is unavailable. Enable Google in Firebase Console.',
       );
     } on FirebaseAuthException catch (e) {
-      throw AuthException(_mapFirebaseAuthError(e));
-    } catch (_) {
+      debugPrint('FIREBASE GOOGLE AUTH ERROR: ${e.code} - ${e.message}');
+      throw AuthException(mapFirebaseAuthError(e));
+    } catch (e, st) {
+      debugPrint('GOOGLE SIGN-IN ERROR: $e\n$st');
       throw AuthException(
-        'Google Sign-In failed. Ensure Google provider and OAuth clients are set up.',
+        _mapGenericAuthError(
+          e,
+          fallback:
+              'Google Sign-In failed. Ensure Google provider and OAuth clients '
+              'are set up.',
+        ),
       );
     }
+  }
+
+  /// Flutter Web: Firebase Auth popup (GIS / OAuth client from Firebase options).
+  Future<AppUser> _signInWithGoogleOnWeb() async {
+    final provider = GoogleAuthProvider()
+      ..addScope('email')
+      ..addScope('profile')
+      ..setCustomParameters({'prompt': 'select_account'});
+    final userCredential = await _auth.signInWithPopup(provider);
+    final firebaseUser = userCredential.user;
+    if (firebaseUser == null) {
+      throw AuthException('Google Sign-In failed. Try again.');
+    }
+    return _finalizeSocialUser(
+      firebaseUser,
+      displayName: firebaseUser.displayName,
+      isNewUser: userCredential.additionalUserInfo?.isNewUser ?? false,
+    );
+  }
+
+  /// iOS / Android / desktop: google_sign_in ID token → Firebase credential.
+  Future<AppUser> _signInWithGoogleNative() async {
+    await _ensureGoogleInitialized();
+    final account = await _googleSignIn.authenticate();
+    final idToken = account.authentication.idToken;
+    if (idToken == null || idToken.isEmpty) {
+      throw AuthException(
+        'Google Sign-In did not return an ID token. Check OAuth client setup.',
+      );
+    }
+    final credential = GoogleAuthProvider.credential(idToken: idToken);
+    final userCredential = await _auth.signInWithCredential(credential);
+    final firebaseUser = userCredential.user;
+    if (firebaseUser == null) {
+      throw AuthException('Google Sign-In failed. Try again.');
+    }
+    return _finalizeSocialUser(
+      firebaseUser,
+      displayName: account.displayName,
+      isNewUser: userCredential.additionalUserInfo?.isNewUser ?? false,
+    );
   }
 
   @override
@@ -273,7 +306,7 @@ class FirebaseAuthRepository implements AuthRepository {
         'and the Sign in with Apple capability.',
       );
     } on FirebaseAuthException catch (e) {
-      throw AuthException(_mapFirebaseAuthError(e));
+      throw AuthException(mapFirebaseAuthError(e));
     } catch (_) {
       throw AuthException(
         'Apple Sign-In failed. Enable the Apple provider in Firebase Console.',
@@ -293,11 +326,13 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {
-    try {
-      await _ensureGoogleInitialized();
-      await _googleSignIn.signOut();
-    } catch (_) {
-      // Google may be unconfigured; still sign out of Firebase.
+    if (!kIsWeb) {
+      try {
+        await _ensureGoogleInitialized();
+        await _googleSignIn.signOut();
+      } catch (_) {
+        // Google may be unconfigured; still sign out of Firebase.
+      }
     }
     await _auth.signOut();
   }
@@ -395,39 +430,6 @@ class FirebaseAuthRepository implements AuthRepository {
     return sha256.convert(bytes).toString();
   }
 
-  static String _mapFirebaseAuthError(FirebaseAuthException e) {
-    switch (e.code) {
-      case 'invalid-email':
-        return 'Enter a valid email address.';
-      case 'user-disabled':
-        return 'This account has been disabled.';
-      case 'user-not-found':
-        return 'No account found for that email.';
-      case 'wrong-password':
-      case 'invalid-credential':
-        return 'Incorrect email or password.';
-      case 'email-already-in-use':
-        return 'An account already exists for that email.';
-      case 'weak-password':
-        return 'Password must be at least 6 characters.';
-      case 'network-request-failed':
-        return 'Network error. Check your connection and try again.';
-      case 'operation-not-allowed':
-        return 'This sign-in method is not enabled in Firebase Console.';
-      case 'channel-error':
-        // FlutterFire may surface pigeon channel failures on misconfigured web.
-        return 'Could not reach Firebase Auth. Enable Email/Password in '
-            'Firebase Console, authorize this domain, then hard-refresh '
-            '(Cmd+Shift+R) and try again.';
-      default:
-        final message = e.message?.trim() ?? '';
-        if (message.isEmpty || message.contains('FirebaseAuthHostApi')) {
-          return 'Authentication failed (${e.code}). Try again.';
-        }
-        return '$message (${e.code})';
-    }
-  }
-
   /// Maps non-Firebase failures that still carry FlutterFire pigeon strings.
   static String _mapGenericAuthError(
     Object error, {
@@ -441,6 +443,48 @@ class FirebaseAuthRepository implements AuthRepository {
           '(Cmd+Shift+R) and try again.';
     }
     return fallback;
+  }
+}
+
+/// Maps Firebase Auth exception codes to user-facing copy (SnackBar / sheet).
+String mapFirebaseAuthError(FirebaseAuthException e) {
+  switch (e.code) {
+    case 'invalid-email':
+      return 'Enter a valid email address.';
+    case 'user-disabled':
+      return 'This account has been disabled.';
+    case 'user-not-found':
+      return 'No account found for that email.';
+    case 'wrong-password':
+    case 'invalid-credential':
+      return 'Incorrect email or password.';
+    case 'email-already-in-use':
+      return 'An account already exists for that email.';
+    case 'weak-password':
+      return 'Password must be at least 6 characters.';
+    case 'network-request-failed':
+      return 'Network error. Check your connection and try again.';
+    case 'operation-not-allowed':
+      return 'This sign-in method is not enabled in Firebase Console.';
+    case 'popup-closed-by-user':
+    case 'web-context-cancelled':
+      return 'Google Sign-In was closed before finishing. Try again when ready.';
+    case 'popup-blocked':
+      return 'Your browser blocked the Google Sign-In popup. Allow popups for '
+          'this site and try again.';
+    case 'cancelled-popup-request':
+      return 'Another Google Sign-In popup is already open. Close it and try again.';
+    case 'channel-error':
+      // FlutterFire may surface pigeon channel failures on misconfigured web.
+      return 'Could not reach Firebase Auth. Enable Email/Password in '
+          'Firebase Console, authorize this domain, then hard-refresh '
+          '(Cmd+Shift+R) and try again.';
+    default:
+      final message = e.message?.trim() ?? '';
+      if (message.isEmpty || message.contains('FirebaseAuthHostApi')) {
+        return 'Authentication failed (${e.code}). Try again.';
+      }
+      return '$message (${e.code})';
   }
 }
 
