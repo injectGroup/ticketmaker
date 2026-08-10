@@ -16,6 +16,7 @@ enum AuthSheetMode { signIn, signUp }
 Future<bool> showAuthFlow(
   BuildContext context, {
   AuthSheetMode initialMode = AuthSheetMode.signIn,
+  String? subtitle,
 }) async {
   final result = await showModalBottomSheet<bool>(
     context: context,
@@ -24,16 +25,26 @@ Future<bool> showAuthFlow(
     showDragHandle: true,
     backgroundColor: AppColors.secondaryBackground,
     builder: (sheetContext) {
-      return AuthFlowSheet(initialMode: initialMode);
+      return AuthFlowSheet(
+        initialMode: initialMode,
+        subtitle: subtitle,
+      );
     },
   );
   return result ?? false;
 }
 
 class AuthFlowSheet extends StatefulWidget {
-  const AuthFlowSheet({super.key, this.initialMode = AuthSheetMode.signIn});
+  const AuthFlowSheet({
+    super.key,
+    this.initialMode = AuthSheetMode.signIn,
+    this.subtitle,
+  });
 
   final AuthSheetMode initialMode;
+
+  /// Optional purpose line under the headline (defaults to save-ticket copy).
+  final String? subtitle;
 
   @override
   State<AuthFlowSheet> createState() => _AuthFlowSheetState();
@@ -197,7 +208,8 @@ class _AuthFlowSheetState extends State<AuthFlowSheet> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Sign in or create an account to save your ticket.',
+                  widget.subtitle ??
+                      'Sign in or create an account to save your ticket.',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: AppColors.secondaryText,
                   ),

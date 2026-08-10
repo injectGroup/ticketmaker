@@ -7,6 +7,7 @@ import '../../../generate/domain/entities/ticket.dart';
 import '../../data/ticket_share_helper.dart';
 import '../bloc/tickets_cubit.dart';
 import '../pages/tickets_page.dart';
+import 'share_auth_gate.dart';
 
 /// List card for a persisted ticket, with a native share action.
 class SavedTicketCard extends StatelessWidget {
@@ -27,6 +28,9 @@ class SavedTicketCard extends StatelessWidget {
 
   Future<void> _share(BuildContext buttonContext) async {
     try {
+      final allowed = await ensureAuthenticatedForShare(buttonContext);
+      if (!buttonContext.mounted || !allowed) return;
+
       // List rows have no on-screen ticket RepaintBoundary. Share still
       // composes SavedTicketView off-screen / via modal from [ticket] data
       // (and optional event photo bytes) for Download on web.

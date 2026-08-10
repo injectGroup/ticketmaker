@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-08-01T11:40:00Z",
+      "updatedAt": "2026-08-10T09:05:00Z",
       "lastMilestone": {
-        "message": "A ticket’s QR code now scans everywhere it is shown — on screen, in the shared PNG and in print — checked against a real reader on all twelve palettes in both formats",
-        "taskId": "task-qr-scannable-everywhere-20260801",
-        "updatedAt": "2026-08-01T11:40:00Z"
+        "message": "Share now requires sign-in — guests see a Sign In / Sign Up gate before image, PDF, or link share",
+        "taskId": "task-share-auth-gate-20260810",
+        "updatedAt": "2026-08-10T09:05:00Z"
       }
     }
   ],
@@ -1917,6 +1917,20 @@
       "createdAt": "2026-08-01T11:40:00Z",
       "updatedAt": "2026-08-01T11:40:00Z",
       "note": "Branch feature/v1-personal-ticket-share. Cloud task_create_in_db denied (project not shared with this MCP user); local backup only."
+    },
+    {
+      "id": "task-share-auth-gate-20260810",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Share button requires authentication",
+      "description": "Intercept Share (image/PDF/link) when the guest is not signed in; show a themed gate sheet (Sign In / Sign Up, Cancel); allow existing share flow only when AuthCubit reports an authenticated Firebase session.",
+      "details": "Branch feature/share-authentication-gate. Cloud task_create denied; local backup only.\n\nAdded share_auth_gate.dart (ensureAuthenticatedForShare + showShareAuthGate). Wired from ticket_detail_page and saved_ticket_card. Auth flow sheet accepts optional share subtitle. Tests in share_auth_gate_test.dart.\n\nGate: flutter test test/share_auth_gate_test.dart green; analyze clean on touched files.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-08-10T08:29:57Z",
+      "updatedAt": "2026-08-10T09:05:00Z",
+      "note": "Reuse showAuthFlow after the share-specific gate prompt."
     }
   ],
   "epics": [
@@ -1932,5 +1946,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-08-01T10:35:11.214Z"
+  "lastSync": "2026-08-10T09:05:31.948Z"
 }

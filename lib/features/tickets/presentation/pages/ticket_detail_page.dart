@@ -6,6 +6,7 @@ import '../../../generate/domain/entities/ticket.dart';
 import '../../data/ticket_share_helper.dart';
 import '../bloc/tickets_cubit.dart';
 import '../widgets/saved_ticket_view.dart';
+import '../widgets/share_auth_gate.dart';
 
 class TicketDetailPage extends StatefulWidget {
   const TicketDetailPage({super.key, required this.ticketId});
@@ -23,9 +24,12 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
 
   Future<void> _share(BuildContext buttonContext, Ticket ticket) async {
     try {
-      final bytes =
-          context.read<TicketsCubit>().state.imageBytesFor(ticket.id);
+      final ticketsCubit = context.read<TicketsCubit>();
       final origin = TicketShareHelper.shareOriginFrom(buttonContext);
+      if (!await ensureAuthenticatedForShare(context)) return;
+      if (!mounted) return;
+
+      final bytes = ticketsCubit.state.imageBytesFor(ticket.id);
 
       // No pre-capture: the PDF is drawn from the ticket model and needs no
       // painted boundary, and the image path already degrades to JPEG and then
