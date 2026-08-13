@@ -131,4 +131,62 @@ void main() {
     expect(find.text('Sign in to continue'), findsNothing);
     expect(find.text('Sign In'), findsNothing);
   });
+
+  testWidgets('Sign Out sits beside Clear all on My Tickets', (tester) async {
+    await tester.pumpWidget(
+      buildTestApp(authRepository: await seedSignedInUser()),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    await tester.ensureVisible(find.text('Save Ticket'));
+    await tester.tap(find.text('Save Ticket'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    await tester.tap(find.text('Tickets'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('clear-all-tickets')), findsOneWidget);
+    expect(find.byKey(const Key('sign-out-tickets')), findsOneWidget);
+  });
+
+  testWidgets('Sign Out signs out and opens the auth sheet', (tester) async {
+    await tester.pumpWidget(
+      buildTestApp(authRepository: await seedSignedInUser()),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Tickets'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('sign-out-tickets')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Signed out successfully!'), findsOneWidget);
+    expect(find.text('Sign in to continue'), findsOneWidget);
+    expect(find.text('Sign In'), findsWidgets);
+    expect(find.text('Sign Up'), findsWidgets);
+  });
+
+  testWidgets('Guest Share Ticket opens Sign in to continue', (tester) async {
+    await tester.pumpWidget(buildTestApp());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    await tester.ensureVisible(find.text('Save Ticket'));
+    await tester.tap(find.text('Save Ticket'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    await tester.tap(find.text('Tickets'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Share Ticket'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sign in to continue'), findsOneWidget);
+    expect(find.byKey(const Key('share-format-dialog')), findsNothing);
+    expect(find.byKey(const Key('web-share-options-dialog')), findsNothing);
+  });
 }

@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-08-13T13:16:00Z",
+      "updatedAt": "2026-08-13T15:05:00Z",
       "lastMilestone": {
-        "message": "Android release builds sign from gitignored android/key.properties",
-        "taskId": "task-android-release-signing-props-20260813",
-        "updatedAt": "2026-08-13T13:16:00Z"
+        "message": "My Tickets Sign Out beside Clear all; Share requires Sign In or Sign Up",
+        "taskId": "task-tickets-sign-out-share-auth-20260813",
+        "updatedAt": "2026-08-13T15:05:00Z"
       }
     }
   ],
@@ -1945,6 +1945,20 @@
       "createdAt": "2026-08-13T13:13:00Z",
       "updatedAt": "2026-08-13T13:16:00Z",
       "note": "Branch feature/v1-personal-ticket-share-ios."
+    },
+    {
+      "id": "task-tickets-sign-out-share-auth-20260813",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Tickets Sign Out beside Clear all; Share requires sign-in",
+      "description": "Add Sign Out next to Clear all on My Tickets (AuthCubit.signOut then auth sheet). Gate list and detail Share so guests see Sign in / Sign up before the share sheet.",
+      "details": "Cloud task_create_in_db denied (project not shared with this MCP user); local backup only.\n\nTicketsPage: Sign Out (Icons.logout) after Clear all and when the list is empty. AuthCubit.signOut then Signed out successfully! and showAuthFlow. List and detail Share call ensureAuthenticated (restore session, then Sign In / Sign Up sheet) before TicketShareHelper.share.\n\nGate: flutter test test/widget_test.dart green.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-08-13T15:00:00Z",
+      "updatedAt": "2026-08-13T15:05:00Z",
+      "note": "Branch feature/v1-personal-ticket-share."
     }
   ],
   "epics": [
@@ -1960,5 +1974,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-08-13T13:16:01.496Z"
+  "lastSync": "2026-08-13T15:02:34.711Z"
 }

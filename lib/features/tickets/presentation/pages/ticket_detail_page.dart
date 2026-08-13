@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/presentation/auth_gate.dart';
 import '../../../generate/domain/entities/ticket.dart';
 import '../../data/ticket_share_helper.dart';
 import '../bloc/tickets_cubit.dart';
@@ -23,6 +24,9 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
 
   Future<void> _share(BuildContext buttonContext, Ticket ticket) async {
     try {
+      if (!await ensureAuthenticated(buttonContext)) return;
+      if (!mounted || !buttonContext.mounted) return;
+
       final bytes =
           context.read<TicketsCubit>().state.imageBytesFor(ticket.id);
       final origin = TicketShareHelper.shareOriginFrom(buttonContext);

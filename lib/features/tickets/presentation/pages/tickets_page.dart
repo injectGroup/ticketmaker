@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/presentation/bloc/auth_cubit.dart';
+import '../../../auth/presentation/widgets/auth_flow_sheet.dart';
 import '../../../generate/domain/entities/ticket.dart';
 import '../bloc/tickets_cubit.dart';
 import '../widgets/saved_ticket_card.dart';
@@ -131,6 +133,27 @@ class _TicketsPageState extends State<TicketsPage> {
     if (mounted) _exitSelection();
   }
 
+  Future<void> _signOut(BuildContext context) async {
+    await context.read<AuthCubit>().signOut();
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(content: Text('Signed out successfully!')),
+      );
+    await showAuthFlow(context);
+  }
+
+  Widget _signOutButton() {
+    return IconButton(
+      key: const Key('sign-out-tickets'),
+      tooltip: 'Sign Out',
+      onPressed: () => _signOut(context),
+      icon: const Icon(Icons.logout),
+      color: Colors.white,
+    );
+  }
+
   Future<void> _swipeDelete(Ticket ticket, int index) async {
     final cubit = context.read<TicketsCubit>();
     final messenger = ScaffoldMessenger.of(context);
@@ -244,7 +267,9 @@ class _TicketsPageState extends State<TicketsPage> {
   }
 
   List<Widget> _appBarActions(TicketsState state) {
-    if (state.tickets.isEmpty) return const [];
+    if (state.tickets.isEmpty) {
+      return [_signOutButton()];
+    }
 
     final whiteStyle = TextButton.styleFrom(
       foregroundColor: Colors.white,
@@ -302,6 +327,7 @@ class _TicketsPageState extends State<TicketsPage> {
         icon: const Icon(Icons.delete_sweep_outlined),
         label: const Text('Clear all'),
       ),
+      _signOutButton(),
     ];
   }
 

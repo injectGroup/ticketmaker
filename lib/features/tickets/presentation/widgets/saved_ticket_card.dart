@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/presentation/auth_gate.dart';
 import '../../../generate/domain/entities/ticket.dart';
 import '../../data/ticket_share_helper.dart';
 import '../bloc/tickets_cubit.dart';
@@ -27,6 +28,9 @@ class SavedTicketCard extends StatelessWidget {
 
   Future<void> _share(BuildContext buttonContext) async {
     try {
+      if (!await ensureAuthenticated(buttonContext)) return;
+      if (!buttonContext.mounted) return;
+
       // List rows have no on-screen ticket RepaintBoundary. Share still
       // composes SavedTicketView off-screen / via modal from [ticket] data
       // (and optional event photo bytes) for Download on web.

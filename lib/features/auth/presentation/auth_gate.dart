@@ -12,6 +12,21 @@ import '../domain/pending_auth_action.dart';
 import 'bloc/auth_cubit.dart';
 import 'widgets/auth_flow_sheet.dart';
 
+/// Returns true when the session is authenticated (after optional sign-in).
+///
+/// Guests see the Sign In / Sign Up sheet. Signed-in users pass through.
+Future<bool> ensureAuthenticated(BuildContext context) async {
+  final auth = context.read<AuthCubit>();
+  if (auth.state.status == AuthStatus.unknown) {
+    await auth.restoreSession();
+    if (!context.mounted) return false;
+  }
+  if (auth.state.isAuthenticated) return true;
+  final signedIn = await showAuthFlow(context);
+  if (!context.mounted) return false;
+  return signedIn && auth.state.isAuthenticated;
+}
+
 /// Ensures authentication, then runs [action].
 ///
 /// Prefer [saveTicketAsGuest] for Save Ticket — guests may persist locally
