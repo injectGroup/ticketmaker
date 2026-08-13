@@ -153,8 +153,7 @@ class SavedTicketView extends StatelessWidget {
           const SizedBox(height: 20),
           TicketCodeBadge(
             code: ticket.code,
-            foreground: onCard,
-            background: onCard.withValues(alpha: 0.14),
+            labelColor: onCard,
             showIdLabel: true,
           ),
           const SizedBox(height: 16),

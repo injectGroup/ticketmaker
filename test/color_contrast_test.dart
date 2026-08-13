@@ -61,6 +61,13 @@ void main() {
     expect(ColorContrast.onGradient(fill, fill), ColorContrast.onDark);
   });
 
+  test('ticket ID tokens are dark ink on opaque white', () {
+    expect(ColorContrast.ticketIdInk, const Color(0xFF1A1A1A));
+    expect(ColorContrast.ticketIdField, const Color(0xFFFFFFFF));
+    expect(ColorContrast.ticketIdInk.computeLuminance(), lessThan(0.05));
+    expect(ColorContrast.ticketIdField.computeLuminance(), greaterThan(0.99));
+  });
+
   group('qrInk', () {
     test('keeps a module colour dark enough to read', () {
       const navy = Color(0xFF0F3460);

@@ -36,6 +36,12 @@ abstract final class ColorContrast {
   /// inverted onto a dark pad however well that suits the ticket.
   static const Color qrField = Colors.white;
 
+  /// Ticket ID digits under the QR: near-black ink, independent of the card.
+  static const Color ticketIdInk = Color(0xFF1A1A1A);
+
+  /// Solid white pill behind the ticket ID so the digits stay readable.
+  static const Color ticketIdField = Color(0xFFFFFFFF);
+
   /// Darkest a module may be while still reading as ink on [qrField]. Set at
   /// a ~3.5:1 contrast ratio, below which readers start to miss the code
   /// entirely.

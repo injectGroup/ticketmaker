@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-08-13T16:20:00Z",
+      "updatedAt": "2026-08-13T15:35:00Z",
       "lastMilestone": {
-        "message": "Share sends a ticket PNG file (temp XFile), not plain text",
-        "taskId": "task-share-png-xfile-20260813",
-        "updatedAt": "2026-08-13T16:20:00Z"
+        "message": "Ticket ID under the QR is bold #1A1A1A on a solid white pill",
+        "taskId": "task-ticket-id-high-contrast-20260813",
+        "updatedAt": "2026-08-13T15:35:00Z"
       }
     }
   ],
@@ -1973,6 +1973,20 @@
       "createdAt": "2026-08-13T15:16:00Z",
       "updatedAt": "2026-08-13T16:20:00Z",
       "note": "Branch feature/v1-personal-ticket-share."
+    },
+    {
+      "id": "task-ticket-id-high-contrast-20260813",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "High-contrast ticket ID under QR",
+      "description": "Ticket ID under the QR code uses bold dark #1A1A1A text on a solid white background by default, including generated tickets and shared images.",
+      "details": "Cloud task_create_in_db denied (project not shared with this MCP user); local backup only.\n\nTicketCodeBadge defaults to ColorContrast.ticketIdInk (#1A1A1A) bold w700 on solid white. Generate (TicketHeaderSection) and SavedTicketView no longer restyle the pill to match the card. TicketRasterExport._drawBadge uses the same tokens so shared PNGs match.\n\nGate: flutter test ticket_code_badge_test, color_contrast_test, ticket_raster_export_test, widget_test green.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-08-13T15:30:00Z",
+      "updatedAt": "2026-08-13T15:35:00Z",
+      "note": "Branch feature/v1-personal-ticket-share."
     }
   ],
   "epics": [
@@ -1988,5 +2002,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-08-13T15:20:55.672Z"
+  "lastSync": "2026-08-13T15:33:53.543Z"
 }

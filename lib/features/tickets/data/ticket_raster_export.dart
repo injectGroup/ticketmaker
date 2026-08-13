@@ -130,7 +130,7 @@ class TicketRasterExport {
     y += _qrSize + 16;
 
     final code = _safeText(ticket.code, fallback: '----');
-    _drawBadge(canvas, code, y: y, fg: textColor, bg: _withAlpha(onCard, 0.14));
+    _drawBadge(canvas, code, y: y);
     y += 44;
 
     _drawDashedLine(canvas, y: y, color: _withAlpha(onCard, 0.45));
@@ -285,8 +285,6 @@ class TicketRasterExport {
     img.Image canvas,
     String code, {
     required int y,
-    required img.Color fg,
-    required img.Color bg,
   }) {
     const padX = 16;
     const padY = 8;
@@ -294,6 +292,8 @@ class TicketRasterExport {
     final boxW = textW + padX * 2;
     final boxH = 14 + padY * 2;
     final left = (_width - boxW) ~/ 2;
+    final bg = _toImgColor(ColorContrast.ticketIdField);
+    final fg = _toImgColor(ColorContrast.ticketIdInk);
     img.fillRect(
       canvas,
       x1: left,

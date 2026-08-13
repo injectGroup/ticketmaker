@@ -91,8 +91,7 @@ class TicketHeaderSection extends StatelessWidget {
           const SizedBox(height: 16),
           TicketCodeBadge(
             code: ticket.code,
-            foreground: onText,
-            background: Colors.white.withValues(alpha: 0.16),
+            labelColor: onText,
             showInfo: true,
             showIdLabel: true,
           ),

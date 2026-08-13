@@ -2,16 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/color_contrast.dart';
 import 'ticket_section_label.dart';
 
 /// Compact, tappable ticket code chip that copies to the clipboard.
+///
+/// Digits default to bold [ColorContrast.ticketIdInk] on a solid white pill so
+/// the ID stays readable on every ticket palette and in shared images.
 class TicketCodeBadge extends StatelessWidget {
   const TicketCodeBadge({
     super.key,
     required this.code,
     this.foreground,
     this.background,
+    this.labelColor,
     this.showInfo = false,
     this.showIdLabel = false,
   });
@@ -19,6 +23,10 @@ class TicketCodeBadge extends StatelessWidget {
   final String code;
   final Color? foreground;
   final Color? background;
+
+  /// Colour for the `TICKET ID` caption. The digits always use [foreground]
+  /// (or [ColorContrast.ticketIdInk]) on [background].
+  final Color? labelColor;
 
   /// Places an info icon inside the pill beside the code.
   final bool showInfo;
@@ -36,8 +44,9 @@ class TicketCodeBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = foreground ?? AppColors.primaryText;
-    final bg = background ?? const Color(0xFFF1F5F9);
+    final fg = foreground ?? ColorContrast.ticketIdInk;
+    final bg = background ?? ColorContrast.ticketIdField;
+    final caption = labelColor ?? fg;
 
     final pill = Material(
       color: bg,
@@ -60,7 +69,7 @@ class TicketCodeBadge extends StatelessWidget {
                 code,
                 style: GoogleFonts.spaceMono(
                   color: fg,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   fontSize: 14,
                   letterSpacing: 0.6,
                   height: 1.2,
@@ -91,7 +100,7 @@ class TicketCodeBadge extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        TicketSectionLabel(text: 'Ticket ID', color: fg),
+        TicketSectionLabel(text: 'Ticket ID', color: caption),
         const SizedBox(height: 6),
         pill,
       ],

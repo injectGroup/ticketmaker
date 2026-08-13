@@ -274,4 +274,31 @@ void main() {
       );
     });
   });
+
+  test('shared PNG paints the ticket ID dark on a solid white badge', () async {
+    final darkTicket = sampleTicket.copyWith(
+      topGradientStart: const Color(0xFF1A1A2E),
+      topGradientEnd: const Color(0xFF1A1A2E),
+    );
+    final bytes = await TicketRasterExport.toPngBytes(darkTicket);
+    expect(bytes, isNotNull);
+
+    final image = img.decodePng(bytes!);
+    expect(image, isNotNull);
+
+    // Header 24+40, QR 150, gap 16 → badge starts at y=230 on a 420-wide canvas.
+    const badgeTop = 230;
+    const badgeBottom = 258;
+    var light = 0;
+    var dark = 0;
+    for (var y = badgeTop; y < badgeBottom; y++) {
+      for (var x = 150; x < 270; x++) {
+        final lum = _luminance(image!.getPixel(x, y));
+        if (lum > 0.9) light++;
+        if (lum < 0.2) dark++;
+      }
+    }
+    expect(light, greaterThan(80), reason: 'badge field should be solid white');
+    expect(dark, greaterThan(20), reason: 'ticket ID digits should be near-black');
+  });
 }
