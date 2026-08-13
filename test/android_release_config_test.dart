@@ -39,11 +39,23 @@ void main() {
     test('sources credentials from key.properties rather than the repo', () {
       final gradle = _read(_gradlePath);
 
-      expect(gradle, contains('key.properties'));
+      expect(gradle, contains('java.util.Properties'));
+      expect(gradle, contains('rootProject.file("key.properties")'));
       expect(gradle, contains('storeFile'));
       expect(gradle, contains('storePassword'));
       expect(gradle, contains('keyAlias'));
       expect(gradle, contains('keyPassword'));
+      expect(gradle, contains('keyAlias = keystoreProperties.getProperty("keyAlias")'));
+      expect(
+        gradle,
+        contains('keyPassword = keystoreProperties.getProperty("keyPassword")'),
+      );
+      expect(
+        gradle,
+        contains(
+          'storePassword = keystoreProperties.getProperty("storePassword")',
+        ),
+      );
     });
   });
 

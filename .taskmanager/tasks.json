@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-08-04T16:11:19Z",
+      "updatedAt": "2026-08-13T13:16:00Z",
       "lastMilestone": {
-        "message": "Cursor rules refreshed: Flutter Expert, DevSecOps, anti-over-engineering, and TDD/TaskManager presets",
-        "taskId": "task-cursor-rules-update-20260804",
-        "updatedAt": "2026-08-04T16:11:19Z"
+        "message": "Android release builds sign from gitignored android/key.properties",
+        "taskId": "task-android-release-signing-props-20260813",
+        "updatedAt": "2026-08-13T13:16:00Z"
       }
     }
   ],
@@ -1931,6 +1931,20 @@
       "createdAt": "2026-08-04T16:11:19Z",
       "updatedAt": "2026-08-04T16:11:19Z",
       "note": "Branch feature/v1-personal-ticket-share. Preserved taskmanager-app-notifications.mdc unchanged."
+    },
+    {
+      "id": "task-android-release-signing-props-20260813",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Wire Android release signing from android/key.properties",
+      "description": "Release builds sign with the upload keystore via java.util.Properties from android/key.properties. signingConfigs.release sets keyAlias, keyPassword, storeFile, storePassword; buildTypes.release uses that config. Do not commit key.properties.",
+      "details": "Cloud task_create_in_db denied (project not shared with this MCP user); local backup only.\n\nProject uses Kotlin DSL android/app/build.gradle.kts (no Groovy build.gradle). Loads android/key.properties via java.util.Properties after plugins {}. signingConfigs.release now assigns keyAlias, keyPassword, storeFile, storePassword directly (not nested in storeFile?.let). buildTypes.release still uses signingConfigs.release. Kept fail-fast GradleException when a release bundle/apk is requested without key.properties. key.properties stays gitignored.\n\nGate: flutter test test/android_release_config_test.dart green.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-08-13T13:13:00Z",
+      "updatedAt": "2026-08-13T13:16:00Z",
+      "note": "Branch feature/v1-personal-ticket-share-ios."
     }
   ],
   "epics": [
@@ -1946,5 +1960,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-08-04T16:11:31.930Z"
+  "lastSync": "2026-08-13T13:16:01.496Z"
 }
