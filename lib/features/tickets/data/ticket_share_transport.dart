@@ -6,12 +6,13 @@ import 'package:share_plus/share_plus.dart';
 
 import 'ticket_share_download_stub.dart'
     if (dart.library.js_interop) 'ticket_share_download_web.dart';
+import 'ticket_share_image_xfile_stub.dart'
+    if (dart.library.io) 'ticket_share_image_xfile_io.dart';
 
 /// Hands finished ticket bytes to the platform.
 ///
-/// Everything crosses this boundary as bytes held in memory — no ticket is
-/// written to device storage on the way to the share sheet. Tests replace the
-/// implementation to assert what would have been shared.
+/// Image shares write a temporary PNG so Android/iOS apps receive a real file
+/// path. PDF shares stay in memory. Tests replace the implementation.
 abstract class TicketShareTransport {
   Future<void> shareImage({
     required Uint8List bytes,
@@ -44,9 +45,14 @@ class PlatformTicketShareTransport implements TicketShareTransport {
     required String subject,
     Rect? sharePositionOrigin,
   }) async {
+    final xFile = await ticketShareImageXFile(
+      bytes: bytes,
+      fileName: fileName,
+      mimeType: mimeType,
+    );
     await SharePlus.instance.share(
       ShareParams(
-        files: [XFile.fromData(bytes, mimeType: mimeType, name: fileName)],
+        files: [xFile],
         fileNameOverrides: [fileName],
         text: text,
         subject: subject,

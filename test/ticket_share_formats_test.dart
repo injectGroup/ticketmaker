@@ -260,11 +260,14 @@ void main() {
         const <int>[137, 80, 78, 71, 13, 10, 26, 10],
         reason: 'PNG magic header',
       );
+      expect(shared.text, "You're invited to my event!");
+      expect(shared.text, isNot(contains('http://')));
+      expect(shared.text, isNot(contains('https://')));
     });
   });
 
   group('share', () {
-    testWidgets('asks for a format, then shares that format', (tester) async {
+    testWidgets('shares a PNG image without asking for a format', (tester) async {
       final ticket = _ticket();
       final boundaryKey = GlobalKey();
 
@@ -272,17 +275,18 @@ void main() {
       await tester.pumpAndSettle();
 
       final context = tester.element(find.byType(Scaffold));
-      TicketShareHelper.share(context, ticket, boundaryKey: boundaryKey);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.runAsync(() async {
+        await TicketShareHelper.share(
+          context,
+          ticket,
+          boundaryKey: boundaryKey,
+        );
+      });
 
-      expect(find.byKey(const Key('share-format-dialog')), findsOneWidget);
-
-      await tester.tap(find.byKey(const Key('share-format-pdf')));
-      await _pumpFor(tester, const Duration(seconds: 2));
-
+      expect(find.byKey(const Key('share-format-dialog')), findsNothing);
       expect(transport.shares, hasLength(1));
-      expect(transport.shares.single.mimeType, 'application/pdf');
+      expect(transport.shares.single.mimeType, 'image/png');
+      expect(transport.shares.single.text, "You're invited to my event!");
     });
 
     testWidgets('does not ask for a format when no ticket image is attached', (
@@ -303,31 +307,35 @@ void main() {
     });
   });
 
-  group('no local copy is required', () {
-    test('the share and PDF paths never write to the file system', () {
-      const paths = <String>[
-        'lib/features/tickets/data/ticket_share_helper.dart',
-        'lib/features/tickets/data/ticket_pdf_export.dart',
-        'lib/features/tickets/data/ticket_share_transport.dart',
-      ];
-      const forbidden = <String>[
+  group('PDF share stays in memory', () {
+    test('the PDF builder never writes to the file system', () {
+      const path = 'lib/features/tickets/data/ticket_pdf_export.dart';
+      final source = File(path).readAsStringSync();
+      for (final needle in <String>[
         'getTemporaryDirectory',
         'getApplicationDocumentsDirectory',
         'writeAsBytes',
         'dart:io',
-      ];
-
-      for (final path in paths) {
-        final source = File(path).readAsStringSync();
-        for (final needle in forbidden) {
-          expect(
-            source,
-            isNot(contains(needle)),
-            reason: '$path should share bytes from memory, but references '
-                '"$needle"',
-          );
-        }
+      ]) {
+        expect(
+          source,
+          isNot(contains(needle)),
+          reason: '$path should build the PDF in memory, but references '
+              '"$needle"',
+        );
       }
+    });
+  });
+
+  group('image share uses a physical temp file', () {
+    test('native image XFile is written via getTemporaryDirectory', () {
+      final source = File(
+        'lib/features/tickets/data/ticket_share_image_xfile_io.dart',
+      ).readAsStringSync();
+      expect(source, contains('getTemporaryDirectory'));
+      expect(source, contains('writeAsBytes'));
+      expect(source, contains('XFile('));
+      expect(source, contains('mimeType:'));
     });
   });
 }

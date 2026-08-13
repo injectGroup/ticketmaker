@@ -31,9 +31,6 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
           context.read<TicketsCubit>().state.imageBytesFor(ticket.id);
       final origin = TicketShareHelper.shareOriginFrom(buttonContext);
 
-      // No pre-capture: the PDF is drawn from the ticket model and needs no
-      // painted boundary, and the image path already degrades to JPEG and then
-      // to a link share on its own if capture fails.
       await TicketShareHelper.share(
         context,
         ticket,
@@ -44,28 +41,13 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
     } catch (e, st) {
       debugPrint('TicketDetailPage share failed: $e\n$st');
       if (!mounted) return;
-      // Last-resort link share so the Share button still completes.
-      try {
-        final origin = buttonContext.mounted
-            ? TicketShareHelper.shareOriginFrom(buttonContext)
-            : null;
-        await TicketShareHelper.share(
-          context,
-          ticket,
-          sharePositionOrigin: origin,
-          attachTicketImage: false,
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Could not generate ticket image. Please try again.'),
+          ),
         );
-      } catch (fallbackError, fallbackSt) {
-        debugPrint('TicketDetailPage link fallback failed: $fallbackError\n$fallbackSt');
-        if (!mounted) return;
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(
-              content: Text('Could not share ticket. Try again.'),
-            ),
-          );
-      }
     }
   }
 

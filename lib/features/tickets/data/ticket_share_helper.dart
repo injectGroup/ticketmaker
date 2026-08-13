@@ -9,7 +9,6 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../generate/domain/entities/ticket.dart';
 import '../presentation/widgets/saved_ticket_view.dart';
-import '../presentation/widgets/share_format_dialog.dart';
 import '../presentation/widgets/web_share_options_dialog.dart';
 import 'ticket_image_codec.dart';
 import 'ticket_image_store.dart';
@@ -28,6 +27,9 @@ class TicketShareHelper {
   static const String _jpegFileName = 'ticket.jpg';
   static const String _fallbackShareText =
       "You're invited — open your personal guest ticket!";
+  static const String _imageShareCaption = "You're invited to my event!";
+  static const String _imageFailedMessage =
+      'Could not generate ticket image. Please try again.';
   static const String _prepareFailedMessage =
       'Could not prepare ticket image to share.';
   static const String _shareFailedMessage =
@@ -240,17 +242,13 @@ class TicketShareHelper {
     } catch (_) {}
   }
 
-  /// Shares [ticket] in the format the guest picks: a PNG of the **full
-  /// ticket**, or a printable PDF. Falls back to sharing the link and details
-  /// when neither can be produced.
+  /// Shares [ticket] as a PNG of the full ticket on native Android/iOS.
   ///
   /// [eventImageBytes] is only used as the photo slot inside [SavedTicketView].
-  /// Prefer an on-screen [boundaryKey] (detail page); otherwise compose via a
-  /// opaque modal when [attachTicketImage] is true.
+  /// Prefer an on-screen [boundaryKey] (detail page); otherwise compose from
+  /// the ticket model via [TicketRasterExport] (no list-row `toImage`).
   ///
-  /// Set [attachTicketImage] to `false` for My Tickets **list** rows (no full
-  /// ticket [RepaintBoundary] is painted there) — skips the format question and
-  /// shares link/details only, without throwing.
+  /// Set [attachTicketImage] to `false` to share link/details only.
   ///
   /// **Web:** shows a dialog with **Download Ticket Image**, **Share as PDF**
   /// and **Copy Share Link**, then SnackBars that name the completed action.
@@ -290,32 +288,19 @@ class TicketShareHelper {
       return;
     }
 
-    final format = await showShareFormatDialog(context);
-    if (!context.mounted || format == null) return;
-
-    switch (format) {
-      case TicketShareFormat.image:
-        await shareAsImage(
-          context,
-          ticket,
-          boundaryKey: boundaryKey,
-          sharePositionOrigin: origin,
-          eventImageBytes: photoBytes,
-        );
-      case TicketShareFormat.pdf:
-        await shareAsPdf(
-          context,
-          ticket,
-          sharePositionOrigin: origin,
-          eventImageBytes: photoBytes,
-        );
-    }
+    await shareAsImage(
+      context,
+      ticket,
+      boundaryKey: boundaryKey,
+      sharePositionOrigin: origin,
+      eventImageBytes: photoBytes,
+    );
   }
 
-  /// Shares a PNG of the whole ticket straight from memory.
+  /// Shares a PNG of the whole ticket as a local temp file.
   ///
-  /// Degrades in order: PNG capture, then JPEG capture, then link and details —
-  /// so the Share button always completes with something useful.
+  /// Caption is invitation-only (no URLs). Capture failure shows a SnackBar
+  /// instead of sharing plain text.
   static Future<void> shareAsImage(
     BuildContext context,
     Ticket ticket, {
@@ -359,12 +344,11 @@ class TicketShareHelper {
       }
 
       if (bytes == null || bytes.isEmpty) {
-        await _shareTextOrCopyLink(
-          context,
-          ticket,
-          origin: origin,
-          messenger: messenger,
-        );
+        messenger
+          ?..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(content: Text(_imageFailedMessage)),
+          );
         return;
       }
 
@@ -372,7 +356,7 @@ class TicketShareHelper {
         bytes: bytes,
         fileName: fileName,
         mimeType: mimeType,
-        text: _linkOrShareText(ticket),
+        text: _imageShareCaption,
         subject: _subject,
         sharePositionOrigin: origin,
       );
@@ -682,6 +666,14 @@ class TicketShareHelper {
         final onScreen = await _capturePngWithRetries(boundaryKey);
         if (onScreen != null && onScreen.isNotEmpty) return onScreen;
       }
+
+      // Canvas compose — no widget toImage. List rows never paint a ticket
+      // RepaintBoundary; iOS/Android overlay capture often fails.
+      final raster = await TicketRasterExport.toPngBytes(
+        ticket,
+        eventImageBytes: photoBytes,
+      );
+      if (raster != null && raster.isNotEmpty) return raster;
 
       if (!context.mounted) return null;
 

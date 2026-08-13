@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-08-13T15:05:00Z",
+      "updatedAt": "2026-08-13T16:20:00Z",
       "lastMilestone": {
-        "message": "My Tickets Sign Out beside Clear all; Share requires Sign In or Sign Up",
-        "taskId": "task-tickets-sign-out-share-auth-20260813",
-        "updatedAt": "2026-08-13T15:05:00Z"
+        "message": "Share sends a ticket PNG file (temp XFile), not plain text",
+        "taskId": "task-share-png-xfile-20260813",
+        "updatedAt": "2026-08-13T16:20:00Z"
       }
     }
   ],
@@ -1959,6 +1959,20 @@
       "createdAt": "2026-08-13T15:00:00Z",
       "updatedAt": "2026-08-13T15:05:00Z",
       "note": "Branch feature/v1-personal-ticket-share."
+    },
+    {
+      "id": "task-share-png-xfile-20260813",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Share attaches a temp PNG file, not plain text",
+      "description": "Native Share captures/composes a ticket PNG, writes it via getTemporaryDirectory, and shares XFile(path, mimeType: image/png) with caption You're invited to my event! No URL, no text-only fallback. List rows use TicketRasterExport when toImage fails.",
+      "details": "Cloud task_create_in_db denied (project not shared with this MCP user); local backup only.\n\nNative Share skips the image/PDF dialog and always shares a PNG. Bytes come from RepaintBoundary when present, else TicketRasterExport.toPngBytes (list rows). ticketShareImageXFile writes getTemporaryDirectory() then XFile(path, mimeType: image/png). Caption is You're invited to my event! (no verify URL). Capture failure shows Could not generate ticket image. Please try again. instead of text share.\n\nGate: flutter test ticket_share_formats_test, ticket_share_helper_test, ticket_share_image_xfile_test, ticket_raster_export_test green.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-08-13T15:16:00Z",
+      "updatedAt": "2026-08-13T16:20:00Z",
+      "note": "Branch feature/v1-personal-ticket-share."
     }
   ],
   "epics": [
@@ -1974,5 +1988,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-08-13T15:02:34.711Z"
+  "lastSync": "2026-08-13T15:20:55.672Z"
 }

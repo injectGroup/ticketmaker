@@ -158,4 +158,32 @@ void main() {
     expect(png!, isNotEmpty);
     expect(png!.take(8).toList(), [137, 80, 78, 71, 13, 10, 26, 10]);
   });
+
+  testWidgets('composeTicketPngBytes rasterizes without an on-screen ticket', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => const Text('list'),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.text('list'));
+    Uint8List? png;
+    await tester.runAsync(() async {
+      png = await TicketShareHelper.composeTicketPngBytes(
+        context,
+        sampleTicket,
+      );
+    });
+
+    expect(png, isNotNull);
+    expect(png!, isNotEmpty);
+    expect(png!.take(8).toList(), [137, 80, 78, 71, 13, 10, 26, 10]);
+  });
 }

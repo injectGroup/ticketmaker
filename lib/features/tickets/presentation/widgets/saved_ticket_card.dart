@@ -31,9 +31,8 @@ class SavedTicketCard extends StatelessWidget {
       if (!await ensureAuthenticated(buttonContext)) return;
       if (!buttonContext.mounted) return;
 
-      // List rows have no on-screen ticket RepaintBoundary. Share still
-      // composes SavedTicketView off-screen / via modal from [ticket] data
-      // (and optional event photo bytes) for Download on web.
+      // List rows have no on-screen ticket RepaintBoundary. Native share
+      // rasterizes the ticket to a PNG temp file; web still offers download.
       final eventBytes =
           buttonContext.read<TicketsCubit>().state.imageBytesFor(ticket.id);
       await TicketShareHelper.share(
@@ -41,8 +40,6 @@ class SavedTicketCard extends StatelessWidget {
         ticket,
         sharePositionOrigin: TicketShareHelper.shareOriginFrom(buttonContext),
         eventImageBytes: eventBytes,
-        // Allow compose for web Download; native list still falls back to
-        // link/text when image capture is unavailable.
         attachTicketImage: true,
       );
     } catch (e, st) {
