@@ -1987,6 +1987,20 @@
       "createdAt": "2026-08-13T15:30:00Z",
       "updatedAt": "2026-08-13T15:35:00Z",
       "note": "Branch feature/v1-personal-ticket-share."
+    },
+    {
+      "id": "task-agatha-yuzu-backup-20260814",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Backup local TaskManager board to AGATHA PROJECTS in Yuzu",
+      "description": "Copied the 147 done ticketmaker tasks to Yuzu AGATHA PROJECTS (dAi3F4B4jmZ4U2hGrYiv). Inventory card lists every local id; recent session work also has standalone done cards.",
+      "details": "Yuzu project: AGATHA PROJECTS `dAi3F4B4jmZ4U2hGrYiv`.\n\n- Inventory (all 147 titles): `task-1786737072342` done\n- High-contrast ticket ID: `task-1786736937313` done\n- Share PNG file: `task-1786737072757` done\n- Sign Out / Share auth: `task-1786737073298` done\n- Android signing: `task-1786737073469` done\n\nDid not mark unrelated AGATHA cards done (Circadia, GDPR, Flutter onboarding, parent Quick Ticket Maker `cwh72YYKr3bj6LUjZFVA` still in-progress for Play/TestFlight deliverables).",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-08-14T19:52:00Z",
+      "updatedAt": "2026-08-14T19:52:00Z",
+      "note": "Yuzu cloud write succeeded for AGATHA PROJECTS."
     }
   ],
   "epics": [
@@ -2002,5 +2016,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-08-13T15:33:53.543Z"
+  "lastSync": "2026-08-14T19:53:15.526Z"
 }
