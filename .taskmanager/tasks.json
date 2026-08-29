@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-08-29T19:52:00Z",
+      "updatedAt": "2026-08-29T20:02:00Z",
       "lastMilestone": {
-        "message": "Web favicon uses quick_ticket_maker1.JPEG",
-        "taskId": "task-1788033105587",
-        "updatedAt": "2026-08-29T19:52:00Z"
+        "message": "Web favicon uses quick_ticket_maker1.jpeg",
+        "taskId": "task-1788033703862",
+        "updatedAt": "2026-08-29T20:02:00Z"
       }
     }
   ],
@@ -2042,6 +2042,20 @@
       "status": "done",
       "createdAt": "2026-08-29T19:50:00Z",
       "updatedAt": "2026-08-29T19:52:00Z",
+      "note": "Branch feature/v1-personal-ticket-share."
+    },
+    {
+      "id": "task-favicon-jpeg-lowercase-20260829",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Update web favicon to quick_ticket_maker1.jpeg",
+      "description": "Favicon and apple-touch-icon hrefs use lowercase quick_ticket_maker1.jpeg. Git-renamed the asset so case-sensitive hosting matches.",
+      "details": "Yuzu AGATHA card: `task-1788033703862`.\n\nGate: flutter test web_favicon_test.",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-08-29T20:00:00Z",
+      "updatedAt": "2026-08-29T20:02:00Z",
       "note": "Branch feature/v1-personal-ticket-share."
     }
   ],
