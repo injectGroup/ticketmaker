@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show Color;
 import 'package:image/image.dart' as img;
@@ -365,13 +367,33 @@ class TicketRasterExport {
 
     final decoded = img.decodeImage(bytes);
     if (decoded == null) return;
+    final covered = _coverTo(decoded, _photoW, _photoH);
+    img.compositeImage(canvas, covered, dstX: left, dstY: top);
+  }
+
+  /// Scales [src] to fill [width]×[height] then centre-crops — BoxFit.cover.
+  static img.Image _coverTo(img.Image src, int width, int height) {
+    if (src.width <= 0 || src.height <= 0) return src;
+    final scale = math.max(width / src.width, height / src.height);
+    var resizedW = math.max(width, (src.width * scale).round());
+    var resizedH = math.max(height, (src.height * scale).round());
     final resized = img.copyResize(
-      decoded,
-      width: _photoW,
-      height: _photoH,
+      src,
+      width: resizedW,
+      height: resizedH,
       interpolation: img.Interpolation.linear,
     );
-    img.compositeImage(canvas, resized, dstX: left, dstY: top);
+    final x = ((resized.width - width) / 2).round().clamp(0, resized.width);
+    final y = ((resized.height - height) / 2).round().clamp(0, resized.height);
+    final cropW = math.min(width, resized.width - x);
+    final cropH = math.min(height, resized.height - y);
+    return img.copyCrop(
+      resized,
+      x: x,
+      y: y,
+      width: cropW,
+      height: cropH,
+    );
   }
 
   static void _drawQr(

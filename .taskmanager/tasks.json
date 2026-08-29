@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-08-13T15:35:00Z",
+      "updatedAt": "2026-08-29T17:20:00Z",
       "lastMilestone": {
-        "message": "Ticket ID under the QR is bold #1A1A1A on a solid white pill",
-        "taskId": "task-ticket-id-high-contrast-20260813",
-        "updatedAt": "2026-08-13T15:35:00Z"
+        "message": "Event photo uses BoxFit.cover in a clipped 3:2 frame",
+        "taskId": "task-1788023885733",
+        "updatedAt": "2026-08-29T17:20:00Z"
       }
     }
   ],
@@ -2001,6 +2001,20 @@
       "createdAt": "2026-08-14T19:52:00Z",
       "updatedAt": "2026-08-14T19:52:00Z",
       "note": "Yuzu cloud write succeeded for AGATHA PROJECTS."
+    },
+    {
+      "id": "task-event-photo-cover-20260829",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Event photo BoxFit.cover without stretch",
+      "description": "Ticket event/guest photo uses BoxFit.cover inside a clipped 3:2 (300×200) frame on Generate, saved tickets, and shared raster PNGs.",
+      "details": "Yuzu AGATHA card: `task-1788023885733`.\n\nTicketEventPhotoFrame (ClipRRect + fixed 300×200). Generate no longer Centers the photo. TicketRasterExport cover-crops instead of copyResize stretch.\n\nGate: flutter test ticket_event_photo_test, ticket_raster_export_test, ticket_share_helper_test, widget_test; dart analyze clean.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-08-29T17:15:00Z",
+      "updatedAt": "2026-08-29T17:20:00Z",
+      "note": "Branch feature/v1-personal-ticket-share."
     }
   ],
   "epics": [
@@ -2016,5 +2030,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-08-14T19:53:15.526Z"
+  "lastSync": "2026-08-29T17:22:17.489Z"
 }

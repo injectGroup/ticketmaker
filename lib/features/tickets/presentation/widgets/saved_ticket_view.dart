@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/utils/color_contrast.dart';
 import '../../../../core/widgets/ticket_photo_placeholder.dart';
+import '../../../../core/widgets/ticket_event_photo_frame.dart';
 import '../../../generate/domain/entities/ticket.dart';
 import '../../../generate/presentation/widgets/generate_qr_code.dart';
 import '../../../generate/presentation/widgets/ticket_branding_footer.dart';
@@ -27,8 +28,8 @@ class SavedTicketView extends StatelessWidget {
   final Uint8List? imageBytes;
 
   Widget _eventImage() {
-    const width = 300.0;
-    const height = 200.0;
+    const width = TicketEventPhotoFrame.width;
+    const height = TicketEventPhotoFrame.height;
 
     final bytes = imageBytes;
     if (bytes != null && bytes.isNotEmpty) {
@@ -37,6 +38,7 @@ class SavedTicketView extends StatelessWidget {
         width: width,
         height: height,
         fit: BoxFit.cover,
+        alignment: Alignment.center,
         gaplessPlayback: true,
         errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
           width: width,
@@ -69,6 +71,7 @@ class SavedTicketView extends StatelessWidget {
         width: width,
         height: height,
         fit: BoxFit.cover,
+        alignment: Alignment.center,
         gaplessPlayback: true,
         errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
           width: width,
@@ -102,6 +105,7 @@ class SavedTicketView extends StatelessWidget {
       width: width,
       height: height,
       fit: BoxFit.cover,
+      alignment: Alignment.center,
       errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
         width: width,
         height: height,
@@ -170,10 +174,7 @@ class SavedTicketView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: _eventImage(),
-          ),
+          TicketEventPhotoFrame(child: _eventImage()),
           if (ticket.subtitle.trim().isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(30, 30, 30, 16),

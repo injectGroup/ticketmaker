@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/color_contrast.dart';
 import '../../../../core/widgets/ticket_photo_placeholder.dart';
+import '../../../../core/widgets/ticket_event_photo_frame.dart';
 import '../../../tickets/data/ticket_image_store.dart';
 import '../../../tickets/data/ticket_network_image.dart';
 import '../../domain/entities/ticket.dart';
@@ -115,8 +116,8 @@ class TicketDetailsSection extends StatelessWidget {
   }
 
   Widget _eventImage() {
-    const width = 300.0;
-    const height = 200.0;
+    const width = TicketEventPhotoFrame.width;
+    const height = TicketEventPhotoFrame.height;
     final bytes = imageBytes;
     final path = ticket.photoUrl.trim();
 
@@ -126,6 +127,7 @@ class TicketDetailsSection extends StatelessWidget {
         width: width,
         height: height,
         fit: BoxFit.cover,
+        alignment: Alignment.center,
         gaplessPlayback: true,
         errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
           width: width,
@@ -146,6 +148,7 @@ class TicketDetailsSection extends StatelessWidget {
         width: width,
         height: height,
         fit: BoxFit.cover,
+        alignment: Alignment.center,
         errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
           width: width,
           height: height,
@@ -168,6 +171,7 @@ class TicketDetailsSection extends StatelessWidget {
         width: width,
         height: height,
         fit: BoxFit.cover,
+        alignment: Alignment.center,
         gaplessPlayback: true,
         errorBuilder: (_, _, _) => const TicketPhotoPlaceholder(
           width: width,
@@ -239,15 +243,11 @@ class TicketDetailsSection extends StatelessWidget {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: SizedBox(
-                    width: 300,
-                    height: 200,
-                    child: ColoredBox(
-                      color: const Color(0xFF2D3436),
-                      child: Center(child: _eventImage()),
-                    ),
+                TicketEventPhotoFrame(
+                  borderRadius: 12,
+                  child: ColoredBox(
+                    color: const Color(0xFF2D3436),
+                    child: _eventImage(),
                   ),
                 ),
                 Positioned(

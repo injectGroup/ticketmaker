@@ -301,4 +301,31 @@ void main() {
     expect(light, greaterThan(80), reason: 'badge field should be solid white');
     expect(dark, greaterThan(20), reason: 'ticket ID digits should be near-black');
   });
+
+  test('shared PNG covers the event photo without stretching', () async {
+    final source = img.Image(width: 100, height: 10, numChannels: 3);
+    for (var x = 0; x < 100; x++) {
+      final color = (x >= 40 && x < 60)
+          ? img.ColorRgb8(16, 200, 16)
+          : img.ColorRgb8(200, 16, 16);
+      for (var y = 0; y < 10; y++) {
+        source.setPixel(x, y, color);
+      }
+    }
+    final photoBytes = Uint8List.fromList(img.encodePng(source));
+    final bytes = await TicketRasterExport.toPngBytes(
+      sampleTicket,
+      eventImageBytes: photoBytes,
+    );
+    expect(bytes, isNotNull);
+    final ticketPng = img.decodePng(bytes!);
+    expect(ticketPng, isNotNull);
+
+    // Header 24+40, QR 150, badge 16+44, dash 24, title 36 → photo at y=334.
+    const photoLeft = 60;
+    const photoTop = 334;
+    final edge = ticketPng!.getPixel(photoLeft + 8, photoTop + 100);
+    expect(edge.g, greaterThan(edge.r),
+        reason: 'cover-crop keeps the green centre, stretch would show red sides');
+  });
 }

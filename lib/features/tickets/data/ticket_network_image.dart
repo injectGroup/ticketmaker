@@ -188,6 +188,7 @@ class _TicketCorsSafeNetworkImageState extends State<TicketCorsSafeNetworkImage>
           width: width,
           height: height,
           fit: widget.fit,
+          alignment: Alignment.center,
           gaplessPlayback: true,
           errorBuilder: (_, _, _) => TicketPhotoPlaceholder(
             width: width ?? 300,
