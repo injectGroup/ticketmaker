@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../data/auth_repository.dart';
@@ -142,6 +143,7 @@ class AuthCubit extends Cubit<AuthState> {
       );
       return true;
     } on AuthException catch (e) {
+      debugPrint(e.toString());
       emit(
         state.copyWith(
           isSubmitting: false,
@@ -150,7 +152,8 @@ class AuthCubit extends Cubit<AuthState> {
         ),
       );
       return false;
-    } catch (_) {
+    } catch (e) {
+      debugPrint(e.toString());
       emit(
         state.copyWith(
           isSubmitting: false,

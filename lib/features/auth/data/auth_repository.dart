@@ -190,28 +190,15 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<AppUser> signInWithGoogle() async {
     try {
-      await _ensureGoogleInitialized();
-      final account = await _googleSignIn.authenticate();
-      final idToken = account.authentication.idToken;
-      if (idToken == null || idToken.isEmpty) {
-        throw AuthException(
-          'Google Sign-In did not return an ID token. Check OAuth client setup.',
-        );
+      if (kIsWeb) {
+        return await _signInWithGooglePopup();
       }
-      final credential = GoogleAuthProvider.credential(idToken: idToken);
-      final userCredential = await _auth.signInWithCredential(credential);
-      final firebaseUser = userCredential.user;
-      if (firebaseUser == null) {
-        throw AuthException('Google Sign-In failed. Try again.');
-      }
-      return _finalizeSocialUser(
-        firebaseUser,
-        displayName: account.displayName,
-        isNewUser: userCredential.additionalUserInfo?.isNewUser ?? false,
-      );
-    } on AuthException {
+      return await _signInWithGoogleNative();
+    } on AuthException catch (e) {
+      debugPrint(e.toString());
       rethrow;
     } on GoogleSignInException catch (e) {
+      debugPrint(e.toString());
       if (e.code == GoogleSignInExceptionCode.canceled) {
         throw AuthException('Google Sign-In was cancelled.');
       }
@@ -219,12 +206,54 @@ class FirebaseAuthRepository implements AuthRepository {
         'Google Sign-In is unavailable. Enable Google in Firebase Console.',
       );
     } on FirebaseAuthException catch (e) {
+      debugPrint(e.toString());
       throw AuthException(_mapFirebaseAuthError(e));
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint(e.toString());
+      debugPrint('$st');
       throw AuthException(
         'Google Sign-In failed. Ensure Google provider and OAuth clients are set up.',
       );
     }
+  }
+
+  /// Web: Firebase Auth popup. Do not use [GoogleSignIn] on web — the GIS
+  /// plugin needs a different client setup than authorized domains alone.
+  Future<AppUser> _signInWithGooglePopup() async {
+    final provider = GoogleAuthProvider();
+    final userCredential = await _auth.signInWithPopup(provider);
+    final firebaseUser = userCredential.user;
+    if (firebaseUser == null) {
+      throw AuthException('Google Sign-In failed. Try again.');
+    }
+    return _finalizeSocialUser(
+      firebaseUser,
+      displayName: firebaseUser.displayName,
+      isNewUser: userCredential.additionalUserInfo?.isNewUser ?? false,
+    );
+  }
+
+  /// iOS/Android: Google Sign-In plugin → ID token → Firebase credential.
+  Future<AppUser> _signInWithGoogleNative() async {
+    await _ensureGoogleInitialized();
+    final account = await _googleSignIn.authenticate();
+    final idToken = account.authentication.idToken;
+    if (idToken == null || idToken.isEmpty) {
+      throw AuthException(
+        'Google Sign-In did not return an ID token. Check OAuth client setup.',
+      );
+    }
+    final credential = GoogleAuthProvider.credential(idToken: idToken);
+    final userCredential = await _auth.signInWithCredential(credential);
+    final firebaseUser = userCredential.user;
+    if (firebaseUser == null) {
+      throw AuthException('Google Sign-In failed. Try again.');
+    }
+    return _finalizeSocialUser(
+      firebaseUser,
+      displayName: account.displayName,
+      isNewUser: userCredential.additionalUserInfo?.isNewUser ?? false,
+    );
   }
 
   @override
@@ -293,11 +322,14 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {
-    try {
-      await _ensureGoogleInitialized();
-      await _googleSignIn.signOut();
-    } catch (_) {
-      // Google may be unconfigured; still sign out of Firebase.
+    if (!kIsWeb) {
+      try {
+        await _ensureGoogleInitialized();
+        await _googleSignIn.signOut();
+      } catch (e) {
+        debugPrint(e.toString());
+        // Google may be unconfigured; still sign out of Firebase.
+      }
     }
     await _auth.signOut();
   }
