@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-08-29T20:02:00Z",
+      "updatedAt": "2026-08-31T09:50:00Z",
       "lastMilestone": {
-        "message": "Web favicon uses quick_ticket_maker1.jpeg",
-        "taskId": "task-1788033703862",
-        "updatedAt": "2026-08-29T20:02:00Z"
+        "message": "Release Android App Bundle built (1.0.0+4)",
+        "taskId": "task-android-aab-build-20260831",
+        "updatedAt": "2026-08-31T09:50:00Z"
       }
     }
   ],
@@ -2057,6 +2057,20 @@
       "createdAt": "2026-08-29T20:00:00Z",
       "updatedAt": "2026-08-29T20:02:00Z",
       "note": "Branch feature/v1-personal-ticket-share."
+    },
+    {
+      "id": "task-android-aab-build-20260831",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Build Android App Bundle (AAB) release",
+      "description": "Verify applicationId/version in android/app/build.gradle.kts, run flutter build appbundle --release, confirm app-release.aab output path.",
+      "details": "Cloud task_create_in_db denied (project not shared with this MCP user); local backup only. tkl sync completed local-only. Web UI / Chat notify tools were blocked this session; lastMilestone written locally. GOOGLE_CHAT_WEBHOOK_URL unset.\n\nVerified in android/app/build.gradle.kts: applicationId com.agathakakalogical.quickticketmaker; versionName/versionCode from Flutter toolchain (pubspec.yaml version 1.0.0+4 → 1.0.0 / 4). android/key.properties present.\n\nflutter build appbundle --release succeeded (exit 0, ~645s Gradle). Artifact: build/app/outputs/bundle/release/app-release.aab (70,969,751 bytes / 71.0MB). KGP deprecation warning from mobile_scanner, package_info_plus, share_plus, sign_in_with_apple — not a failure.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-08-31T09:38:00Z",
+      "updatedAt": "2026-08-31T09:50:00Z",
+      "note": "AAB ready for Play Console upload."
     }
   ],
   "epics": [
@@ -2072,5 +2086,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-08-29T19:52:54.278Z"
+  "lastSync": "2026-08-31T09:50:41.249Z"
 }
