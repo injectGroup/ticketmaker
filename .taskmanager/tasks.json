@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-08-31T09:50:00Z",
+      "updatedAt": "2026-09-01T12:53:00Z",
       "lastMilestone": {
-        "message": "Release Android App Bundle built (1.0.0+4)",
-        "taskId": "task-android-aab-build-20260831",
-        "updatedAt": "2026-08-31T09:50:00Z"
+        "message": "Cleaned duplicate pubspec.yaml sections; launcher icons use assets/quick_ticket_maker.jpeg",
+        "taskId": "task-pubspec-cleanup-20260901",
+        "updatedAt": "2026-09-01T12:53:00Z"
       }
     }
   ],
@@ -2071,6 +2071,47 @@
       "createdAt": "2026-08-31T09:38:00Z",
       "updatedAt": "2026-08-31T09:50:00Z",
       "note": "AAB ready for Play Console upload."
+    },
+    {
+      "id": "task-event-photo-cover-fit-20260831",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Cover-fit event photos in the 3:2 frame",
+      "description": "Paint every event photo with BoxFit.cover filling TicketEventPhotoFrame so gallery picks of any size keep aspect ratio (crop, no stretch).",
+      "details": "Cloud task_create_in_db denied; local backup only.\n\nAdded TicketCoverPhoto: Image with BoxFit.cover and width/height infinity so the frame constrains and cover crops. Wired Generate, SavedTicketView, and TicketCorsSafeNetworkImage. Raster _coverTo resizes by width only (copyResize with both dimensions stretches). bakeOrientation on JPEG compress and raster decode.\n\nGate: flutter test ticket_event_photo_test + ticket_raster_export_test green; dart analyze clean on touched files.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-08-31T17:01:00Z",
+      "updatedAt": "2026-08-31T17:10:00Z",
+      "note": "Fixes stretched guest-pass photos."
+    },
+    {
+      "id": "task-android-aab-build-20260831-v6",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Build release AAB 1.0.0+6",
+      "description": "Confirm pubspec versionCode is incremented, run flutter build appbundle --release, report app-release.aab path.",
+      "details": "Cloud task_create_in_db denied; local backup only. pubspec 1.0.0+6 vs HEAD 1.0.0+5 (cover-fit included). flutter build appbundle --release exit 0 (~910s). Artifact: build/app/outputs/bundle/release/app-release.aab (70,991,942 bytes / 71.0MB).",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-08-31T17:07:00Z",
+      "updatedAt": "2026-08-31T17:23:00Z",
+      "note": "Play versionCode 6. Upload this AAB."
+    },
+    {
+      "id": "task-pubspec-cleanup-20260901",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Clean up duplicate pubspec.yaml sections",
+      "description": "Remove duplicate `dev_dependencies` and `flutter` blocks. Keep `flutter_launcher_icons: ^0.13.1`, add `assets/quick_ticket_maker.jpeg` with existing assets, and keep launcher-icons config at the bottom.",
+      "details": "Cloud task_create_in_db denied (project not shared with this MCP user); local backup only. Merged duplicate YAML keys; flutter pub get resolved flutter_launcher_icons 0.13.1. Copied JPEG to assets/quick_ticket_maker.jpeg so the declared path exists.",
+      "operationalPhase": "COMPLETE",
+      "priority": "medium",
+      "status": "done",
+      "createdAt": "2026-09-01T12:50:00Z",
+      "updatedAt": "2026-09-01T12:53:00Z"
     }
   ],
   "epics": [
@@ -2086,5 +2127,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-08-31T09:50:41.249Z"
+  "lastSync": "2026-09-01T12:53:11.333Z"
 }

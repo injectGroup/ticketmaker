@@ -1,7 +1,7 @@
 name: ticket_maker
 description: Quick Ticket Maker — generate styled event tickets with customizable QR codes.
 publish_to: 'none'
-version: 1.0.0+5
+version: 1.0.0+7
 
 environment:
   sdk: ^3.12.2
@@ -45,10 +45,12 @@ dev_dependencies:
   flutter_secure_storage_platform_interface: ^2.0.2
   fake_cloud_firestore: ^4.2.0
   mock_exceptions: ^0.8.2
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
   assets:
+    - assets/quick_ticket_maker.jpeg
     - assets/images/ticket_event_placeholder.png
     - assets/images/app_logo_mark.png
     # Pre-bundled Google Fonts. google_fonts resolves these from the asset
@@ -66,3 +68,9 @@ flutter:
     - family: Roboto
       fonts:
         - asset: assets/fonts/Roboto-Regular.ttf
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/quick_ticket_maker.jpeg"
+  min_sdk_android: 21
