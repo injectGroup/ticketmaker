@@ -21,11 +21,11 @@
       "ownershipStatus": "pending_owner_claim",
       "legacyLocalProjectId": "S48ODI73lfsZJSn8Kke2",
       "createdAt": "2026-07-22T08:32:00.000Z",
-      "updatedAt": "2026-09-01T12:53:00Z",
+      "updatedAt": "2026-09-01T14:23:00Z",
       "lastMilestone": {
-        "message": "Cleaned duplicate pubspec.yaml sections; launcher icons use assets/quick_ticket_maker.jpeg",
-        "taskId": "task-pubspec-cleanup-20260901",
-        "updatedAt": "2026-09-01T12:53:00Z"
+        "message": "Launcher icon switched to quick_ticket_maker_icon.jpeg; release AAB 1.0.0+7 built",
+        "taskId": "task-launcher-icon-aab-20260901",
+        "updatedAt": "2026-09-01T14:23:00Z"
       }
     }
   ],
@@ -2112,6 +2112,19 @@
       "status": "done",
       "createdAt": "2026-09-01T12:50:00Z",
       "updatedAt": "2026-09-01T12:53:00Z"
+    },
+    {
+      "id": "task-launcher-icon-aab-20260901",
+      "projectId": "project-1784709204130",
+      "epicId": null,
+      "title": "Switch launcher icon and build release AAB",
+      "description": "Point launcher icons at assets/quick_ticket_maker_icon.jpeg, regenerate icons, then production AAB.",
+      "details": "Cloud task_create_in_db denied (project not shared with this MCP user); local backup only. dart run flutter_launcher_icons succeeded (Android+iOS). flutter clean && flutter pub get && flutter build appbundle --release exit 0. Artifact: build/app/outputs/bundle/release/app-release.aab (68M / 71.2MB). KGP deprecation warning from mobile_scanner, package_info_plus, share_plus, sign_in_with_apple — not a failure.",
+      "operationalPhase": "COMPLETE",
+      "priority": "high",
+      "status": "done",
+      "createdAt": "2026-09-01T14:01:00Z",
+      "updatedAt": "2026-09-01T14:23:00Z"
     }
   ],
   "epics": [
@@ -2127,5 +2140,5 @@
       "note": "Cloud epic_create denied (project not shared); local backup only."
     }
   ],
-  "lastSync": "2026-09-01T12:53:11.333Z"
+  "lastSync": "2026-09-01T14:25:32.822Z"
 }
